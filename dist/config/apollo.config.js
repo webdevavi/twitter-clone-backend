@@ -12,11 +12,12 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.apolloConfig = void 0;
 const type_graphql_1 = require("type-graphql");
 const follow_1 = require("../resolvers/follow");
+const quack_1 = require("../resolvers/quack");
 const user_1 = require("../resolvers/user");
 const apolloConfig = () => __awaiter(void 0, void 0, void 0, function* () {
     return ({
         schema: yield type_graphql_1.buildSchema({
-            resolvers: [user_1.UserResolver, follow_1.FollowResolver],
+            resolvers: [user_1.UserResolver, follow_1.FollowResolver, quack_1.QuackResolver],
             validate: false,
         }),
         context: ({ req, res }) => ({ req, res }),

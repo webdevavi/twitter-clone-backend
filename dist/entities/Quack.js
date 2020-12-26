@@ -34,22 +34,21 @@ __decorate([
     __metadata("design:type", String)
 ], Quack.prototype, "text", void 0);
 __decorate([
-    type_graphql_1.Field(() => [String]),
+    type_graphql_1.Field(() => String, { nullable: true }),
+    __metadata("design:type", String)
+], Quack.prototype, "truncatedText", void 0);
+__decorate([
+    type_graphql_1.Field(() => [String], { nullable: true }),
     __metadata("design:type", Array)
 ], Quack.prototype, "urls", void 0);
-__decorate([
-    type_graphql_1.Field(() => [String]),
-    __metadata("design:type", Array)
-], Quack.prototype, "images", void 0);
 __decorate([
     typeorm_1.Column(),
     type_graphql_1.Field(),
     __metadata("design:type", String)
 ], Quack.prototype, "quackedByUserId", void 0);
 __decorate([
-    typeorm_1.ManyToOne(() => User_1.User, (user) => user.quacks, {
-        onDelete: "CASCADE",
-    }),
+    typeorm_1.ManyToOne(() => User_1.User, (user) => user.quacks),
+    type_graphql_1.Field(() => User_1.User),
     __metadata("design:type", User_1.User)
 ], Quack.prototype, "quackedByUser", void 0);
 __decorate([
@@ -58,13 +57,16 @@ __decorate([
     __metadata("design:type", String)
 ], Quack.prototype, "inReplyToQuackId", void 0);
 __decorate([
-    typeorm_1.ManyToOne(() => Quack_1, (quack) => quack.replies, { nullable: true }),
+    typeorm_1.ManyToOne(() => Quack_1, (quack) => quack.replies, {
+        onDelete: "SET NULL",
+        nullable: true,
+    }),
+    type_graphql_1.Field(() => Quack_1, { nullable: true }),
     __metadata("design:type", Quack)
 ], Quack.prototype, "inReplyToQuack", void 0);
 __decorate([
     typeorm_1.OneToMany(() => Quack_1, (quack) => quack.inReplyToQuack, {
         nullable: true,
-        onDelete: "CASCADE",
     }),
     type_graphql_1.Field(() => [Quack_1], { nullable: true }),
     __metadata("design:type", Array)
@@ -72,17 +74,15 @@ __decorate([
 __decorate([
     typeorm_1.OneToMany(() => Requack_1.Requack, (requacks) => requacks.quack, {
         nullable: true,
-        onDelete: "CASCADE",
     }),
-    type_graphql_1.Field(() => [Requack_1.Requack]),
+    type_graphql_1.Field(() => [Requack_1.Requack], { nullable: true }),
     __metadata("design:type", Array)
 ], Quack.prototype, "requacks", void 0);
 __decorate([
     typeorm_1.OneToMany(() => Like_1.Like, (like) => like.quack, {
         nullable: true,
-        onDelete: "CASCADE",
     }),
-    type_graphql_1.Field(() => [Like_1.Like]),
+    type_graphql_1.Field(() => [Like_1.Like], { nullable: true }),
     __metadata("design:type", Array)
 ], Quack.prototype, "likes", void 0);
 Quack = Quack_1 = __decorate([

@@ -27,46 +27,46 @@ export class Quack extends BaseEntity {
   @Field()
   text: string;
 
-  @Field(() => [String])
-  urls: string[];
+  @Field(() => String, { nullable: true })
+  truncatedText: string;
 
-  @Field(() => [String])
-  images: string[];
+  @Field(() => [String], { nullable: true })
+  urls: string[];
 
   @Column()
   @Field()
   quackedByUserId: string;
 
-  @ManyToOne(() => User, (user) => user.quacks, {
-    onDelete: "CASCADE",
-  })
+  @ManyToOne(() => User, (user) => user.quacks)
+  @Field(() => User)
   quackedByUser: User;
 
   @Column({ nullable: true })
   @Field(() => String, { nullable: true })
   inReplyToQuackId: string;
 
-  @ManyToOne(() => Quack, (quack) => quack.replies, { nullable: true })
+  @ManyToOne(() => Quack, (quack) => quack.replies, {
+    onDelete: "SET NULL",
+    nullable: true,
+  })
+  @Field(() => Quack, { nullable: true })
   inReplyToQuack: Quack;
 
   @OneToMany(() => Quack, (quack) => quack.inReplyToQuack, {
     nullable: true,
-    onDelete: "CASCADE",
   })
   @Field(() => [Quack], { nullable: true })
   replies: Quack[];
 
   @OneToMany(() => Requack, (requacks) => requacks.quack, {
     nullable: true,
-    onDelete: "CASCADE",
   })
-  @Field(() => [Requack])
+  @Field(() => [Requack], { nullable: true })
   requacks: Requack[];
 
   @OneToMany(() => Like, (like) => like.quack, {
     nullable: true,
-    onDelete: "CASCADE",
   })
-  @Field(() => [Like])
+  @Field(() => [Like], { nullable: true })
   likes: Like[];
 }
