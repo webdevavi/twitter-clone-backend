@@ -11,10 +11,11 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.apolloConfig = void 0;
 const type_graphql_1 = require("type-graphql");
+const user_1 = require("../resolvers/user");
 const apolloConfig = () => __awaiter(void 0, void 0, void 0, function* () {
     return ({
         schema: yield type_graphql_1.buildSchema({
-            resolvers: [],
+            resolvers: [user_1.UserResolver],
             validate: false,
         }),
         context: ({ req, res }) => ({ req, res }),
