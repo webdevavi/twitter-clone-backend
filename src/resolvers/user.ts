@@ -1,7 +1,5 @@
 import argon from "argon2";
 import {
-  DEFAULT_CP,
-  DEFAULT_DP,
   FORGOT_PASSWORD_PREFIX,
   ORIGIN,
   VERIFY_EMAIL_PREFIX,
@@ -9,9 +7,11 @@ import {
 import {
   Arg,
   Ctx,
+  FieldResolver,
   Mutation,
   Query,
   Resolver,
+  Root,
   UseMiddleware,
 } from "type-graphql";
 import { User } from "../entities/User";
@@ -26,9 +26,42 @@ import { v4 } from "uuid";
 import { Cache } from "../entities/Cache";
 import { isAuth } from "../middleware/isAuth";
 import { forgotPasswordTemplate } from "../emailTemplates/forgotPassword";
+import { Follow } from "../entities/Follow";
+import { Quack } from "../entities/Quack";
+import { Requack } from "../entities/Requack";
+import { Like } from "../entities/Like";
 
 @Resolver(User)
 export class UserResolver {
+  @FieldResolver()
+  async followers(@Root() user: User) {
+    const follows = await Follow.find({ where: { userId: user.id } });
+    const followersIds = follows.map((follow) => follow.followerId);
+    return await User.findByIds(followersIds);
+  }
+
+  @FieldResolver()
+  async followings(@Root() user: User) {
+    const follows = await Follow.find({ where: { followerId: user.id } });
+    const followingsIds = follows.map((follow) => follow.userId);
+    return await User.findByIds(followingsIds);
+  }
+
+  @FieldResolver()
+  quacks(@Root() user: User) {
+    return Quack.find({ where: { quackedByUserId: user.id } });
+  }
+
+  @FieldResolver()
+  requacks(@Root() user: User) {
+    return Requack.find({ where: { userId: user.id } });
+  }
+
+  @FieldResolver()
+  likes(@Root() user: User) {
+    return Like.find({ where: { userId: user.id } });
+  }
+
   @Mutation(() => UserResponse)
   async signup(
     @Arg("input") input: UserInput,
@@ -49,9 +82,6 @@ export class UserResolver {
       username,
       email,
       password: hashedPassword,
-      emailVerified: false,
-      displayPicture: DEFAULT_DP,
-      coverPicture: DEFAULT_CP,
     });
 
     try {

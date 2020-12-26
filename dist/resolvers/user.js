@@ -39,7 +39,34 @@ const uuid_1 = require("uuid");
 const Cache_1 = require("../entities/Cache");
 const isAuth_1 = require("../middleware/isAuth");
 const forgotPassword_1 = require("../emailTemplates/forgotPassword");
+const Follow_1 = require("../entities/Follow");
+const Quack_1 = require("../entities/Quack");
+const Requack_1 = require("../entities/Requack");
+const Like_1 = require("../entities/Like");
 let UserResolver = class UserResolver {
+    followers(user) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const follows = yield Follow_1.Follow.find({ where: { userId: user.id } });
+            const followersIds = follows.map((follow) => follow.followerId);
+            return yield User_1.User.findByIds(followersIds);
+        });
+    }
+    followings(user) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const follows = yield Follow_1.Follow.find({ where: { followerId: user.id } });
+            const followingsIds = follows.map((follow) => follow.userId);
+            return yield User_1.User.findByIds(followingsIds);
+        });
+    }
+    quacks(user) {
+        return Quack_1.Quack.find({ where: { quackedByUserId: user.id } });
+    }
+    requacks(user) {
+        return Requack_1.Requack.find({ where: { userId: user.id } });
+    }
+    likes(user) {
+        return Like_1.Like.find({ where: { userId: user.id } });
+    }
     signup(input, { req }) {
         return __awaiter(this, void 0, void 0, function* () {
             const errors = new user_1.ValidateUser(input).validate();
@@ -53,9 +80,6 @@ let UserResolver = class UserResolver {
                 username,
                 email,
                 password: hashedPassword,
-                emailVerified: false,
-                displayPicture: constants_1.DEFAULT_DP,
-                coverPicture: constants_1.DEFAULT_CP,
             });
             try {
                 yield user.save();
@@ -262,6 +286,41 @@ let UserResolver = class UserResolver {
         return User_1.User.findOne(req.session.userId);
     }
 };
+__decorate([
+    type_graphql_1.FieldResolver(),
+    __param(0, type_graphql_1.Root()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [User_1.User]),
+    __metadata("design:returntype", Promise)
+], UserResolver.prototype, "followers", null);
+__decorate([
+    type_graphql_1.FieldResolver(),
+    __param(0, type_graphql_1.Root()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [User_1.User]),
+    __metadata("design:returntype", Promise)
+], UserResolver.prototype, "followings", null);
+__decorate([
+    type_graphql_1.FieldResolver(),
+    __param(0, type_graphql_1.Root()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [User_1.User]),
+    __metadata("design:returntype", void 0)
+], UserResolver.prototype, "quacks", null);
+__decorate([
+    type_graphql_1.FieldResolver(),
+    __param(0, type_graphql_1.Root()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [User_1.User]),
+    __metadata("design:returntype", void 0)
+], UserResolver.prototype, "requacks", null);
+__decorate([
+    type_graphql_1.FieldResolver(),
+    __param(0, type_graphql_1.Root()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [User_1.User]),
+    __metadata("design:returntype", void 0)
+], UserResolver.prototype, "likes", null);
 __decorate([
     type_graphql_1.Mutation(() => UserResponse_1.UserResponse),
     __param(0, type_graphql_1.Arg("input")),
