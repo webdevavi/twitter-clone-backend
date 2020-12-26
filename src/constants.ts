@@ -21,3 +21,6 @@ export const VERIFY_EMAIL_PREFIX =
   process.env.VERIFY_EMAIL_PREFIX || "verify-email:";
 export const FORGOT_PASSWORD_PREFIX =
   process.env.FORGOT_PASSWORD_PREFIX || "forgot-password:";
+
+export const DEFAULT_DP = "https://picsum.photos/400";
+export const DEFAULT_CP = "https://picsum.photos/1200";
