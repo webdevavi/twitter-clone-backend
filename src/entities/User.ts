@@ -8,6 +8,7 @@ import {
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from "typeorm";
+import { DEFAULT_CP, DEFAULT_DP } from "../constants";
 import { Like } from "./Like";
 import { Quack } from "./Quack";
 import { Requack } from "./Requack";
@@ -31,13 +32,13 @@ export class User extends BaseEntity {
   @Field()
   displayName: string;
 
-  @Column()
+  @Column({ default: DEFAULT_DP })
   @Field()
-  displayPicture: string;
+  displayPicture: string = DEFAULT_DP;
 
-  @Column()
+  @Column({ default: DEFAULT_CP })
   @Field()
-  coverPicture: string;
+  coverPicture: string = DEFAULT_CP;
 
   @Column({ unique: true })
   @Field()
@@ -47,9 +48,9 @@ export class User extends BaseEntity {
   @Field()
   email: string;
 
-  @Column({ type: "boolean" })
+  @Column({ type: "boolean", default: false })
   @Field()
-  emailVerified: boolean;
+  emailVerified: boolean = false;
 
   @Column()
   password: string;
@@ -62,13 +63,19 @@ export class User extends BaseEntity {
     nullable: true,
     onDelete: "CASCADE",
   })
-  @Field(() => [Requack])
+  @Field(() => [Requack], { nullable: true })
   requacks: Requack[];
 
   @OneToMany(() => Like, (like) => like.user, {
     nullable: true,
     onDelete: "CASCADE",
   })
-  @Field(() => [Like])
+  @Field(() => [Like], { nullable: true })
   likes: Like[];
+
+  @Field(() => [User], { nullable: true })
+  followers: User[];
+
+  @Field(() => [User], { nullable: true })
+  followings: User[];
 }

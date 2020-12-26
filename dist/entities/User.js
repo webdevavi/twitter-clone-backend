@@ -8,14 +8,22 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
+var User_1;
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.User = void 0;
 const type_graphql_1 = require("type-graphql");
 const typeorm_1 = require("typeorm");
+const constants_1 = require("../constants");
 const Like_1 = require("./Like");
 const Quack_1 = require("./Quack");
 const Requack_1 = require("./Requack");
-let User = class User extends typeorm_1.BaseEntity {
+let User = User_1 = class User extends typeorm_1.BaseEntity {
+    constructor() {
+        super(...arguments);
+        this.displayPicture = constants_1.DEFAULT_DP;
+        this.coverPicture = constants_1.DEFAULT_CP;
+        this.emailVerified = false;
+    }
 };
 __decorate([
     typeorm_1.PrimaryGeneratedColumn("uuid"),
@@ -38,12 +46,12 @@ __decorate([
     __metadata("design:type", String)
 ], User.prototype, "displayName", void 0);
 __decorate([
-    typeorm_1.Column(),
+    typeorm_1.Column({ default: constants_1.DEFAULT_DP }),
     type_graphql_1.Field(),
     __metadata("design:type", String)
 ], User.prototype, "displayPicture", void 0);
 __decorate([
-    typeorm_1.Column(),
+    typeorm_1.Column({ default: constants_1.DEFAULT_CP }),
     type_graphql_1.Field(),
     __metadata("design:type", String)
 ], User.prototype, "coverPicture", void 0);
@@ -58,7 +66,7 @@ __decorate([
     __metadata("design:type", String)
 ], User.prototype, "email", void 0);
 __decorate([
-    typeorm_1.Column({ type: "boolean" }),
+    typeorm_1.Column({ type: "boolean", default: false }),
     type_graphql_1.Field(),
     __metadata("design:type", Boolean)
 ], User.prototype, "emailVerified", void 0);
@@ -76,7 +84,7 @@ __decorate([
         nullable: true,
         onDelete: "CASCADE",
     }),
-    type_graphql_1.Field(() => [Requack_1.Requack]),
+    type_graphql_1.Field(() => [Requack_1.Requack], { nullable: true }),
     __metadata("design:type", Array)
 ], User.prototype, "requacks", void 0);
 __decorate([
@@ -84,10 +92,18 @@ __decorate([
         nullable: true,
         onDelete: "CASCADE",
     }),
-    type_graphql_1.Field(() => [Like_1.Like]),
+    type_graphql_1.Field(() => [Like_1.Like], { nullable: true }),
     __metadata("design:type", Array)
 ], User.prototype, "likes", void 0);
-User = __decorate([
+__decorate([
+    type_graphql_1.Field(() => [User_1], { nullable: true }),
+    __metadata("design:type", Array)
+], User.prototype, "followers", void 0);
+__decorate([
+    type_graphql_1.Field(() => [User_1], { nullable: true }),
+    __metadata("design:type", Array)
+], User.prototype, "followings", void 0);
+User = User_1 = __decorate([
     typeorm_1.Entity(),
     type_graphql_1.ObjectType()
 ], User);
