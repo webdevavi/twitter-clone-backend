@@ -1,9 +1,9 @@
+import { FieldError } from "../utils/FieldError";
 import {
   containsSpecialCharacters,
   validEmail,
   validUrl,
 } from "../utils/regexp";
-import { FieldError } from "../entities/FieldError";
 
 interface IValidateUser {
   displayName?: string;
