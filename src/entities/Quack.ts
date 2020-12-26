@@ -6,7 +6,7 @@ import {
   Entity,
   ManyToOne,
   OneToMany,
-  PrimaryColumn,
+  PrimaryGeneratedColumn,
 } from "typeorm";
 import { Requack } from "./Requack";
 import { User } from "./User";
@@ -15,7 +15,7 @@ import { Like } from "./Like";
 @Entity()
 @ObjectType()
 export class Quack extends BaseEntity {
-  @PrimaryColumn({ type: "text" })
+  @PrimaryGeneratedColumn("uuid")
   @Field()
   id: string;
 

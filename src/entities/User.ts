@@ -5,7 +5,7 @@ import {
   CreateDateColumn,
   Entity,
   OneToMany,
-  PrimaryColumn,
+  PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from "typeorm";
 import { Like } from "./Like";
@@ -15,7 +15,7 @@ import { Requack } from "./Requack";
 @Entity()
 @ObjectType()
 export class User extends BaseEntity {
-  @PrimaryColumn({ type: "text" })
+  @PrimaryGeneratedColumn("uuid")
   @Field()
   id: string;
 

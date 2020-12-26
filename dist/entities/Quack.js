@@ -19,7 +19,7 @@ const Like_1 = require("./Like");
 let Quack = Quack_1 = class Quack extends typeorm_1.BaseEntity {
 };
 __decorate([
-    typeorm_1.PrimaryColumn({ type: "text" }),
+    typeorm_1.PrimaryGeneratedColumn("uuid"),
     type_graphql_1.Field(),
     __metadata("design:type", String)
 ], Quack.prototype, "id", void 0);

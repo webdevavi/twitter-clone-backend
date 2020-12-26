@@ -1,8 +1,8 @@
-import { BaseEntity, Column, Entity, PrimaryColumn } from "typeorm";
+import { BaseEntity, Column, Entity, PrimaryGeneratedColumn } from "typeorm";
 
 @Entity()
 export class Follow extends BaseEntity {
-  @PrimaryColumn({ type: "text" })
+  @PrimaryGeneratedColumn("uuid")
   id: string;
 
   @Column()

@@ -14,7 +14,7 @@ const typeorm_1 = require("typeorm");
 let Follow = class Follow extends typeorm_1.BaseEntity {
 };
 __decorate([
-    typeorm_1.PrimaryColumn({ type: "text" }),
+    typeorm_1.PrimaryGeneratedColumn("uuid"),
     __metadata("design:type", String)
 ], Follow.prototype, "id", void 0);
 __decorate([
