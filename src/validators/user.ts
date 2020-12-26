@@ -10,6 +10,7 @@ interface IValidateUser {
   username?: string;
   email?: string;
   password?: string;
+  newPassword?: string;
   displayPicture?: string;
   coverPicture?: string;
 }
@@ -19,6 +20,7 @@ export class ValidateUser {
   username?: string;
   email?: string;
   password?: string;
+  newPassword?: string;
   displayPicture?: string;
   coverPicture?: string;
 
@@ -27,6 +29,7 @@ export class ValidateUser {
     this.username = user.username;
     this.email = user.email;
     this.password = user.password;
+    this.newPassword = user.newPassword;
     this.displayPicture = user.displayPicture;
     this.coverPicture = user.coverPicture;
   }
@@ -68,6 +71,13 @@ export class ValidateUser {
     if (this.password && this.password.length < 6) {
       errors.push({
         field: "password",
+        message: "The password must be atleast 6 characters long.",
+      });
+    }
+
+    if (this.newPassword && this.newPassword.length < 6) {
+      errors.push({
+        field: "newPassword",
         message: "The password must be atleast 6 characters long.",
       });
     }
