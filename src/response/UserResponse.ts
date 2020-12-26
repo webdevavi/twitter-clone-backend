@@ -1,6 +1,6 @@
-import { ObjectType, Field } from "type-graphql";
-import { FieldError } from "./FieldError";
-import { User } from "./User";
+import { Field, ObjectType } from "type-graphql";
+import { FieldError } from "../entities/FieldError";
+import { User } from "../entities/User";
 
 @ObjectType()
 export class UserResponse {

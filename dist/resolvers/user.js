@@ -26,23 +26,23 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.UserResolver = void 0;
 const argon2_1 = __importDefault(require("argon2"));
-const constants_1 = require("../constants");
 const type_graphql_1 = require("type-graphql");
-const User_1 = require("../entities/User");
-const UserResponse_1 = require("../entities/UserResponse");
-const UserInput_1 = require("../input/UserInput");
-const regexp_1 = require("../utils/regexp");
-const user_1 = require("../validators/user");
-const sendEmail_1 = require("../utils/sendEmail");
-const verifyEmail_1 = require("../emailTemplates/verifyEmail");
 const uuid_1 = require("uuid");
-const Cache_1 = require("../entities/Cache");
-const isAuth_1 = require("../middleware/isAuth");
+const constants_1 = require("../constants");
 const forgotPassword_1 = require("../emailTemplates/forgotPassword");
+const verifyEmail_1 = require("../emailTemplates/verifyEmail");
+const Cache_1 = require("../entities/Cache");
 const Follow_1 = require("../entities/Follow");
+const Like_1 = require("../entities/Like");
 const Quack_1 = require("../entities/Quack");
 const Requack_1 = require("../entities/Requack");
-const Like_1 = require("../entities/Like");
+const User_1 = require("../entities/User");
+const UserInput_1 = require("../input/UserInput");
+const isAuth_1 = require("../middleware/isAuth");
+const UserResponse_1 = require("../response/UserResponse");
+const regexp_1 = require("../utils/regexp");
+const sendEmail_1 = require("../utils/sendEmail");
+const user_1 = require("../validators/user");
 let UserResolver = class UserResolver {
     followers(user) {
         return __awaiter(this, void 0, void 0, function* () {

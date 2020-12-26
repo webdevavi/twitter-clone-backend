@@ -1,10 +1,5 @@
 import argon from "argon2";
 import {
-  FORGOT_PASSWORD_PREFIX,
-  ORIGIN,
-  VERIFY_EMAIL_PREFIX,
-} from "../constants";
-import {
   Arg,
   Ctx,
   FieldResolver,
@@ -14,22 +9,27 @@ import {
   Root,
   UseMiddleware,
 } from "type-graphql";
-import { User } from "../entities/User";
-import { UserResponse } from "../entities/UserResponse";
-import { UserInput } from "../input/UserInput";
-import { MyContext } from "../types";
-import { validEmail } from "../utils/regexp";
-import { ValidateUser } from "../validators/user";
-import { sendEmail } from "../utils/sendEmail";
-import { verifyEmailTemplate } from "../emailTemplates/verifyEmail";
 import { v4 } from "uuid";
-import { Cache } from "../entities/Cache";
-import { isAuth } from "../middleware/isAuth";
+import {
+  FORGOT_PASSWORD_PREFIX,
+  ORIGIN,
+  VERIFY_EMAIL_PREFIX,
+} from "../constants";
 import { forgotPasswordTemplate } from "../emailTemplates/forgotPassword";
+import { verifyEmailTemplate } from "../emailTemplates/verifyEmail";
+import { Cache } from "../entities/Cache";
 import { Follow } from "../entities/Follow";
+import { Like } from "../entities/Like";
 import { Quack } from "../entities/Quack";
 import { Requack } from "../entities/Requack";
-import { Like } from "../entities/Like";
+import { User } from "../entities/User";
+import { UserInput } from "../input/UserInput";
+import { isAuth } from "../middleware/isAuth";
+import { UserResponse } from "../response/UserResponse";
+import { MyContext } from "../types";
+import { validEmail } from "../utils/regexp";
+import { sendEmail } from "../utils/sendEmail";
+import { ValidateUser } from "../validators/user";
 
 @Resolver(User)
 export class UserResolver {
