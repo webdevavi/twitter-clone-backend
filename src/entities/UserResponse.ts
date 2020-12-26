@@ -5,8 +5,8 @@ import { User } from "./User";
 @ObjectType()
 export class UserResponse {
   @Field(() => User, { nullable: true })
-  user: User | null;
+  user?: User | null;
 
   @Field(() => [FieldError], { nullable: true })
-  errors: FieldError[] | null;
+  errors?: FieldError[] | null;
 }
