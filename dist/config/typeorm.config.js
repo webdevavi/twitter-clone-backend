@@ -9,6 +9,7 @@ const Requack_1 = require("../entities/Requack");
 const Quack_1 = require("../entities/Quack");
 const User_1 = require("../entities/User");
 const Block_1 = require("../entities/Block");
+const Session_1 = require("../entities/Session");
 exports.typeormConfig = {
     url: constants_1.DATABASE_URL,
     type: "postgres",
@@ -17,6 +18,6 @@ exports.typeormConfig = {
     password: constants_1.DATABASE_PASSWORD,
     logging: true,
     synchronize: true,
-    entities: [Quack_1.Quack, User_1.User, Follow_1.Follow, Requack_1.Requack, Like_1.Like, Block_1.Block, Cache_1.Cache],
+    entities: [Quack_1.Quack, User_1.User, Follow_1.Follow, Requack_1.Requack, Like_1.Like, Block_1.Block, Cache_1.Cache, Session_1.Session],
 };
 //# sourceMappingURL=typeorm.config.js.map

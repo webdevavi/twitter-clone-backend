@@ -10,12 +10,15 @@ import {
   typeormConfig,
 } from "./config";
 import { PORT, __prod__ } from "./constants";
+import { Session } from "./entities/Session";
 
 const main = async () => {
-  await createConnection(typeormConfig);
+  const connection = await createConnection(typeormConfig);
   const app = express();
 
-  app.use(session(sessionConfig));
+  const sessionRepository = connection.getRepository(Session);
+
+  app.use(session(sessionConfig(sessionRepository)));
 
   app.use(cors(corsConfig));
 
