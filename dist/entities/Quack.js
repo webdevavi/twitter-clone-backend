@@ -94,6 +94,14 @@ __decorate([
     type_graphql_1.Field(() => [Like_1.Like], { nullable: true }),
     __metadata("design:type", Array)
 ], Quack.prototype, "likes", void 0);
+__decorate([
+    type_graphql_1.Field(),
+    __metadata("design:type", Boolean)
+], Quack.prototype, "requackStatus", void 0);
+__decorate([
+    type_graphql_1.Field(),
+    __metadata("design:type", Boolean)
+], Quack.prototype, "likeStatus", void 0);
 Quack = Quack_1 = __decorate([
     typeorm_1.Entity(),
     type_graphql_1.ObjectType()

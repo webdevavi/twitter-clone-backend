@@ -25,3 +25,21 @@ export const requackLoaderByUserId = () =>
       requacks.filter((requack) => requack.userId === userId)
     );
   });
+
+export const requackLoader = () =>
+  new DataLoader<{ quackId: string; userId: string }, Requack[]>(
+    async (keys) => {
+      const requacks = await Requack.find({
+        where: {
+          quackId: In(keys.map((key) => key.quackId)),
+          userId: In(keys.map((key) => key.userId)),
+        },
+      });
+      return keys.map((key) =>
+        requacks.filter(
+          (requack) =>
+            requack.quackId === key.quackId && requack.userId === key.userId
+        )
+      );
+    }
+  );

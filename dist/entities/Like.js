@@ -17,7 +17,12 @@ const User_1 = require("./User");
 let Like = class Like extends typeorm_1.BaseEntity {
 };
 __decorate([
-    typeorm_1.PrimaryColumn({ type: "text" }),
+    typeorm_1.PrimaryGeneratedColumn(),
+    type_graphql_1.Field(),
+    __metadata("design:type", Number)
+], Like.prototype, "id", void 0);
+__decorate([
+    typeorm_1.Column(),
     type_graphql_1.Field(),
     __metadata("design:type", String)
 ], Like.prototype, "quackId", void 0);

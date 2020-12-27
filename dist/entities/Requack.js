@@ -17,9 +17,9 @@ const User_1 = require("./User");
 let Requack = class Requack extends typeorm_1.BaseEntity {
 };
 __decorate([
-    typeorm_1.PrimaryGeneratedColumn("uuid"),
+    typeorm_1.PrimaryGeneratedColumn(),
     type_graphql_1.Field(),
-    __metadata("design:type", String)
+    __metadata("design:type", Number)
 ], Requack.prototype, "id", void 0);
 __decorate([
     typeorm_1.Column(),

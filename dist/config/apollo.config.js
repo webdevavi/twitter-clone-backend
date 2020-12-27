@@ -13,7 +13,9 @@ exports.apolloConfig = void 0;
 const type_graphql_1 = require("type-graphql");
 const block_1 = require("../resolvers/block");
 const follow_1 = require("../resolvers/follow");
+const like_1 = require("../resolvers/like");
 const quack_1 = require("../resolvers/quack");
+const requack_1 = require("../resolvers/requack");
 const user_1 = require("../resolvers/user");
 const likeLoader_1 = require("../utils/likeLoader");
 const requackLoader_1 = require("../utils/requackLoader");
@@ -21,15 +23,24 @@ const userLoader_1 = require("../utils/userLoader");
 const apolloConfig = () => __awaiter(void 0, void 0, void 0, function* () {
     return ({
         schema: yield type_graphql_1.buildSchema({
-            resolvers: [user_1.UserResolver, follow_1.FollowResolver, quack_1.QuackResolver, block_1.BlockResolver],
+            resolvers: [
+                user_1.UserResolver,
+                follow_1.FollowResolver,
+                quack_1.QuackResolver,
+                block_1.BlockResolver,
+                requack_1.RequackResolver,
+                like_1.LikeResolver,
+            ],
             validate: false,
         }),
         context: ({ req, res }) => ({
             req,
             res,
             userLoader: userLoader_1.userLoader(),
+            requackLoader: requackLoader_1.requackLoader(),
             requackLoaderByUserId: requackLoader_1.requackLoaderByUserId(),
             requackLoaderByQuackId: requackLoader_1.requackLoaderByQuackId(),
+            likeLoader: likeLoader_1.likeLoader(),
             likeLoaderByQuackId: likeLoader_1.likeLoaderByQuackId(),
             likeLoaderByUserId: likeLoader_1.likeLoaderByUserId(),
         }),

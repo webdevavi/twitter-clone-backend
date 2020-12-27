@@ -73,4 +73,10 @@ export class Quack extends BaseEntity {
   })
   @Field(() => [Like], { nullable: true })
   likes: Like[];
+
+  @Field()
+  requackStatus: Boolean;
+
+  @Field()
+  likeStatus: Boolean;
 }

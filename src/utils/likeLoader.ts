@@ -25,3 +25,18 @@ export const likeLoaderByUserId = () =>
       likes.filter((like) => like.userId === userId)
     );
   });
+
+export const likeLoader = () =>
+  new DataLoader<{ quackId: string; userId: string }, Like[]>(async (keys) => {
+    const likes = await Like.find({
+      where: {
+        quackId: In(keys.map((key) => key.quackId)),
+        userId: In(keys.map((key) => key.userId)),
+      },
+    });
+    return keys.map((key) =>
+      likes.filter(
+        (like) => like.quackId === key.quackId && like.userId === key.userId
+      )
+    );
+  });

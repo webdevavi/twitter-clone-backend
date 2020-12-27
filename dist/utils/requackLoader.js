@@ -12,7 +12,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.requackLoaderByUserId = exports.requackLoaderByQuackId = void 0;
+exports.requackLoader = exports.requackLoaderByUserId = exports.requackLoaderByQuackId = void 0;
 const dataloader_1 = __importDefault(require("dataloader"));
 const typeorm_1 = require("typeorm");
 const Requack_1 = require("../entities/Requack");
@@ -34,4 +34,14 @@ const requackLoaderByUserId = () => new dataloader_1.default((userIds) => __awai
     return userIds.map((userId) => requacks.filter((requack) => requack.userId === userId));
 }));
 exports.requackLoaderByUserId = requackLoaderByUserId;
+const requackLoader = () => new dataloader_1.default((keys) => __awaiter(void 0, void 0, void 0, function* () {
+    const requacks = yield Requack_1.Requack.find({
+        where: {
+            quackId: typeorm_1.In(keys.map((key) => key.quackId)),
+            userId: typeorm_1.In(keys.map((key) => key.userId)),
+        },
+    });
+    return keys.map((key) => requacks.filter((requack) => requack.quackId === key.quackId && requack.userId === key.userId));
+}));
+exports.requackLoader = requackLoader;
 //# sourceMappingURL=requackLoader.js.map

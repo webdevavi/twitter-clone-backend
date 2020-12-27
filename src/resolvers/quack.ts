@@ -75,6 +75,32 @@ export class QuackResolver {
     return [...urlsSet];
   }
 
+  @FieldResolver()
+  async requackStatus(
+    @Root() quack: Quack,
+    @Ctx() { req, requackLoader }: MyContext
+  ) {
+    //@ts-ignore
+    const userId = req.session.userId;
+
+    const requacks = await requackLoader.load({ quackId: quack.id, userId });
+    if (requacks?.length > 0) return true;
+    return false;
+  }
+
+  @FieldResolver()
+  async likeStatus(
+    @Root() quack: Quack,
+    @Ctx() { req, likeLoader }: MyContext
+  ) {
+    //@ts-ignore
+    const userId = req.session.userId;
+
+    const likes = await likeLoader.load({ quackId: quack.id, userId });
+    if (likes?.length > 0) return true;
+    return false;
+  }
+
   @Mutation(() => QuackResponse)
   @UseMiddleware(isAuth)
   @UseMiddleware(isActive)

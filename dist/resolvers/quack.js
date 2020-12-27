@@ -77,6 +77,24 @@ let QuackResolver = class QuackResolver {
         const urlsSet = get_urls_1.default(quack.text);
         return [...urlsSet];
     }
+    requackStatus(quack, { req, requackLoader }) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const userId = req.session.userId;
+            const requacks = yield requackLoader.load({ quackId: quack.id, userId });
+            if ((requacks === null || requacks === void 0 ? void 0 : requacks.length) > 0)
+                return true;
+            return false;
+        });
+    }
+    likeStatus(quack, { req, likeLoader }) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const userId = req.session.userId;
+            const likes = yield likeLoader.load({ quackId: quack.id, userId });
+            if ((likes === null || likes === void 0 ? void 0 : likes.length) > 0)
+                return true;
+            return false;
+        });
+    }
     quack({ text, inReplyToQuackId }, { req }) {
         return __awaiter(this, void 0, void 0, function* () {
             const myUserId = req.session.userId;
@@ -176,6 +194,22 @@ __decorate([
     __metadata("design:paramtypes", [Quack_1.Quack]),
     __metadata("design:returntype", void 0)
 ], QuackResolver.prototype, "urls", null);
+__decorate([
+    type_graphql_1.FieldResolver(),
+    __param(0, type_graphql_1.Root()),
+    __param(1, type_graphql_1.Ctx()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Quack_1.Quack, Object]),
+    __metadata("design:returntype", Promise)
+], QuackResolver.prototype, "requackStatus", null);
+__decorate([
+    type_graphql_1.FieldResolver(),
+    __param(0, type_graphql_1.Root()),
+    __param(1, type_graphql_1.Ctx()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Quack_1.Quack, Object]),
+    __metadata("design:returntype", Promise)
+], QuackResolver.prototype, "likeStatus", null);
 __decorate([
     type_graphql_1.Mutation(() => QuackResponse_1.QuackResponse),
     type_graphql_1.UseMiddleware(isAuth_1.isAuth),

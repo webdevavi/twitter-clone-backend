@@ -12,9 +12,9 @@ import { User } from "./User";
 @Entity()
 @ObjectType()
 export class Requack extends BaseEntity {
-  @PrimaryGeneratedColumn("uuid")
+  @PrimaryGeneratedColumn()
   @Field()
-  id: string;
+  id: number;
 
   @Column()
   @Field()
