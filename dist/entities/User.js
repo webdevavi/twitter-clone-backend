@@ -14,6 +14,7 @@ exports.User = void 0;
 const type_graphql_1 = require("type-graphql");
 const typeorm_1 = require("typeorm");
 const constants_1 = require("../constants");
+const Follow_1 = require("./Follow");
 const Like_1 = require("./Like");
 const Quack_1 = require("./Quack");
 const Requack_1 = require("./Requack");
@@ -102,10 +103,16 @@ __decorate([
     __metadata("design:type", Array)
 ], User.prototype, "likes", void 0);
 __decorate([
+    typeorm_1.OneToMany(() => Follow_1.Follow, (follow) => follow.user, {
+        onDelete: "CASCADE",
+    }),
     type_graphql_1.Field(() => [User_1], { nullable: true }),
     __metadata("design:type", Array)
 ], User.prototype, "followers", void 0);
 __decorate([
+    typeorm_1.OneToMany(() => Follow_1.Follow, (follow) => follow.follower, {
+        onDelete: "CASCADE",
+    }),
     type_graphql_1.Field(() => [User_1], { nullable: true }),
     __metadata("design:type", Array)
 ], User.prototype, "followings", void 0);
