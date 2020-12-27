@@ -9,11 +9,10 @@ import {
   sessionConfig,
   typeormConfig,
 } from "./config";
-import { PORT } from "./constants";
+import { PORT, __prod__ } from "./constants";
 
 const main = async () => {
   await createConnection(typeormConfig);
-
   const app = express();
 
   app.use(session(sessionConfig));
@@ -27,7 +26,14 @@ const main = async () => {
     cors: true,
   });
 
-  app.listen(PORT, () => console.log(`Server started on port ${PORT}`));
+  app.listen(PORT, () => {
+    console.log(`The server has started on port ${PORT}.`);
+    if (!__prod__) {
+      const url = `http://localhost:${PORT}/graphql`;
+      console.log(`You can debug the graphql server at ${url}`);
+      require("open")(url);
+    }
+  });
 };
 
 main().catch((error) => console.log(error));

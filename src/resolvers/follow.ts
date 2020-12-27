@@ -29,7 +29,10 @@ export class FollowResolver {
     });
     if (follow) return true;
     const user = await User.findOne(userId);
+    console.log(user);
+
     if (!user) return false;
+    if (user.amIDeactivated) return false;
     await Follow.insert({ userId, followerId: myUserId });
     return true;
   }
@@ -44,6 +47,8 @@ export class FollowResolver {
     if (!follow) return true;
     const user = await User.findOne(userId);
     if (!user) return false;
+    console.log(user);
+    if (user.amIDeactivated) return false;
     await Follow.delete({ userId, followerId });
     return true;
   }

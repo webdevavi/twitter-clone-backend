@@ -49,7 +49,10 @@ let FollowResolver = class FollowResolver {
             if (follow)
                 return true;
             const user = yield User_1.User.findOne(userId);
+            console.log(user);
             if (!user)
+                return false;
+            if (user.amIDeactivated)
                 return false;
             yield Follow_1.Follow.insert({ userId, followerId: myUserId });
             return true;
@@ -65,6 +68,9 @@ let FollowResolver = class FollowResolver {
                 return true;
             const user = yield User_1.User.findOne(userId);
             if (!user)
+                return false;
+            console.log(user);
+            if (user.amIDeactivated)
                 return false;
             yield Follow_1.Follow.delete({ userId, followerId });
             return true;

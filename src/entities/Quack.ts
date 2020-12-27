@@ -23,6 +23,10 @@ export class Quack extends BaseEntity {
   @Field()
   createdAt: Date;
 
+  @Column({ type: "boolean", default: true })
+  @Field()
+  isVisible: boolean = true;
+
   @Column()
   @Field()
   text: string;

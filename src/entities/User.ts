@@ -52,6 +52,10 @@ export class User extends BaseEntity {
   @Field()
   emailVerified: boolean = false;
 
+  @Column({ type: "boolean", default: false })
+  @Field()
+  amIDeactivated: boolean = false;
+
   @Column()
   password: string;
 

@@ -23,6 +23,7 @@ let User = User_1 = class User extends typeorm_1.BaseEntity {
         this.displayPicture = constants_1.DEFAULT_DP;
         this.coverPicture = constants_1.DEFAULT_CP;
         this.emailVerified = false;
+        this.amIDeactivated = false;
     }
 };
 __decorate([
@@ -70,6 +71,11 @@ __decorate([
     type_graphql_1.Field(),
     __metadata("design:type", Boolean)
 ], User.prototype, "emailVerified", void 0);
+__decorate([
+    typeorm_1.Column({ type: "boolean", default: false }),
+    type_graphql_1.Field(),
+    __metadata("design:type", Boolean)
+], User.prototype, "amIDeactivated", void 0);
 __decorate([
     typeorm_1.Column(),
     __metadata("design:type", String)

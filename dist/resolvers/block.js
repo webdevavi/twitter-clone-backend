@@ -26,6 +26,7 @@ const type_graphql_1 = require("type-graphql");
 const typeorm_1 = require("typeorm");
 const Block_1 = require("../entities/Block");
 const Follow_1 = require("../entities/Follow");
+const User_1 = require("../entities/User");
 const isAuth_1 = require("../middleware/isAuth");
 let BlockResolver = class BlockResolver {
     block(userId, { req }) {
@@ -38,6 +39,11 @@ let BlockResolver = class BlockResolver {
             });
             if (blocked)
                 return true;
+            const user = yield User_1.User.findOne(userId);
+            if (!user)
+                return false;
+            if (user.amIDeactivated)
+                return false;
             yield typeorm_1.getConnection().transaction((em) => __awaiter(this, void 0, void 0, function* () {
                 em.insert(Block_1.Block, { userId, blockedByUserId: myUserId });
                 em.delete(Follow_1.Follow, { userId, followerId: myUserId });
@@ -56,6 +62,11 @@ let BlockResolver = class BlockResolver {
             });
             if (!blocked)
                 return true;
+            const user = yield User_1.User.findOne(userId);
+            if (!user)
+                return false;
+            if (user.amIDeactivated)
+                return false;
             yield Block_1.Block.delete({ userId, blockedByUserId: myUserId });
             return true;
         });

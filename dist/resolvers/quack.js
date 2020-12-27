@@ -25,18 +25,17 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.QuackResolver = void 0;
+const get_urls_1 = __importDefault(require("get-urls"));
 const type_graphql_1 = require("type-graphql");
 const typeorm_1 = require("typeorm");
 const Follow_1 = require("../entities/Follow");
-const Like_1 = require("../entities/Like");
 const Quack_1 = require("../entities/Quack");
-const Requack_1 = require("../entities/Requack");
 const User_1 = require("../entities/User");
 const QuackInput_1 = require("../input/QuackInput");
+const isActive_1 = require("../middleware/isActive");
 const isAuth_1 = require("../middleware/isAuth");
 const QuackResponse_1 = require("../response/QuackResponse");
 const quack_1 = require("../validators/quack");
-const get_urls_1 = __importDefault(require("get-urls"));
 let QuackResolver = class QuackResolver {
     truncatedText(quack) {
         if (quack.text.length > 50) {
@@ -47,14 +46,32 @@ let QuackResolver = class QuackResolver {
     quackedByUser(quack) {
         return User_1.User.findOne(quack.quackedByUserId);
     }
-    requacks(quack) {
-        return Requack_1.Requack.find({ where: { quackId: quack.id } });
+    requacks(quack, { userLoader, requackLoaderByQuackId }) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const requacks = yield requackLoaderByQuackId.load(quack.id);
+            return requacks.map((requack) => __awaiter(this, void 0, void 0, function* () {
+                const user = yield userLoader.load(requack.userId);
+                if (user && !user.amIDeactivated)
+                    return requack;
+                return;
+            }));
+        });
     }
-    likes(quack) {
-        return Like_1.Like.find({ where: { quackId: quack.id } });
+    likes(quack, { userLoader, likeLoaderByQuackId }) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const likes = yield likeLoaderByQuackId.load(quack.id);
+            return likes.map((like) => __awaiter(this, void 0, void 0, function* () {
+                const user = yield userLoader.load(like.userId);
+                if (user && !user.amIDeactivated)
+                    return like;
+                return;
+            }));
+        });
     }
     replies(quack) {
-        return Quack_1.Quack.find({ where: { inReplyToQuackId: quack.id } });
+        return Quack_1.Quack.find({
+            where: { inReplyToQuackId: quack.id, isVisible: true },
+        });
     }
     urls(quack) {
         const urlsSet = get_urls_1.default(quack.text);
@@ -62,11 +79,14 @@ let QuackResolver = class QuackResolver {
     }
     quack({ text, inReplyToQuackId }, { req }) {
         return __awaiter(this, void 0, void 0, function* () {
+            const myUserId = req.session.userId;
             const errors = new quack_1.QuackValidator(text).validate();
             if (errors.length !== 0) {
                 return { errors };
             }
-            const inReplyToQuack = yield Quack_1.Quack.findOne(inReplyToQuackId);
+            const inReplyToQuack = yield Quack_1.Quack.findOne({
+                where: { id: inReplyToQuackId, isVisible: true },
+            });
             if (!inReplyToQuack)
                 return {
                     errors: [
@@ -87,8 +107,9 @@ let QuackResolver = class QuackResolver {
     }
     deleteQuack(quackId, { req }) {
         return __awaiter(this, void 0, void 0, function* () {
+            const myUserId = req.session.userId;
             const quack = yield Quack_1.Quack.findOne(quackId);
-            if ((quack === null || quack === void 0 ? void 0 : quack.quackedByUserId) !== req.session.userId)
+            if ((quack === null || quack === void 0 ? void 0 : quack.quackedByUserId) !== myUserId)
                 return false;
             if (!quack)
                 return true;
@@ -97,7 +118,7 @@ let QuackResolver = class QuackResolver {
         });
     }
     quacks() {
-        return Quack_1.Quack.find();
+        return Quack_1.Quack.find({ where: { isVisible: true } });
     }
     quacksFromFollowings({ req }) {
         return __awaiter(this, void 0, void 0, function* () {
@@ -105,7 +126,9 @@ let QuackResolver = class QuackResolver {
                 where: { followerId: req.session.userId },
             });
             const followingIds = follows.map((follow) => follow.userId);
-            return Quack_1.Quack.find({ where: { quackedByUserId: typeorm_1.In(followingIds) } });
+            return Quack_1.Quack.find({
+                where: { quackedByUserId: typeorm_1.In(followingIds), isVisible: true },
+            });
         });
     }
 };
@@ -126,16 +149,18 @@ __decorate([
 __decorate([
     type_graphql_1.FieldResolver(),
     __param(0, type_graphql_1.Root()),
+    __param(1, type_graphql_1.Ctx()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Quack_1.Quack]),
-    __metadata("design:returntype", void 0)
+    __metadata("design:paramtypes", [Quack_1.Quack, Object]),
+    __metadata("design:returntype", Promise)
 ], QuackResolver.prototype, "requacks", null);
 __decorate([
     type_graphql_1.FieldResolver(),
     __param(0, type_graphql_1.Root()),
+    __param(1, type_graphql_1.Ctx()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Quack_1.Quack]),
-    __metadata("design:returntype", void 0)
+    __metadata("design:paramtypes", [Quack_1.Quack, Object]),
+    __metadata("design:returntype", Promise)
 ], QuackResolver.prototype, "likes", null);
 __decorate([
     type_graphql_1.FieldResolver(),
@@ -154,6 +179,7 @@ __decorate([
 __decorate([
     type_graphql_1.Mutation(() => QuackResponse_1.QuackResponse),
     type_graphql_1.UseMiddleware(isAuth_1.isAuth),
+    type_graphql_1.UseMiddleware(isActive_1.isActive),
     __param(0, type_graphql_1.Arg("input")),
     __param(1, type_graphql_1.Ctx()),
     __metadata("design:type", Function),
@@ -163,6 +189,7 @@ __decorate([
 __decorate([
     type_graphql_1.Mutation(() => Boolean),
     type_graphql_1.UseMiddleware(isAuth_1.isAuth),
+    type_graphql_1.UseMiddleware(isActive_1.isActive),
     __param(0, type_graphql_1.Arg("quackId")),
     __param(1, type_graphql_1.Ctx()),
     __metadata("design:type", Function),
@@ -178,6 +205,7 @@ __decorate([
 __decorate([
     type_graphql_1.Query(() => [Quack_1.Quack], { nullable: true }),
     type_graphql_1.UseMiddleware(isAuth_1.isAuth),
+    type_graphql_1.UseMiddleware(isActive_1.isActive),
     __param(0, type_graphql_1.Ctx()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [Object]),

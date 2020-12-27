@@ -60,13 +60,19 @@ let UserResolver = class UserResolver {
         });
     }
     quacks(user) {
+        if (user.amIDeactivated)
+            return null;
         return Quack_1.Quack.find({ where: { quackedByUserId: user.id } });
     }
-    requacks(user) {
-        return Requack_1.Requack.find({ where: { userId: user.id } });
+    requacks(user, { requackLoaderByUserId }) {
+        if (user.amIDeactivated)
+            return null;
+        return requackLoaderByUserId.load(user.id);
     }
-    likes(user) {
-        return Like_1.Like.find({ where: { userId: user.id } });
+    likes(user, { likeLoaderByUserId }) {
+        if (user.amIDeactivated)
+            return null;
+        return likeLoaderByUserId.load(user.id);
     }
     haveIBlockedThisUser(user, { req }) {
         return __awaiter(this, void 0, void 0, function* () {
@@ -306,6 +312,43 @@ let UserResolver = class UserResolver {
             return { user };
         });
     }
+    deactivate(password, { req }) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const myUserId = req.session.userId;
+            const user = yield User_1.User.findOne(myUserId);
+            if (!user) {
+                throw Error("User not found");
+            }
+            if (yield argon2_1.default.verify(user.password, password)) {
+                user.amIDeactivated = true;
+                yield user.save();
+                yield Quack_1.Quack.update({ quackedByUserId: myUserId }, { isVisible: false });
+                req.session.destroy(() => {
+                    var _a;
+                    (_a = req.session) === null || _a === void 0 ? void 0 : _a.userId = null;
+                });
+                return { user };
+            }
+            else {
+                return {
+                    errors: [{ field: "password", message: "The password is incorrect." }],
+                };
+            }
+        });
+    }
+    activate({ req }) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const myUserId = req.session.userId;
+            const user = yield User_1.User.findOne(myUserId);
+            if (!user) {
+                throw Error("User not found");
+            }
+            user.amIDeactivated = false;
+            yield user.save();
+            yield Quack_1.Quack.update({ quackedByUserId: myUserId }, { isVisible: true });
+            return { user };
+        });
+    }
     me({ req }) {
         if (!req.session.userId) {
             return null;
@@ -331,24 +374,24 @@ __decorate([
     __metadata("design:returntype", Promise)
 ], UserResolver.prototype, "followings", null);
 __decorate([
-    type_graphql_1.FieldResolver(),
+    type_graphql_1.FieldResolver(() => [Quack_1.Quack], { nullable: true }),
     __param(0, type_graphql_1.Root()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [User_1.User]),
     __metadata("design:returntype", void 0)
 ], UserResolver.prototype, "quacks", null);
 __decorate([
-    type_graphql_1.FieldResolver(),
-    __param(0, type_graphql_1.Root()),
+    type_graphql_1.FieldResolver(() => [Requack_1.Requack], { nullable: true }),
+    __param(0, type_graphql_1.Root()), __param(1, type_graphql_1.Ctx()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [User_1.User]),
+    __metadata("design:paramtypes", [User_1.User, Object]),
     __metadata("design:returntype", void 0)
 ], UserResolver.prototype, "requacks", null);
 __decorate([
-    type_graphql_1.FieldResolver(),
-    __param(0, type_graphql_1.Root()),
+    type_graphql_1.FieldResolver(() => [Like_1.Like], { nullable: true }),
+    __param(0, type_graphql_1.Root()), __param(1, type_graphql_1.Ctx()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [User_1.User]),
+    __metadata("design:paramtypes", [User_1.User, Object]),
     __metadata("design:returntype", void 0)
 ], UserResolver.prototype, "likes", null);
 __decorate([
@@ -413,6 +456,23 @@ __decorate([
     __metadata("design:paramtypes", [String, String, Object]),
     __metadata("design:returntype", Promise)
 ], UserResolver.prototype, "changePassword", null);
+__decorate([
+    type_graphql_1.Mutation(() => UserResponse_1.UserResponse, { nullable: true }),
+    type_graphql_1.UseMiddleware(isAuth_1.isAuth),
+    __param(0, type_graphql_1.Arg("password")),
+    __param(1, type_graphql_1.Ctx()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, Object]),
+    __metadata("design:returntype", Promise)
+], UserResolver.prototype, "deactivate", null);
+__decorate([
+    type_graphql_1.Mutation(() => UserResponse_1.UserResponse, { nullable: true }),
+    type_graphql_1.UseMiddleware(isAuth_1.isAuth),
+    __param(0, type_graphql_1.Ctx()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object]),
+    __metadata("design:returntype", Promise)
+], UserResolver.prototype, "activate", null);
 __decorate([
     type_graphql_1.Query(() => User_1.User, { nullable: true }),
     __param(0, type_graphql_1.Ctx()),

@@ -48,19 +48,22 @@ export class UserResolver {
     return await User.findByIds(followingsIds);
   }
 
-  @FieldResolver()
+  @FieldResolver(() => [Quack], { nullable: true })
   quacks(@Root() user: User) {
+    if (user.amIDeactivated) return null;
     return Quack.find({ where: { quackedByUserId: user.id } });
   }
 
-  @FieldResolver()
-  requacks(@Root() user: User) {
-    return Requack.find({ where: { userId: user.id } });
+  @FieldResolver(() => [Requack], { nullable: true })
+  requacks(@Root() user: User, @Ctx() { requackLoaderByUserId }: MyContext) {
+    if (user.amIDeactivated) return null;
+    return requackLoaderByUserId.load(user.id);
   }
 
-  @FieldResolver()
-  likes(@Root() user: User) {
-    return Like.find({ where: { userId: user.id } });
+  @FieldResolver(() => [Like], { nullable: true })
+  likes(@Root() user: User, @Ctx() { likeLoaderByUserId }: MyContext) {
+    if (user.amIDeactivated) return null;
+    return likeLoaderByUserId.load(user.id);
   }
 
   @FieldResolver(() => Boolean, { nullable: true })
@@ -348,6 +351,54 @@ export class UserResolver {
     req.session.userId = user.id;
 
     await Cache.delete(key);
+
+    return { user };
+  }
+
+  @Mutation(() => UserResponse, { nullable: true })
+  @UseMiddleware(isAuth)
+  async deactivate(
+    @Arg("password") password: string,
+    @Ctx() { req }: MyContext
+  ): Promise<UserResponse> {
+    //@ts-ignore
+    const myUserId = req.session.userId;
+
+    const user = await User.findOne(myUserId);
+    if (!user) {
+      throw Error("User not found");
+    }
+
+    if (await argon.verify(user.password, password)) {
+      user.amIDeactivated = true;
+      await user.save();
+      await Quack.update({ quackedByUserId: myUserId }, { isVisible: false });
+      req.session.destroy(() => {
+        //@ts-ignore
+        req.session?.userId = null;
+      });
+      return { user };
+    } else {
+      return {
+        errors: [{ field: "password", message: "The password is incorrect." }],
+      };
+    }
+  }
+
+  @Mutation(() => UserResponse, { nullable: true })
+  @UseMiddleware(isAuth)
+  async activate(@Ctx() { req }: MyContext): Promise<UserResponse> {
+    //@ts-ignore
+    const myUserId = req.session.userId;
+
+    const user = await User.findOne(myUserId);
+    if (!user) {
+      throw Error("User not found");
+    }
+
+    user.amIDeactivated = false;
+    await user.save();
+    await Quack.update({ quackedByUserId: myUserId }, { isVisible: true });
 
     return { user };
   }

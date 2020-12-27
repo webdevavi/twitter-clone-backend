@@ -17,6 +17,10 @@ const Requack_1 = require("./Requack");
 const User_1 = require("./User");
 const Like_1 = require("./Like");
 let Quack = Quack_1 = class Quack extends typeorm_1.BaseEntity {
+    constructor() {
+        super(...arguments);
+        this.isVisible = true;
+    }
 };
 __decorate([
     typeorm_1.PrimaryGeneratedColumn("uuid"),
@@ -28,6 +32,11 @@ __decorate([
     type_graphql_1.Field(),
     __metadata("design:type", Date)
 ], Quack.prototype, "createdAt", void 0);
+__decorate([
+    typeorm_1.Column({ type: "boolean", default: true }),
+    type_graphql_1.Field(),
+    __metadata("design:type", Boolean)
+], Quack.prototype, "isVisible", void 0);
 __decorate([
     typeorm_1.Column(),
     type_graphql_1.Field(),

@@ -29,7 +29,14 @@ const main = () => __awaiter(void 0, void 0, void 0, function* () {
         app,
         cors: true,
     });
-    app.listen(constants_1.PORT, () => console.log(`Server started on port ${constants_1.PORT}`));
+    app.listen(constants_1.PORT, () => {
+        console.log(`The server has started on port ${constants_1.PORT}.`);
+        if (!constants_1.__prod__) {
+            const url = `http://localhost:${constants_1.PORT}/graphql`;
+            console.log(`You can debug the graphql server at ${url}`);
+            require("open")(url);
+        }
+    });
 });
 main().catch((error) => console.log(error));
 //# sourceMappingURL=index.js.map
