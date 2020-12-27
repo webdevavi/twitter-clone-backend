@@ -303,7 +303,7 @@ export class UserResolver {
   }
 
   @Mutation(() => UserResponse)
-  async changePassword(
+  async changePasswordWithToken(
     @Arg("token") token: string,
     @Arg("newPassword") newPassword: string,
     @Ctx() { req }: MyContext
@@ -355,6 +355,48 @@ export class UserResolver {
     return { user };
   }
 
+  @Mutation(() => UserResponse)
+  @UseMiddleware(isAuth)
+  async changePasswordWithOldPassword(
+    @Arg("password") password: string,
+    @Arg("newPassword") newPassword: string,
+    @Ctx() { req }: MyContext
+  ): Promise<UserResponse> {
+    //@ts-ignore
+    const myUserId = req.session.userId;
+    const errors = new ValidateUser({ password, newPassword }).validate();
+
+    if (errors.length !== 0) {
+      return { errors };
+    }
+
+    const user = await User.findOne(myUserId);
+
+    if (!user) {
+      throw Error("Your account no longer exists.");
+    }
+
+    if (await argon.verify(user.password, password)) {
+      const hashedPassword = await argon.hash(newPassword);
+
+      user.password = hashedPassword;
+      await user.save();
+
+      //@ts-ignore
+      req.session.userId = user.id;
+      return { user };
+    } else {
+      return {
+        errors: [
+          {
+            field: "password",
+            message: "The password is incorrect.",
+          },
+        ],
+      };
+    }
+  }
+
   @Mutation(() => UserResponse, { nullable: true })
   @UseMiddleware(isAuth)
   async deactivate(
@@ -401,6 +443,17 @@ export class UserResolver {
     await Quack.update({ quackedByUserId: myUserId }, { isVisible: true });
 
     return { user };
+  }
+
+  @Mutation(() => Boolean)
+  logout(@Ctx() { req }: MyContext) {
+    req.session.destroy((err) => {
+      if (err) {
+        //@ts-ignore
+        req.session?.userId = null;
+      }
+    });
+    return true;
   }
 
   @Query(() => User, { nullable: true })

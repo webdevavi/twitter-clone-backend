@@ -275,7 +275,7 @@ let UserResolver = class UserResolver {
             return true;
         });
     }
-    changePassword(token, newPassword, { req }) {
+    changePasswordWithToken(token, newPassword, { req }) {
         return __awaiter(this, void 0, void 0, function* () {
             const errors = new user_1.ValidateUser({ newPassword }).validate();
             if (errors.length !== 0) {
@@ -310,6 +310,36 @@ let UserResolver = class UserResolver {
             req.session.userId = user.id;
             yield Cache_1.Cache.delete(key);
             return { user };
+        });
+    }
+    changePasswordWithOldPassword(password, newPassword, { req }) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const myUserId = req.session.userId;
+            const errors = new user_1.ValidateUser({ password, newPassword }).validate();
+            if (errors.length !== 0) {
+                return { errors };
+            }
+            const user = yield User_1.User.findOne(myUserId);
+            if (!user) {
+                throw Error("Your account no longer exists.");
+            }
+            if (yield argon2_1.default.verify(user.password, password)) {
+                const hashedPassword = yield argon2_1.default.hash(newPassword);
+                user.password = hashedPassword;
+                yield user.save();
+                req.session.userId = user.id;
+                return { user };
+            }
+            else {
+                return {
+                    errors: [
+                        {
+                            field: "password",
+                            message: "The password is incorrect.",
+                        },
+                    ],
+                };
+            }
         });
     }
     deactivate(password, { req }) {
@@ -348,6 +378,15 @@ let UserResolver = class UserResolver {
             yield Quack_1.Quack.update({ quackedByUserId: myUserId }, { isVisible: true });
             return { user };
         });
+    }
+    logout({ req }) {
+        req.session.destroy((err) => {
+            var _a;
+            if (err) {
+                (_a = req.session) === null || _a === void 0 ? void 0 : _a.userId = null;
+            }
+        });
+        return true;
     }
     me({ req }) {
         if (!req.session.userId) {
@@ -455,7 +494,17 @@ __decorate([
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String, String, Object]),
     __metadata("design:returntype", Promise)
-], UserResolver.prototype, "changePassword", null);
+], UserResolver.prototype, "changePasswordWithToken", null);
+__decorate([
+    type_graphql_1.Mutation(() => UserResponse_1.UserResponse),
+    type_graphql_1.UseMiddleware(isAuth_1.isAuth),
+    __param(0, type_graphql_1.Arg("password")),
+    __param(1, type_graphql_1.Arg("newPassword")),
+    __param(2, type_graphql_1.Ctx()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, String, Object]),
+    __metadata("design:returntype", Promise)
+], UserResolver.prototype, "changePasswordWithOldPassword", null);
 __decorate([
     type_graphql_1.Mutation(() => UserResponse_1.UserResponse, { nullable: true }),
     type_graphql_1.UseMiddleware(isAuth_1.isAuth),
@@ -473,6 +522,13 @@ __decorate([
     __metadata("design:paramtypes", [Object]),
     __metadata("design:returntype", Promise)
 ], UserResolver.prototype, "activate", null);
+__decorate([
+    type_graphql_1.Mutation(() => Boolean),
+    __param(0, type_graphql_1.Ctx()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object]),
+    __metadata("design:returntype", void 0)
+], UserResolver.prototype, "logout", null);
 __decorate([
     type_graphql_1.Query(() => User_1.User, { nullable: true }),
     __param(0, type_graphql_1.Ctx()),
