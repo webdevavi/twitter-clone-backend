@@ -14,5 +14,5 @@ export const isActive: MiddlewareFn<MyContext> = async ({ context }, next) => {
 
   if (user.amIDeactivated) throw Error("Your account has been deactivated.");
 
-  next();
+  return next();
 };

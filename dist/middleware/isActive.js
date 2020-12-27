@@ -19,7 +19,7 @@ const isActive = ({ context }, next) => __awaiter(void 0, void 0, void 0, functi
     }
     if (user.amIDeactivated)
         throw Error("Your account has been deactivated.");
-    next();
+    return next();
 });
 exports.isActive = isActive;
 //# sourceMappingURL=isActive.js.map
