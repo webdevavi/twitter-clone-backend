@@ -31,6 +31,7 @@ const uuid_1 = require("uuid");
 const constants_1 = require("../constants");
 const forgotPassword_1 = require("../emailTemplates/forgotPassword");
 const verifyEmail_1 = require("../emailTemplates/verifyEmail");
+const Block_1 = require("../entities/Block");
 const Cache_1 = require("../entities/Cache");
 const Follow_1 = require("../entities/Follow");
 const Like_1 = require("../entities/Like");
@@ -66,6 +67,32 @@ let UserResolver = class UserResolver {
     }
     likes(user) {
         return Like_1.Like.find({ where: { userId: user.id } });
+    }
+    haveIBlockedThisUser(user, { req }) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const myUserId = req.session.userId;
+            if (user.id === myUserId)
+                return null;
+            const block = yield Block_1.Block.findOne({
+                where: { userId: user.id, blockedByUserId: myUserId },
+            });
+            if (!block)
+                return false;
+            return true;
+        });
+    }
+    amIBlockedByThisUser(user, { req }) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const myUserId = req.session.userId;
+            if (user.id === myUserId)
+                return null;
+            const block = yield Block_1.Block.findOne({
+                where: { userId: myUserId, blockedByUserId: user.id },
+            });
+            if (!block)
+                return false;
+            return true;
+        });
     }
     signup(input, { req }) {
         return __awaiter(this, void 0, void 0, function* () {
@@ -285,6 +312,9 @@ let UserResolver = class UserResolver {
         }
         return User_1.User.findOne(req.session.userId);
     }
+    user(userId) {
+        return User_1.User.findOne(userId);
+    }
 };
 __decorate([
     type_graphql_1.FieldResolver(),
@@ -321,6 +351,20 @@ __decorate([
     __metadata("design:paramtypes", [User_1.User]),
     __metadata("design:returntype", void 0)
 ], UserResolver.prototype, "likes", null);
+__decorate([
+    type_graphql_1.FieldResolver(() => Boolean, { nullable: true }),
+    __param(0, type_graphql_1.Root()), __param(1, type_graphql_1.Ctx()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [User_1.User, Object]),
+    __metadata("design:returntype", Promise)
+], UserResolver.prototype, "haveIBlockedThisUser", null);
+__decorate([
+    type_graphql_1.FieldResolver(() => Boolean, { nullable: true }),
+    __param(0, type_graphql_1.Root()), __param(1, type_graphql_1.Ctx()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [User_1.User, Object]),
+    __metadata("design:returntype", Promise)
+], UserResolver.prototype, "amIBlockedByThisUser", null);
 __decorate([
     type_graphql_1.Mutation(() => UserResponse_1.UserResponse),
     __param(0, type_graphql_1.Arg("input")),
@@ -376,6 +420,13 @@ __decorate([
     __metadata("design:paramtypes", [Object]),
     __metadata("design:returntype", void 0)
 ], UserResolver.prototype, "me", null);
+__decorate([
+    type_graphql_1.Query(() => User_1.User, { nullable: true }),
+    __param(0, type_graphql_1.Arg("userId")),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String]),
+    __metadata("design:returntype", void 0)
+], UserResolver.prototype, "user", null);
 UserResolver = __decorate([
     type_graphql_1.Resolver(User_1.User)
 ], UserResolver);

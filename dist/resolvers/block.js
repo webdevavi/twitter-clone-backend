@@ -21,52 +21,42 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.FollowResolver = void 0;
-const Follow_1 = require("../entities/Follow");
+exports.BlockResolver = void 0;
 const type_graphql_1 = require("type-graphql");
-const isAuth_1 = require("../middleware/isAuth");
-const User_1 = require("../entities/User");
+const typeorm_1 = require("typeorm");
 const Block_1 = require("../entities/Block");
-let FollowResolver = class FollowResolver {
-    follow(userId, { req }) {
+const Follow_1 = require("../entities/Follow");
+const isAuth_1 = require("../middleware/isAuth");
+let BlockResolver = class BlockResolver {
+    block(userId, { req }) {
         return __awaiter(this, void 0, void 0, function* () {
             const myUserId = req.session.userId;
             if (userId === myUserId)
                 return false;
-            const haveIBlocked = yield Block_1.Block.find({
+            const blocked = yield Block_1.Block.findOne({
                 where: { userId, blockedByUserId: myUserId },
             });
-            if ((haveIBlocked === null || haveIBlocked === void 0 ? void 0 : haveIBlocked.length) > 0)
-                return false;
-            const amIBlocked = yield Block_1.Block.find({
-                where: { userId: myUserId, blockedByUserId: userId },
-            });
-            if ((amIBlocked === null || amIBlocked === void 0 ? void 0 : amIBlocked.length) > 0)
-                return false;
-            const follow = yield Follow_1.Follow.findOne({
-                where: { userId, followerId: myUserId },
-            });
-            if (follow)
+            if (blocked)
                 return true;
-            const user = yield User_1.User.findOne(userId);
-            if (!user)
-                return false;
-            yield Follow_1.Follow.insert({ userId, followerId: myUserId });
+            yield typeorm_1.getConnection().transaction((em) => __awaiter(this, void 0, void 0, function* () {
+                em.insert(Block_1.Block, { userId, blockedByUserId: myUserId });
+                em.delete(Follow_1.Follow, { userId, followerId: myUserId });
+                em.delete(Follow_1.Follow, { userId: myUserId, followerId: userId });
+            }));
             return true;
         });
     }
-    unfollow(userId, { req }) {
+    unblock(userId, { req }) {
         return __awaiter(this, void 0, void 0, function* () {
-            const followerId = req.session.userId;
-            if (userId === followerId)
+            const myUserId = req.session.userId;
+            if (userId === myUserId)
                 return false;
-            const follow = yield Follow_1.Follow.findOne({ where: { userId, followerId } });
-            if (!follow)
+            const blocked = yield Block_1.Block.findOne({
+                where: { userId, blockedByUserId: myUserId },
+            });
+            if (!blocked)
                 return true;
-            const user = yield User_1.User.findOne(userId);
-            if (!user)
-                return false;
-            yield Follow_1.Follow.delete({ userId, followerId });
+            yield Block_1.Block.delete({ userId, blockedByUserId: myUserId });
             return true;
         });
     }
@@ -78,7 +68,7 @@ __decorate([
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String, Object]),
     __metadata("design:returntype", Promise)
-], FollowResolver.prototype, "follow", null);
+], BlockResolver.prototype, "block", null);
 __decorate([
     type_graphql_1.Mutation(() => Boolean),
     type_graphql_1.UseMiddleware(isAuth_1.isAuth),
@@ -86,9 +76,9 @@ __decorate([
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String, Object]),
     __metadata("design:returntype", Promise)
-], FollowResolver.prototype, "unfollow", null);
-FollowResolver = __decorate([
-    type_graphql_1.Resolver(Follow_1.Follow)
-], FollowResolver);
-exports.FollowResolver = FollowResolver;
-//# sourceMappingURL=follow.js.map
+], BlockResolver.prototype, "unblock", null);
+BlockResolver = __decorate([
+    type_graphql_1.Resolver(Block_1.Block)
+], BlockResolver);
+exports.BlockResolver = BlockResolver;
+//# sourceMappingURL=block.js.map

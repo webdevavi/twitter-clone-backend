@@ -78,4 +78,10 @@ export class User extends BaseEntity {
 
   @Field(() => [User], { nullable: true })
   followings: User[];
+
+  @Field(() => Boolean, { nullable: true })
+  haveIBlockedThisUser: Boolean;
+
+  @Field(() => Boolean, { nullable: true })
+  amIBlockedByThisUser: Boolean;
 }

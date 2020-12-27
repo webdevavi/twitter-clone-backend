@@ -17,6 +17,7 @@ import {
 } from "../constants";
 import { forgotPasswordTemplate } from "../emailTemplates/forgotPassword";
 import { verifyEmailTemplate } from "../emailTemplates/verifyEmail";
+import { Block } from "../entities/Block";
 import { Cache } from "../entities/Cache";
 import { Follow } from "../entities/Follow";
 import { Like } from "../entities/Like";
@@ -60,6 +61,30 @@ export class UserResolver {
   @FieldResolver()
   likes(@Root() user: User) {
     return Like.find({ where: { userId: user.id } });
+  }
+
+  @FieldResolver(() => Boolean, { nullable: true })
+  async haveIBlockedThisUser(@Root() user: User, @Ctx() { req }: MyContext) {
+    //@ts-ignore
+    const myUserId = req.session.userId;
+    if (user.id === myUserId) return null;
+    const block = await Block.findOne({
+      where: { userId: user.id, blockedByUserId: myUserId },
+    });
+    if (!block) return false;
+    return true;
+  }
+
+  @FieldResolver(() => Boolean, { nullable: true })
+  async amIBlockedByThisUser(@Root() user: User, @Ctx() { req }: MyContext) {
+    //@ts-ignore
+    const myUserId = req.session.userId;
+    if (user.id === myUserId) return null;
+    const block = await Block.findOne({
+      where: { userId: myUserId, blockedByUserId: user.id },
+    });
+    if (!block) return false;
+    return true;
   }
 
   @Mutation(() => UserResponse)
@@ -335,5 +360,10 @@ export class UserResolver {
     }
     //@ts-ignore
     return User.findOne(req.session.userId);
+  }
+
+  @Query(() => User, { nullable: true })
+  user(@Arg("userId") userId: string) {
+    return User.findOne(userId);
   }
 }

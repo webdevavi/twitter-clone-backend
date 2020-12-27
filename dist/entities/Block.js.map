@@ -1,0 +1,1 @@
+{"version":3,"file":"Block.js","sourceRoot":"","sources":["../../src/entities/Block.ts"],"names":[],"mappings":";;;;;;;;;;;;AAAA,qCAA6E;AAG7E,IAAa,KAAK,GAAlB,MAAa,KAAM,SAAQ,oBAAU;CASpC,CAAA;AAPC;IADC,gCAAsB,CAAC,MAAM,CAAC;;iCACpB;AAGX;IADC,gBAAM,EAAE;;qCACM;AAGf;IADC,gBAAM,EAAE;;8CACe;AARb,KAAK;IADjB,gBAAM,EAAE;GACI,KAAK,CASjB;AATY,sBAAK"}

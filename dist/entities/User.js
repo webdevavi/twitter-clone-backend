@@ -103,6 +103,14 @@ __decorate([
     type_graphql_1.Field(() => [User_1], { nullable: true }),
     __metadata("design:type", Array)
 ], User.prototype, "followings", void 0);
+__decorate([
+    type_graphql_1.Field(() => Boolean, { nullable: true }),
+    __metadata("design:type", Boolean)
+], User.prototype, "haveIBlockedThisUser", void 0);
+__decorate([
+    type_graphql_1.Field(() => Boolean, { nullable: true }),
+    __metadata("design:type", Boolean)
+], User.prototype, "amIBlockedByThisUser", void 0);
 User = User_1 = __decorate([
     typeorm_1.Entity(),
     type_graphql_1.ObjectType()
