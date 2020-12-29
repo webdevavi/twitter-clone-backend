@@ -3,6 +3,7 @@ import {
   Arg,
   Ctx,
   FieldResolver,
+  Int,
   Mutation,
   Query,
   Resolver,
@@ -168,7 +169,14 @@ export class QuackResolver {
   @Query(() => [Quack], { nullable: true })
   @UseMiddleware(isAuth)
   @UseMiddleware(isActive)
-  async quacksFromFollowings(@Ctx() { req }: MyContext): Promise<Quack[]> {
+  async quacksFromFollowings(
+    @Arg("limit", () => Int, { nullable: true, defaultValue: 20 })
+    limit: number,
+    @Arg("offset", () => Int, { nullable: true, defaultValue: 0 })
+    offset: number,
+    @Ctx()
+    { req }: MyContext
+  ): Promise<Quack[]> {
     const follows = await Follow.find({
       //@ts-ignore
       where: { followerId: req.session.userId },
@@ -176,6 +184,8 @@ export class QuackResolver {
     const followingIds = follows.map((follow) => follow.userId);
     return Quack.find({
       where: { quackedByUserId: In(followingIds), isVisible: true },
+      take: limit,
+      skip: offset,
     });
   }
 }

@@ -138,7 +138,7 @@ let QuackResolver = class QuackResolver {
     quacks() {
         return Quack_1.Quack.find({ where: { isVisible: true } });
     }
-    quacksFromFollowings({ req }) {
+    quacksFromFollowings(limit, offset, { req }) {
         return __awaiter(this, void 0, void 0, function* () {
             const follows = yield Follow_1.Follow.find({
                 where: { followerId: req.session.userId },
@@ -146,6 +146,8 @@ let QuackResolver = class QuackResolver {
             const followingIds = follows.map((follow) => follow.userId);
             return Quack_1.Quack.find({
                 where: { quackedByUserId: typeorm_1.In(followingIds), isVisible: true },
+                take: limit,
+                skip: offset,
             });
         });
     }
@@ -240,9 +242,11 @@ __decorate([
     type_graphql_1.Query(() => [Quack_1.Quack], { nullable: true }),
     type_graphql_1.UseMiddleware(isAuth_1.isAuth),
     type_graphql_1.UseMiddleware(isActive_1.isActive),
-    __param(0, type_graphql_1.Ctx()),
+    __param(0, type_graphql_1.Arg("limit", () => type_graphql_1.Int, { nullable: true, defaultValue: 20 })),
+    __param(1, type_graphql_1.Arg("offset", () => type_graphql_1.Int, { nullable: true, defaultValue: 0 })),
+    __param(2, type_graphql_1.Ctx()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Object]),
+    __metadata("design:paramtypes", [Number, Number, Object]),
     __metadata("design:returntype", Promise)
 ], QuackResolver.prototype, "quacksFromFollowings", null);
 QuackResolver = __decorate([
