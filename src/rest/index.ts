@@ -13,24 +13,27 @@ router.get("/", (_, res) => res.send("<h1>Welcome to Quacker</h1>"));
 router.post("/refresh_token", async (req, res) => {
   const refreshToken = req.headers.authorization?.split(" ")[1];
 
-  if (!refreshToken) {
-    return res.send({ ok: false, message: "No refresh token" });
+  if (!refreshToken || refreshToken === "undefined") {
+    return res.status(400).json({ message: "No refresh token" });
   }
 
+  console.log(refreshToken);
   try {
     const payload = verify(refreshToken!, REFRESH_TOKEN_SECRET!) as JWTPayload;
 
     const user = await User.findOne(payload?.userId);
 
-    if (!user) return res.send({ ok: false, message: "No user found" });
+    if (!user || user === undefined) {
+      return res.status(400).json({ message: "No user found" });
+    }
 
     const accessToken = createAccessToken(user!);
     const newRefreshToken = createRefreshToken(user!);
 
     setTokensToCookie(res, accessToken, newRefreshToken);
 
-    return res.send({ ok: true });
-  } catch (e) {
-    return res.send({ ok: false, message: e.message });
+    return res.sendStatus(200);
+  } catch ({ message }) {
+    return res.status(400).json({ message });
   }
 });

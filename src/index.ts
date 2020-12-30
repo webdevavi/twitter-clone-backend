@@ -1,4 +1,5 @@
 import { ApolloServer } from "apollo-server-express";
+import cookieParser from "cookie-parser";
 import cors from "cors";
 import express from "express";
 import "reflect-metadata";
@@ -12,6 +13,10 @@ const main = async () => {
   const app = express();
 
   app.use(cors(corsConfig));
+
+  app.use(cookieParser());
+
+  app.use(express.json());
 
   app.use(router);
 

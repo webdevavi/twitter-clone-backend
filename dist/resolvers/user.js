@@ -103,7 +103,7 @@ let UserResolver = class UserResolver {
             return true;
         });
     }
-    signup(input) {
+    signup(input, { res }) {
         return __awaiter(this, void 0, void 0, function* () {
             const errors = new user_1.ValidateUser(input).validate();
             if (errors.length !== 0) {
@@ -125,6 +125,7 @@ let UserResolver = class UserResolver {
                 yield sendEmail_1.sendEmail(user.email, template, "Verify your email - Quacker");
                 const accessToken = createJWT_1.createAccessToken(user);
                 const refreshToken = createJWT_1.createRefreshToken(user);
+                setTokensToCookie_1.setTokensToCookie(res, accessToken, refreshToken);
                 return { user, accessToken, refreshToken };
             }
             catch (error) {
@@ -428,8 +429,9 @@ __decorate([
 __decorate([
     type_graphql_1.Mutation(() => UserResponse_1.UserResponse),
     __param(0, type_graphql_1.Arg("input")),
+    __param(1, type_graphql_1.Ctx()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [UserInput_1.UserInput]),
+    __metadata("design:paramtypes", [UserInput_1.UserInput, Object]),
     __metadata("design:returntype", Promise)
 ], UserResolver.prototype, "signup", null);
 __decorate([

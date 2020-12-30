@@ -21,21 +21,23 @@ exports.router.get("/", (_, res) => res.send("<h1>Welcome to Quacker</h1>"));
 exports.router.post("/refresh_token", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     var _a;
     const refreshToken = (_a = req.headers.authorization) === null || _a === void 0 ? void 0 : _a.split(" ")[1];
-    if (!refreshToken) {
-        return res.sendStatus(400);
+    if (!refreshToken || refreshToken === "undefined") {
+        return res.status(400).json({ message: "No refresh token" });
     }
+    console.log(refreshToken);
     try {
         const payload = jsonwebtoken_1.verify(refreshToken, constants_1.REFRESH_TOKEN_SECRET);
         const user = yield User_1.User.findOne(payload === null || payload === void 0 ? void 0 : payload.userId);
-        if (!user)
-            return res.sendStatus(400);
+        if (!user || user === undefined) {
+            return res.status(400).json({ message: "No user found" });
+        }
         const accessToken = createJWT_1.createAccessToken(user);
         const newRefreshToken = createJWT_1.createRefreshToken(user);
         setTokensToCookie_1.setTokensToCookie(res, accessToken, newRefreshToken);
         return res.sendStatus(200);
     }
-    catch (e) {
-        return res.sendStatus(400);
+    catch ({ message }) {
+        return res.status(400).json({ message });
     }
 }));
 //# sourceMappingURL=index.js.map

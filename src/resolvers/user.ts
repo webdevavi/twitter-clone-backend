@@ -100,7 +100,10 @@ export class UserResolver {
   }
 
   @Mutation(() => UserResponse)
-  async signup(@Arg("input") input: UserInput): Promise<UserResponse> {
+  async signup(
+    @Arg("input") input: UserInput,
+    @Ctx() { res }: MyContext
+  ): Promise<UserResponse> {
     const errors = new ValidateUser(input).validate();
 
     if (errors.length !== 0) {
@@ -128,7 +131,7 @@ export class UserResolver {
       await sendEmail(user.email, template, "Verify your email - Quacker");
       const accessToken = createAccessToken(user);
       const refreshToken = createRefreshToken(user);
-
+      setTokensToCookie(res, accessToken, refreshToken);
       return { user, accessToken, refreshToken };
     } catch (error) {
       if (error.detail.includes("already exists")) {
