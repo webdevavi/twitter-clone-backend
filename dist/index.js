@@ -21,7 +21,7 @@ const config_1 = require("./config");
 const constants_1 = require("./constants");
 const rest_1 = require("./rest");
 const main = () => __awaiter(void 0, void 0, void 0, function* () {
-    yield typeorm_1.createConnection(config_1.typeormConfig);
+    yield typeorm_1.createConnection(config_1.typeormConfig());
     const app = express_1.default();
     app.use(cors_1.default(config_1.corsConfig));
     app.use(rest_1.router);

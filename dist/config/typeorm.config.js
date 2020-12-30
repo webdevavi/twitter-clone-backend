@@ -9,12 +9,19 @@ const Like_1 = require("../entities/Like");
 const Quack_1 = require("../entities/Quack");
 const Requack_1 = require("../entities/Requack");
 const User_1 = require("../entities/User");
-const conditionalProps = constants_1.__prod__
-    ? { url: constants_1.DATABASE_URL }
-    : {
-        database: constants_1.DATABASE_NAME,
-        username: constants_1.DATABASE_USER,
-        password: constants_1.DATABASE_PASSWORD,
+const typeormConfig = () => {
+    const commonProps = {
+        type: "postgres",
+        logging: true,
+        synchronize: true,
+        entities: [Quack_1.Quack, User_1.User, Follow_1.Follow, Requack_1.Requack, Like_1.Like, Block_1.Block, Cache_1.Cache],
     };
-exports.typeormConfig = Object.assign(Object.assign({}, conditionalProps), { type: "postgres", logging: true, synchronize: true, entities: [Quack_1.Quack, User_1.User, Follow_1.Follow, Requack_1.Requack, Like_1.Like, Block_1.Block, Cache_1.Cache] });
+    if (constants_1.__prod__) {
+        return Object.assign({ url: constants_1.DATABASE_URL, ssl: true }, commonProps);
+    }
+    else {
+        return Object.assign({ database: constants_1.DATABASE_NAME, user: constants_1.DATABASE_USER, password: constants_1.DATABASE_PASSWORD }, commonProps);
+    }
+};
+exports.typeormConfig = typeormConfig;
 //# sourceMappingURL=typeorm.config.js.map

@@ -8,7 +8,7 @@ import { PORT, __prod__ } from "./constants";
 import { router } from "./rest";
 
 const main = async () => {
-  await createConnection(typeormConfig);
+  await createConnection(typeormConfig());
   const app = express();
 
   app.use(cors(corsConfig));
