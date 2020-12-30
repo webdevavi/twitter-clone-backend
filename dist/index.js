@@ -12,24 +12,10 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-const apollo_server_express_1 = require("apollo-server-express");
-const cors_1 = __importDefault(require("cors"));
 const express_1 = __importDefault(require("express"));
-require("reflect-metadata");
-const typeorm_1 = require("typeorm");
-const config_1 = require("./config");
 const constants_1 = require("./constants");
-const rest_1 = require("./rest");
 const main = () => __awaiter(void 0, void 0, void 0, function* () {
-    yield typeorm_1.createConnection(config_1.typeormConfig);
     const app = express_1.default();
-    app.use(cors_1.default(config_1.corsConfig));
-    app.use(rest_1.router);
-    const apolloServer = new apollo_server_express_1.ApolloServer(yield config_1.apolloConfig());
-    apolloServer.applyMiddleware({
-        app,
-        cors: false,
-    });
     app.listen(constants_1.PORT, () => {
         console.log(`The server has started on port ${constants_1.PORT}.`);
         if (!constants_1.__prod__) {
