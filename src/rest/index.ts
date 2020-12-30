@@ -14,7 +14,7 @@ router.post("/refresh_token", async (req, res) => {
   const refreshToken = req.headers.authorization?.split(" ")[1];
 
   if (!refreshToken) {
-    return res.sendStatus(400);
+    return res.send({ ok: false, message: "No refresh token" });
   }
 
   try {
@@ -22,15 +22,15 @@ router.post("/refresh_token", async (req, res) => {
 
     const user = await User.findOne(payload?.userId);
 
-    if (!user) return res.sendStatus(400);
+    if (!user) return res.send({ ok: false, message: "No user found" });
 
     const accessToken = createAccessToken(user!);
     const newRefreshToken = createRefreshToken(user!);
 
     setTokensToCookie(res, accessToken, newRefreshToken);
 
-    return res.sendStatus(200);
+    return res.send({ ok: true });
   } catch (e) {
-    return res.sendStatus(400);
+    return res.send({ ok: false, message: e.message });
   }
 });
