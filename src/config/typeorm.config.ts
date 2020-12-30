@@ -16,9 +16,9 @@ import { User } from "../entities/User";
 export const typeormConfig = {
   url: DATABASE_URL,
   type: "postgres",
-  database: DATABASE_NAME,
-  username: DATABASE_USER,
-  password: DATABASE_PASSWORD,
+  database: DATABASE_NAME as string,
+  username: DATABASE_USER as string,
+  password: DATABASE_PASSWORD as string,
   logging: true,
   synchronize: true,
   entities: [Quack, User, Follow, Requack, Like, Block, Cache],
