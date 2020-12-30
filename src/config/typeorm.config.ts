@@ -27,7 +27,6 @@ export const typeormConfig = (): TypeormConfig => {
   if (__prod__) {
     return {
       url: DATABASE_URL as string,
-      ssl: true,
       ...commonProps,
     } as TypeormConfig;
   } else {
