@@ -14,14 +14,18 @@ import { Quack } from "../entities/Quack";
 import { Requack } from "../entities/Requack";
 import { User } from "../entities/User";
 
+const conditionalProps = __prod__
+  ? { url: DATABASE_URL }
+  : {
+      database: DATABASE_NAME as string,
+      username: DATABASE_USER as string,
+      password: DATABASE_PASSWORD as string,
+    };
+
 export const typeormConfig = {
-  url: DATABASE_URL,
+  ...conditionalProps,
   type: "postgres",
-  database: DATABASE_NAME as string,
-  username: DATABASE_USER as string,
-  password: DATABASE_PASSWORD as string,
   logging: true,
   synchronize: true,
   entities: [Quack, User, Follow, Requack, Like, Block, Cache],
-  ssl: __prod__,
 } as Parameters<typeof createConnection>[0];

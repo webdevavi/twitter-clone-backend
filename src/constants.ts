@@ -13,8 +13,6 @@ export const DATABASE_NAME = process.env.DATABASE_NAME;
 export const DATABASE_USER = process.env.DATABASE_USER;
 export const DATABASE_PASSWORD = process.env.DATABASE_PASSWORD;
 
-export const SESSION_SECRET = process.env.SESSION_SECRET;
-
 export const ACCESS_TOKEN = process.env.ACCESS_TOKEN || "qat";
 export const REFRESH_TOKEN = process.env.REFRESH_TOKEN || "qrt";
 
