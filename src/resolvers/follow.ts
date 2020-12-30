@@ -1,36 +1,31 @@
-import { Follow } from "../entities/Follow";
-import { Arg, Ctx, Mutation, Resolver, UseMiddleware } from "type-graphql";
-import { MyContext } from "../types";
-import { isAuth } from "../middleware/isAuth";
-import { User } from "../entities/User";
+import { Arg, Authorized, Ctx, Mutation, Resolver } from "type-graphql";
 import { Block } from "../entities/Block";
+import { Follow } from "../entities/Follow";
+import { MyContext, UserRole } from "../types";
 
 @Resolver(Follow)
 export class FollowResolver {
   @Mutation(() => Boolean)
-  @UseMiddleware(isAuth)
-  async follow(@Arg("userId") userId: string, @Ctx() { req }: MyContext) {
-    //@ts-ignore
-    const myUserId = req.session.userId;
+  @Authorized<UserRole>(["ACTIVATED"])
+  async follow(
+    @Arg("userId") userId: string,
+    @Ctx() { payload: { user: me }, userLoader }: MyContext
+  ) {
+    const myUserId = me?.id;
     if (userId === myUserId) return false;
-
     const haveIBlocked = await Block.find({
       where: { userId, blockedByUserId: myUserId },
     });
     if (haveIBlocked?.length > 0) return false;
-
     const amIBlocked = await Block.find({
       where: { userId: myUserId, blockedByUserId: userId },
     });
     if (amIBlocked?.length > 0) return false;
-
     const follow = await Follow.findOne({
       where: { userId, followerId: myUserId },
     });
     if (follow) return true;
-    const user = await User.findOne(userId);
-    console.log(user);
-
+    const user = await userLoader.load(userId);
     if (!user) return false;
     if (user.amIDeactivated) return false;
     await Follow.insert({ userId, followerId: myUserId });
@@ -38,16 +33,17 @@ export class FollowResolver {
   }
 
   @Mutation(() => Boolean)
-  @UseMiddleware(isAuth)
-  async unfollow(@Arg("userId") userId: string, @Ctx() { req }: MyContext) {
-    //@ts-ignore
-    const followerId = req.session.userId;
+  @Authorized<UserRole>(["ACTIVATED"])
+  async unfollow(
+    @Arg("userId") userId: string,
+    @Ctx() { payload: { user: me }, userLoader }: MyContext
+  ) {
+    const followerId = me?.id;
     if (userId === followerId) return false;
     const follow = await Follow.findOne({ where: { userId, followerId } });
     if (!follow) return true;
-    const user = await User.findOne(userId);
+    const user = await userLoader.load(userId);
     if (!user) return false;
-    console.log(user);
     if (user.amIDeactivated) return false;
     await Follow.delete({ userId, followerId });
     return true;

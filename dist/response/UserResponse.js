@@ -20,6 +20,14 @@ __decorate([
     __metadata("design:type", Object)
 ], UserResponse.prototype, "user", void 0);
 __decorate([
+    type_graphql_1.Field({ nullable: true }),
+    __metadata("design:type", String)
+], UserResponse.prototype, "accessToken", void 0);
+__decorate([
+    type_graphql_1.Field({ nullable: true }),
+    __metadata("design:type", String)
+], UserResponse.prototype, "refreshToken", void 0);
+__decorate([
     type_graphql_1.Field(() => [FieldError_1.FieldError], { nullable: true }),
     __metadata("design:type", Object)
 ], UserResponse.prototype, "errors", void 0);

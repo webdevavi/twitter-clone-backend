@@ -1,4 +1,5 @@
 import { ApolloServerExpressConfig } from "apollo-server-express";
+import { authChecker } from "../utils/authChecker";
 import { buildSchema } from "type-graphql";
 import { BlockResolver } from "../resolvers/block";
 import { FollowResolver } from "../resolvers/follow";
@@ -30,7 +31,9 @@ export const apolloConfig = async (): Promise<ApolloServerExpressConfig> => ({
       LikeResolver,
     ],
     validate: false,
+    authChecker,
   }),
+
   context: ({ req, res }): MyContext => ({
     req,
     res,
@@ -41,5 +44,6 @@ export const apolloConfig = async (): Promise<ApolloServerExpressConfig> => ({
     likeLoader: likeLoader(),
     likeLoaderByQuackId: likeLoaderByQuackId(),
     likeLoaderByUserId: likeLoaderByUserId(),
+    payload: {},
   }),
 });

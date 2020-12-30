@@ -22,12 +22,10 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.LikeResolver = void 0;
-const User_1 = require("../entities/User");
 const type_graphql_1 = require("type-graphql");
-const Quack_1 = require("../entities/Quack");
 const Like_1 = require("../entities/Like");
-const isActive_1 = require("../middleware/isActive");
-const isAuth_1 = require("../middleware/isAuth");
+const Quack_1 = require("../entities/Quack");
+const User_1 = require("../entities/User");
 let LikeResolver = class LikeResolver {
     quack(like) {
         return Quack_1.Quack.findOne(like.quackId);
@@ -35,9 +33,9 @@ let LikeResolver = class LikeResolver {
     user(like) {
         return User_1.User.findOne(like.userId);
     }
-    like(quackId, { req }) {
+    like(quackId, { payload: { user } }) {
         return __awaiter(this, void 0, void 0, function* () {
-            const userId = req.session.userId;
+            const userId = user.id;
             const quack = yield Quack_1.Quack.findOne(quackId);
             if (!quack) {
                 return false;
@@ -68,8 +66,7 @@ __decorate([
 ], LikeResolver.prototype, "user", null);
 __decorate([
     type_graphql_1.Mutation(() => Boolean),
-    type_graphql_1.UseMiddleware(isAuth_1.isAuth),
-    type_graphql_1.UseMiddleware(isActive_1.isActive),
+    type_graphql_1.Authorized(["ACTIVATED"]),
     __param(0, type_graphql_1.Arg("quackId")),
     __param(1, type_graphql_1.Ctx()),
     __metadata("design:type", Function),

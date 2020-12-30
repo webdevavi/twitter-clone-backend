@@ -32,8 +32,6 @@ const Follow_1 = require("../entities/Follow");
 const Quack_1 = require("../entities/Quack");
 const User_1 = require("../entities/User");
 const QuackInput_1 = require("../input/QuackInput");
-const isActive_1 = require("../middleware/isActive");
-const isAuth_1 = require("../middleware/isAuth");
 const QuackResponse_1 = require("../response/QuackResponse");
 const quack_1 = require("../validators/quack");
 let QuackResolver = class QuackResolver {
@@ -77,27 +75,30 @@ let QuackResolver = class QuackResolver {
         const urlsSet = get_urls_1.default(quack.text);
         return [...urlsSet];
     }
-    requackStatus(quack, { req, requackLoader }) {
+    requackStatus(quack, { payload: { user }, requackLoader }) {
         return __awaiter(this, void 0, void 0, function* () {
-            const userId = req.session.userId;
-            const requacks = yield requackLoader.load({ quackId: quack.id, userId });
+            const requacks = yield requackLoader.load({
+                quackId: quack.id,
+                userId: user === null || user === void 0 ? void 0 : user.id,
+            });
             if ((requacks === null || requacks === void 0 ? void 0 : requacks.length) > 0)
                 return true;
             return false;
         });
     }
-    likeStatus(quack, { req, likeLoader }) {
+    likeStatus(quack, { payload: { user }, likeLoader }) {
         return __awaiter(this, void 0, void 0, function* () {
-            const userId = req.session.userId;
-            const likes = yield likeLoader.load({ quackId: quack.id, userId });
+            const likes = yield likeLoader.load({
+                quackId: quack.id,
+                userId: user === null || user === void 0 ? void 0 : user.id,
+            });
             if ((likes === null || likes === void 0 ? void 0 : likes.length) > 0)
                 return true;
             return false;
         });
     }
-    quack({ text, inReplyToQuackId }, { req }) {
+    quack({ text, inReplyToQuackId }, { payload: { user } }) {
         return __awaiter(this, void 0, void 0, function* () {
-            const myUserId = req.session.userId;
             const errors = new quack_1.QuackValidator(text).validate();
             if (errors.length !== 0) {
                 return { errors };
@@ -116,21 +117,20 @@ let QuackResolver = class QuackResolver {
                 };
             const quack = Quack_1.Quack.create({
                 text,
-                quackedByUserId: req.session.userId,
+                quackedByUserId: user.id,
                 inReplyToQuackId,
             });
             yield quack.save();
             return { quack };
         });
     }
-    deleteQuack(quackId, { req }) {
+    deleteQuack(quackId, { payload: { user } }) {
         return __awaiter(this, void 0, void 0, function* () {
-            const myUserId = req.session.userId;
             const quack = yield Quack_1.Quack.findOne(quackId);
-            if ((quack === null || quack === void 0 ? void 0 : quack.quackedByUserId) !== myUserId)
-                return false;
             if (!quack)
                 return true;
+            if ((quack === null || quack === void 0 ? void 0 : quack.quackedByUserId) !== user.id)
+                return false;
             yield quack.remove();
             return true;
         });
@@ -138,10 +138,10 @@ let QuackResolver = class QuackResolver {
     quacks() {
         return Quack_1.Quack.find({ where: { isVisible: true } });
     }
-    quacksFromFollowings(limit, offset, { req }) {
+    quacksFromFollowings(limit, offset, { payload: { user } }) {
         return __awaiter(this, void 0, void 0, function* () {
             const follows = yield Follow_1.Follow.find({
-                where: { followerId: req.session.userId },
+                where: { followerId: user.id },
             });
             const followingIds = follows.map((follow) => follow.userId);
             return Quack_1.Quack.find({
@@ -198,6 +198,7 @@ __decorate([
 ], QuackResolver.prototype, "urls", null);
 __decorate([
     type_graphql_1.FieldResolver(),
+    type_graphql_1.Authorized(),
     __param(0, type_graphql_1.Root()),
     __param(1, type_graphql_1.Ctx()),
     __metadata("design:type", Function),
@@ -206,6 +207,7 @@ __decorate([
 ], QuackResolver.prototype, "requackStatus", null);
 __decorate([
     type_graphql_1.FieldResolver(),
+    type_graphql_1.Authorized(),
     __param(0, type_graphql_1.Root()),
     __param(1, type_graphql_1.Ctx()),
     __metadata("design:type", Function),
@@ -214,8 +216,7 @@ __decorate([
 ], QuackResolver.prototype, "likeStatus", null);
 __decorate([
     type_graphql_1.Mutation(() => QuackResponse_1.QuackResponse),
-    type_graphql_1.UseMiddleware(isAuth_1.isAuth),
-    type_graphql_1.UseMiddleware(isActive_1.isActive),
+    type_graphql_1.Authorized(["ACTIVATED"]),
     __param(0, type_graphql_1.Arg("input")),
     __param(1, type_graphql_1.Ctx()),
     __metadata("design:type", Function),
@@ -224,8 +225,7 @@ __decorate([
 ], QuackResolver.prototype, "quack", null);
 __decorate([
     type_graphql_1.Mutation(() => Boolean),
-    type_graphql_1.UseMiddleware(isAuth_1.isAuth),
-    type_graphql_1.UseMiddleware(isActive_1.isActive),
+    type_graphql_1.Authorized(["ACTIVATED"]),
     __param(0, type_graphql_1.Arg("quackId")),
     __param(1, type_graphql_1.Ctx()),
     __metadata("design:type", Function),
@@ -240,8 +240,7 @@ __decorate([
 ], QuackResolver.prototype, "quacks", null);
 __decorate([
     type_graphql_1.Query(() => [Quack_1.Quack], { nullable: true }),
-    type_graphql_1.UseMiddleware(isAuth_1.isAuth),
-    type_graphql_1.UseMiddleware(isActive_1.isActive),
+    type_graphql_1.Authorized(["ACTIVATED"]),
     __param(0, type_graphql_1.Arg("limit", () => type_graphql_1.Int, { nullable: true, defaultValue: 20 })),
     __param(1, type_graphql_1.Arg("offset", () => type_graphql_1.Int, { nullable: true, defaultValue: 0 })),
     __param(2, type_graphql_1.Ctx()),

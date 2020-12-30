@@ -1,18 +1,20 @@
 import argon from "argon2";
 import {
   Arg,
+  Authorized,
   Ctx,
   FieldResolver,
   Mutation,
   Query,
   Resolver,
   Root,
-  UseMiddleware,
 } from "type-graphql";
 import { v4 } from "uuid";
 import {
+  ACCESS_TOKEN,
   FORGOT_PASSWORD_PREFIX,
   ORIGIN,
+  REFRESH_TOKEN,
   VERIFY_EMAIL_PREFIX,
 } from "../constants";
 import { forgotPasswordTemplate } from "../emailTemplates/forgotPassword";
@@ -25,11 +27,12 @@ import { Quack } from "../entities/Quack";
 import { Requack } from "../entities/Requack";
 import { User } from "../entities/User";
 import { UserInput } from "../input/UserInput";
-import { isAuth } from "../middleware/isAuth";
 import { UserResponse } from "../response/UserResponse";
-import { MyContext } from "../types";
+import { MyContext, UserRole } from "../types";
+import { createAccessToken, createRefreshToken } from "../utils/createJWT";
 import { validEmail } from "../utils/regexp";
 import { sendEmail } from "../utils/sendEmail";
+import { setTokensToCookie } from "../utils/setTokensToCookie";
 import { ValidateUser } from "../validators/user";
 
 @Resolver(User)
@@ -67,9 +70,12 @@ export class UserResolver {
   }
 
   @FieldResolver(() => Boolean, { nullable: true })
-  async haveIBlockedThisUser(@Root() user: User, @Ctx() { req }: MyContext) {
-    //@ts-ignore
-    const myUserId = req.session.userId;
+  @Authorized()
+  async haveIBlockedThisUser(
+    @Root() user: User,
+    @Ctx() { payload }: MyContext
+  ) {
+    const myUserId = payload.user?.id;
     if (user.id === myUserId) return null;
     const block = await Block.findOne({
       where: { userId: user.id, blockedByUserId: myUserId },
@@ -79,9 +85,12 @@ export class UserResolver {
   }
 
   @FieldResolver(() => Boolean, { nullable: true })
-  async amIBlockedByThisUser(@Root() user: User, @Ctx() { req }: MyContext) {
-    //@ts-ignore
-    const myUserId = req.session.userId;
+  @Authorized()
+  async amIBlockedByThisUser(
+    @Root() user: User,
+    @Ctx() { payload }: MyContext
+  ) {
+    const myUserId = payload.user?.id;
     if (user.id === myUserId) return null;
     const block = await Block.findOne({
       where: { userId: myUserId, blockedByUserId: user.id },
@@ -91,10 +100,7 @@ export class UserResolver {
   }
 
   @Mutation(() => UserResponse)
-  async signup(
-    @Arg("input") input: UserInput,
-    @Ctx() { req }: MyContext
-  ): Promise<UserResponse> {
+  async signup(@Arg("input") input: UserInput): Promise<UserResponse> {
     const errors = new ValidateUser(input).validate();
 
     if (errors.length !== 0) {
@@ -120,8 +126,10 @@ export class UserResolver {
         ORIGIN + "/verifyEmail?token=" + token
       );
       await sendEmail(user.email, template, "Verify your email - Quacker");
-      //@ts-ignore
-      req.session.userId = user.id;
+      const accessToken = createAccessToken(user);
+      const refreshToken = createRefreshToken(user);
+
+      return { user, accessToken, refreshToken };
     } catch (error) {
       if (error.detail.includes("already exists")) {
         if (error.detail.includes("email")) {
@@ -142,19 +150,17 @@ export class UserResolver {
               },
             ],
           };
-        } else {
-          throw error;
         }
       }
+      throw error;
     }
-    return { user };
   }
 
   @Mutation(() => UserResponse)
   async login(
     @Arg("emailOrUsername") emailOrUsername: string,
     @Arg("password") password: string,
-    @Ctx() { req }: MyContext
+    @Ctx() { res }: MyContext
   ): Promise<UserResponse> {
     const isEmail = validEmail.test(emailOrUsername);
 
@@ -176,9 +182,10 @@ export class UserResolver {
     }
 
     if (await argon.verify(user.password, password)) {
-      //@ts-ignore
-      req.session.userId = user.id;
-      return { user };
+      const accessToken = createAccessToken(user);
+      const refreshToken = createRefreshToken(user);
+      setTokensToCookie(res, accessToken, refreshToken);
+      return { user, accessToken, refreshToken };
     } else {
       return {
         errors: [
@@ -192,20 +199,9 @@ export class UserResolver {
   }
 
   @Mutation(() => Boolean)
-  @UseMiddleware(isAuth)
-  async sendEmailVerificationLink(@Ctx() { req }: MyContext) {
-    //@ts-ignore
-    const user = await User.findOne(req.session.userId);
-
-    if (!user) {
-      throw Error("User not found");
-    }
-
-    if (user.emailVerified) {
-      return false;
-    }
-
-    const cache = await Cache.findOne({ where: { value: user.id } });
+  @Authorized<UserRole>(["UNVERIFIED"])
+  async sendEmailVerificationLink(@Ctx() { payload: { user } }: MyContext) {
+    const cache = await Cache.findOne({ where: { value: user?.id } });
 
     let token: string;
 
@@ -213,13 +209,16 @@ export class UserResolver {
       token = cache.key.slice(VERIFY_EMAIL_PREFIX.length);
     } else {
       token = v4();
-      await Cache.insert({ key: VERIFY_EMAIL_PREFIX + token, value: user.id });
+      await Cache.insert({
+        key: VERIFY_EMAIL_PREFIX + token,
+        value: user?.id,
+      });
     }
 
     const template = verifyEmailTemplate(
       ORIGIN + "/verify-email?token=" + token
     );
-    await sendEmail(user.email, template, "Verify your email - Quacker");
+    await sendEmail(user?.email!, template, "Verify your email - Quacker");
     return true;
   }
 
@@ -262,13 +261,11 @@ export class UserResolver {
         ],
       };
     }
-    await User.update(
-      { id: cache.value },
-      {
-        emailVerified: true,
-      }
-    );
-    user.emailVerified = true;
+
+    if (!user.emailVerified) {
+      user.emailVerified = true;
+      await user.save();
+    }
     await Cache.delete(key);
     return { user };
   }
@@ -305,8 +302,7 @@ export class UserResolver {
   @Mutation(() => UserResponse)
   async changePasswordWithToken(
     @Arg("token") token: string,
-    @Arg("newPassword") newPassword: string,
-    @Ctx() { req }: MyContext
+    @Arg("newPassword") newPassword: string
   ): Promise<UserResponse> {
     const errors = new ValidateUser({ newPassword }).validate();
 
@@ -347,43 +343,30 @@ export class UserResolver {
     user.password = hashedPassword;
     await User.update({ id: cache.value }, { password: hashedPassword });
 
-    //@ts-ignore
-    req.session.userId = user.id;
-
     await Cache.delete(key);
 
     return { user };
   }
 
   @Mutation(() => UserResponse)
-  @UseMiddleware(isAuth)
+  @Authorized<UserRole>(["ACTIVATED"])
   async changePasswordWithOldPassword(
     @Arg("password") password: string,
     @Arg("newPassword") newPassword: string,
-    @Ctx() { req }: MyContext
+    @Ctx() { payload: { user } }: MyContext
   ): Promise<UserResponse> {
-    //@ts-ignore
-    const myUserId = req.session.userId;
     const errors = new ValidateUser({ password, newPassword }).validate();
 
     if (errors.length !== 0) {
       return { errors };
     }
 
-    const user = await User.findOne(myUserId);
-
-    if (!user) {
-      throw Error("Your account no longer exists.");
-    }
-
-    if (await argon.verify(user.password, password)) {
+    if (await argon.verify(user!.password, password)) {
       const hashedPassword = await argon.hash(newPassword);
 
-      user.password = hashedPassword;
-      await user.save();
+      user!.password = hashedPassword;
+      await user?.save();
 
-      //@ts-ignore
-      req.session.userId = user.id;
       return { user };
     } else {
       return {
@@ -398,27 +381,18 @@ export class UserResolver {
   }
 
   @Mutation(() => UserResponse, { nullable: true })
-  @UseMiddleware(isAuth)
+  @Authorized<UserRole>(["ACTIVATED"])
   async deactivate(
     @Arg("password") password: string,
-    @Ctx() { req }: MyContext
+    @Ctx() { payload: { user }, res }: MyContext
   ): Promise<UserResponse> {
-    //@ts-ignore
-    const myUserId = req.session.userId;
+    if (await argon.verify(user!.password, password)) {
+      user!.amIDeactivated = true;
+      await user!.save();
+      await Quack.update({ quackedByUserId: user?.id }, { isVisible: false });
+      res.clearCookie(ACCESS_TOKEN);
+      res.clearCookie(REFRESH_TOKEN);
 
-    const user = await User.findOne(myUserId);
-    if (!user) {
-      throw Error("User not found");
-    }
-
-    if (await argon.verify(user.password, password)) {
-      user.amIDeactivated = true;
-      await user.save();
-      await Quack.update({ quackedByUserId: myUserId }, { isVisible: false });
-      req.session.destroy(() => {
-        //@ts-ignore
-        req.session?.userId = null;
-      });
       return { user };
     } else {
       return {
@@ -428,42 +402,28 @@ export class UserResolver {
   }
 
   @Mutation(() => UserResponse, { nullable: true })
-  @UseMiddleware(isAuth)
-  async activate(@Ctx() { req }: MyContext): Promise<UserResponse> {
-    //@ts-ignore
-    const myUserId = req.session.userId;
-
-    const user = await User.findOne(myUserId);
-    if (!user) {
-      throw Error("User not found");
-    }
-
-    user.amIDeactivated = false;
-    await user.save();
-    await Quack.update({ quackedByUserId: myUserId }, { isVisible: true });
+  @Authorized<UserRole>(["DEACTIVATED"])
+  async activate(
+    @Ctx() { payload: { user } }: MyContext
+  ): Promise<UserResponse> {
+    user!.amIDeactivated = false;
+    await user!.save();
+    await Quack.update({ quackedByUserId: user?.id }, { isVisible: true });
 
     return { user };
   }
 
   @Mutation(() => Boolean)
-  logout(@Ctx() { req }: MyContext) {
-    req.session.destroy((err) => {
-      if (err) {
-        //@ts-ignore
-        req.session?.userId = null;
-      }
-    });
+  logout(@Ctx() { res }: MyContext) {
+    res.clearCookie(ACCESS_TOKEN);
+    res.clearCookie(REFRESH_TOKEN);
     return true;
   }
 
   @Query(() => User, { nullable: true })
-  me(@Ctx() { req }: MyContext) {
-    //@ts-ignore
-    if (!req.session.userId) {
-      return null;
-    }
-    //@ts-ignore
-    return User.findOne(req.session.userId);
+  @Authorized()
+  me(@Ctx() { payload: { user } }: MyContext) {
+    return user;
   }
 
   @Query(() => User, { nullable: true })

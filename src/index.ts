@@ -1,32 +1,25 @@
 import { ApolloServer } from "apollo-server-express";
 import cors from "cors";
 import express from "express";
-import session from "express-session";
+import "reflect-metadata";
 import { createConnection } from "typeorm";
-import {
-  apolloConfig,
-  corsConfig,
-  sessionConfig,
-  typeormConfig,
-} from "./config";
+import { apolloConfig, corsConfig, typeormConfig } from "./config";
 import { PORT, __prod__ } from "./constants";
-import { Session } from "./entities/Session";
+import { router } from "./rest";
 
 const main = async () => {
-  const connection = await createConnection(typeormConfig);
+  await createConnection(typeormConfig);
   const app = express();
 
-  const sessionRepository = connection.getRepository(Session);
-
-  app.use(session(sessionConfig(sessionRepository)));
-
   app.use(cors(corsConfig));
+
+  app.use(router);
 
   const apolloServer = new ApolloServer(await apolloConfig());
 
   apolloServer.applyMiddleware({
     app,
-    cors: true,
+    cors: false,
   });
 
   app.listen(PORT, () => {
@@ -34,7 +27,7 @@ const main = async () => {
     if (!__prod__) {
       const url = `http://localhost:${PORT}/graphql`;
       console.log(`You can debug the graphql server at ${url}`);
-      require("open")(url);
+      // require("open")(url);
     }
   });
 };

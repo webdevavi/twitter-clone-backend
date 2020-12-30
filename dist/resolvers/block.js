@@ -26,12 +26,10 @@ const type_graphql_1 = require("type-graphql");
 const typeorm_1 = require("typeorm");
 const Block_1 = require("../entities/Block");
 const Follow_1 = require("../entities/Follow");
-const User_1 = require("../entities/User");
-const isAuth_1 = require("../middleware/isAuth");
 let BlockResolver = class BlockResolver {
-    block(userId, { req }) {
+    block(userId, { payload: { user: me }, userLoader }) {
         return __awaiter(this, void 0, void 0, function* () {
-            const myUserId = req.session.userId;
+            const myUserId = me === null || me === void 0 ? void 0 : me.id;
             if (userId === myUserId)
                 return false;
             const blocked = yield Block_1.Block.findOne({
@@ -39,7 +37,7 @@ let BlockResolver = class BlockResolver {
             });
             if (blocked)
                 return true;
-            const user = yield User_1.User.findOne(userId);
+            const user = yield userLoader.load(userId);
             if (!user)
                 return false;
             if (user.amIDeactivated)
@@ -52,9 +50,9 @@ let BlockResolver = class BlockResolver {
             return true;
         });
     }
-    unblock(userId, { req }) {
+    unblock(userId, { payload: { user: me }, userLoader }) {
         return __awaiter(this, void 0, void 0, function* () {
-            const myUserId = req.session.userId;
+            const myUserId = me === null || me === void 0 ? void 0 : me.id;
             if (userId === myUserId)
                 return false;
             const blocked = yield Block_1.Block.findOne({
@@ -62,7 +60,7 @@ let BlockResolver = class BlockResolver {
             });
             if (!blocked)
                 return true;
-            const user = yield User_1.User.findOne(userId);
+            const user = yield userLoader.load(userId);
             if (!user)
                 return false;
             if (user.amIDeactivated)
@@ -74,16 +72,18 @@ let BlockResolver = class BlockResolver {
 };
 __decorate([
     type_graphql_1.Mutation(() => Boolean),
-    type_graphql_1.UseMiddleware(isAuth_1.isAuth),
-    __param(0, type_graphql_1.Arg("userId")), __param(1, type_graphql_1.Ctx()),
+    type_graphql_1.Authorized(["ACTIVATED"]),
+    __param(0, type_graphql_1.Arg("userId")),
+    __param(1, type_graphql_1.Ctx()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String, Object]),
     __metadata("design:returntype", Promise)
 ], BlockResolver.prototype, "block", null);
 __decorate([
     type_graphql_1.Mutation(() => Boolean),
-    type_graphql_1.UseMiddleware(isAuth_1.isAuth),
-    __param(0, type_graphql_1.Arg("userId")), __param(1, type_graphql_1.Ctx()),
+    type_graphql_1.Authorized(["ACTIVATED"]),
+    __param(0, type_graphql_1.Arg("userId")),
+    __param(1, type_graphql_1.Ctx()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String, Object]),
     __metadata("design:returntype", Promise)

@@ -10,6 +10,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.apolloConfig = void 0;
+const authChecker_1 = require("../utils/authChecker");
 const type_graphql_1 = require("type-graphql");
 const block_1 = require("../resolvers/block");
 const follow_1 = require("../resolvers/follow");
@@ -32,6 +33,7 @@ const apolloConfig = () => __awaiter(void 0, void 0, void 0, function* () {
                 like_1.LikeResolver,
             ],
             validate: false,
+            authChecker: authChecker_1.authChecker,
         }),
         context: ({ req, res }) => ({
             req,
@@ -43,6 +45,7 @@ const apolloConfig = () => __awaiter(void 0, void 0, void 0, function* () {
             likeLoader: likeLoader_1.likeLoader(),
             likeLoaderByQuackId: likeLoader_1.likeLoaderByQuackId(),
             likeLoaderByUserId: likeLoader_1.likeLoaderByUserId(),
+            payload: {},
         }),
     });
 });

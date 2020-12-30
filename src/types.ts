@@ -9,10 +9,12 @@ import {
   requackLoaderByUserId,
 } from "./utils/requackLoader";
 import { userLoader } from "./utils/userLoader";
+import { Request, Response } from "express";
+import { User } from "./entities/User";
 
 export type MyContext = {
-  req: Express.Request;
-  res: Express.Response;
+  req: Request;
+  res: Response;
   userLoader: ReturnType<typeof userLoader>;
   requackLoader: ReturnType<typeof requackLoader>;
   requackLoaderByQuackId: ReturnType<typeof requackLoaderByQuackId>;
@@ -20,4 +22,15 @@ export type MyContext = {
   likeLoader: ReturnType<typeof likeLoader>;
   likeLoaderByQuackId: ReturnType<typeof likeLoaderByQuackId>;
   likeLoaderByUserId: ReturnType<typeof likeLoaderByUserId>;
+  payload: ContextPayload;
 };
+
+export type ContextPayload = {
+  user?: User;
+};
+
+export type JWTPayload = {
+  userId: string;
+};
+
+export type UserRole = "ACTIVATED" | "DEACTIVATED" | "VERIFIED" | "UNVERIFIED";

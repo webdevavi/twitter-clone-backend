@@ -1,18 +1,16 @@
-import { User } from "../entities/User";
 import {
   Arg,
+  Authorized,
   Ctx,
   FieldResolver,
   Mutation,
   Resolver,
   Root,
-  UseMiddleware,
 } from "type-graphql";
 import { Quack } from "../entities/Quack";
 import { Requack } from "../entities/Requack";
-import { isActive } from "../middleware/isActive";
-import { isAuth } from "../middleware/isAuth";
-import { MyContext } from "../types";
+import { User } from "../entities/User";
+import { MyContext, UserRole } from "../types";
 
 @Resolver(Requack)
 export class RequackResolver {
@@ -27,14 +25,12 @@ export class RequackResolver {
   }
 
   @Mutation(() => Boolean)
-  @UseMiddleware(isAuth)
-  @UseMiddleware(isActive)
+  @Authorized<UserRole>(["ACTIVATED"])
   async requack(
     @Arg("quackId") quackId: string,
-    @Ctx() { req }: MyContext
+    @Ctx() { payload: { user } }: MyContext
   ): Promise<Boolean> {
-    //@ts-ignore
-    const userId = req.session.userId;
+    const userId = user!.id;
 
     const quack = await Quack.findOne(quackId);
     if (!quack) {

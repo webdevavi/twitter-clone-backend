@@ -1,24 +1,24 @@
-import { Arg, Ctx, Mutation, Resolver, UseMiddleware } from "type-graphql";
+import { Arg, Authorized, Ctx, Mutation, Resolver } from "type-graphql";
 import { getConnection } from "typeorm";
 import { Block } from "../entities/Block";
 import { Follow } from "../entities/Follow";
-import { User } from "../entities/User";
-import { isAuth } from "../middleware/isAuth";
-import { MyContext } from "../types";
+import { MyContext, UserRole } from "../types";
 
 @Resolver(Block)
 export class BlockResolver {
   @Mutation(() => Boolean)
-  @UseMiddleware(isAuth)
-  async block(@Arg("userId") userId: string, @Ctx() { req }: MyContext) {
-    //@ts-ignore
-    const myUserId = req.session.userId;
+  @Authorized<UserRole>(["ACTIVATED"])
+  async block(
+    @Arg("userId") userId: string,
+    @Ctx() { payload: { user: me }, userLoader }: MyContext
+  ) {
+    const myUserId = me?.id;
     if (userId === myUserId) return false;
     const blocked = await Block.findOne({
       where: { userId, blockedByUserId: myUserId },
     });
     if (blocked) return true;
-    const user = await User.findOne(userId);
+    const user = await userLoader.load(userId);
     if (!user) return false;
     if (user.amIDeactivated) return false;
     await getConnection().transaction(async (em) => {
@@ -30,16 +30,18 @@ export class BlockResolver {
   }
 
   @Mutation(() => Boolean)
-  @UseMiddleware(isAuth)
-  async unblock(@Arg("userId") userId: string, @Ctx() { req }: MyContext) {
-    //@ts-ignore
-    const myUserId = req.session.userId;
+  @Authorized<UserRole>(["ACTIVATED"])
+  async unblock(
+    @Arg("userId") userId: string,
+    @Ctx() { payload: { user: me }, userLoader }: MyContext
+  ) {
+    const myUserId = me?.id;
     if (userId === myUserId) return false;
     const blocked = await Block.findOne({
       where: { userId, blockedByUserId: myUserId },
     });
     if (!blocked) return true;
-    const user = await User.findOne(userId);
+    const user = await userLoader.load(userId);
     if (!user) return false;
     if (user.amIDeactivated) return false;
     await Block.delete({ userId, blockedByUserId: myUserId });

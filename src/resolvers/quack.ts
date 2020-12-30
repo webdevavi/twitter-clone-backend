@@ -1,6 +1,7 @@
 import getUrls from "get-urls";
 import {
   Arg,
+  Authorized,
   Ctx,
   FieldResolver,
   Int,
@@ -8,17 +9,14 @@ import {
   Query,
   Resolver,
   Root,
-  UseMiddleware,
 } from "type-graphql";
 import { In } from "typeorm";
 import { Follow } from "../entities/Follow";
 import { Quack } from "../entities/Quack";
 import { User } from "../entities/User";
 import { QuackInput } from "../input/QuackInput";
-import { isActive } from "../middleware/isActive";
-import { isAuth } from "../middleware/isAuth";
 import { QuackResponse } from "../response/QuackResponse";
-import { MyContext } from "../types";
+import { MyContext, UserRole } from "../types";
 import { QuackValidator } from "../validators/quack";
 
 @Resolver(Quack)
@@ -77,40 +75,40 @@ export class QuackResolver {
   }
 
   @FieldResolver()
+  @Authorized<UserRole>()
   async requackStatus(
     @Root() quack: Quack,
-    @Ctx() { req, requackLoader }: MyContext
+    @Ctx() { payload: { user }, requackLoader }: MyContext
   ) {
-    //@ts-ignore
-    const userId = req.session.userId;
-
-    const requacks = await requackLoader.load({ quackId: quack.id, userId });
+    const requacks = await requackLoader.load({
+      quackId: quack.id,
+      userId: user?.id!,
+    });
     if (requacks?.length > 0) return true;
     return false;
   }
 
   @FieldResolver()
+  @Authorized<UserRole>()
   async likeStatus(
     @Root() quack: Quack,
-    @Ctx() { req, likeLoader }: MyContext
+    @Ctx() { payload: { user }, likeLoader }: MyContext
   ) {
-    //@ts-ignore
-    const userId = req.session.userId;
-
-    const likes = await likeLoader.load({ quackId: quack.id, userId });
+    const likes = await likeLoader.load({
+      quackId: quack.id,
+      userId: user?.id!,
+    });
     if (likes?.length > 0) return true;
+
     return false;
   }
 
   @Mutation(() => QuackResponse)
-  @UseMiddleware(isAuth)
-  @UseMiddleware(isActive)
+  @Authorized<UserRole>(["ACTIVATED"])
   async quack(
     @Arg("input") { text, inReplyToQuackId }: QuackInput,
-    @Ctx() { req }: MyContext
+    @Ctx() { payload: { user } }: MyContext
   ): Promise<QuackResponse> {
-    //@ts-ignore
-    const myUserId = req.session.userId;
     const errors = new QuackValidator(text).validate();
     if (errors.length !== 0) {
       return { errors };
@@ -132,8 +130,7 @@ export class QuackResolver {
 
     const quack = Quack.create({
       text,
-      //@ts-ignore
-      quackedByUserId: req.session.userId,
+      quackedByUserId: user!.id,
       inReplyToQuackId,
     });
 
@@ -142,20 +139,16 @@ export class QuackResolver {
   }
 
   @Mutation(() => Boolean)
-  @UseMiddleware(isAuth)
-  @UseMiddleware(isActive)
+  @Authorized<UserRole>(["ACTIVATED"])
   async deleteQuack(
     @Arg("quackId") quackId: string,
-    @Ctx() { req }: MyContext
+    @Ctx() { payload: { user } }: MyContext
   ) {
-    //@ts-ignore
-    const myUserId = req.session.userId;
-
     const quack = await Quack.findOne(quackId);
 
-    if (quack?.quackedByUserId !== myUserId) return false;
-
     if (!quack) return true;
+
+    if (quack?.quackedByUserId !== user!.id) return false;
 
     await quack.remove();
     return true;
@@ -167,19 +160,17 @@ export class QuackResolver {
   }
 
   @Query(() => [Quack], { nullable: true })
-  @UseMiddleware(isAuth)
-  @UseMiddleware(isActive)
+  @Authorized<UserRole>(["ACTIVATED"])
   async quacksFromFollowings(
     @Arg("limit", () => Int, { nullable: true, defaultValue: 20 })
     limit: number,
     @Arg("offset", () => Int, { nullable: true, defaultValue: 0 })
     offset: number,
     @Ctx()
-    { req }: MyContext
+    { payload: { user } }: MyContext
   ): Promise<Quack[]> {
     const follows = await Follow.find({
-      //@ts-ignore
-      where: { followerId: req.session.userId },
+      where: { followerId: user!.id },
     });
     const followingIds = follows.map((follow) => follow.userId);
     return Quack.find({

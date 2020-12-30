@@ -22,15 +22,13 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.FollowResolver = void 0;
-const Follow_1 = require("../entities/Follow");
 const type_graphql_1 = require("type-graphql");
-const isAuth_1 = require("../middleware/isAuth");
-const User_1 = require("../entities/User");
 const Block_1 = require("../entities/Block");
+const Follow_1 = require("../entities/Follow");
 let FollowResolver = class FollowResolver {
-    follow(userId, { req }) {
+    follow(userId, { payload: { user: me }, userLoader }) {
         return __awaiter(this, void 0, void 0, function* () {
-            const myUserId = req.session.userId;
+            const myUserId = me === null || me === void 0 ? void 0 : me.id;
             if (userId === myUserId)
                 return false;
             const haveIBlocked = yield Block_1.Block.find({
@@ -48,8 +46,7 @@ let FollowResolver = class FollowResolver {
             });
             if (follow)
                 return true;
-            const user = yield User_1.User.findOne(userId);
-            console.log(user);
+            const user = yield userLoader.load(userId);
             if (!user)
                 return false;
             if (user.amIDeactivated)
@@ -58,18 +55,17 @@ let FollowResolver = class FollowResolver {
             return true;
         });
     }
-    unfollow(userId, { req }) {
+    unfollow(userId, { payload: { user: me }, userLoader }) {
         return __awaiter(this, void 0, void 0, function* () {
-            const followerId = req.session.userId;
+            const followerId = me === null || me === void 0 ? void 0 : me.id;
             if (userId === followerId)
                 return false;
             const follow = yield Follow_1.Follow.findOne({ where: { userId, followerId } });
             if (!follow)
                 return true;
-            const user = yield User_1.User.findOne(userId);
+            const user = yield userLoader.load(userId);
             if (!user)
                 return false;
-            console.log(user);
             if (user.amIDeactivated)
                 return false;
             yield Follow_1.Follow.delete({ userId, followerId });
@@ -79,16 +75,18 @@ let FollowResolver = class FollowResolver {
 };
 __decorate([
     type_graphql_1.Mutation(() => Boolean),
-    type_graphql_1.UseMiddleware(isAuth_1.isAuth),
-    __param(0, type_graphql_1.Arg("userId")), __param(1, type_graphql_1.Ctx()),
+    type_graphql_1.Authorized(["ACTIVATED"]),
+    __param(0, type_graphql_1.Arg("userId")),
+    __param(1, type_graphql_1.Ctx()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String, Object]),
     __metadata("design:returntype", Promise)
 ], FollowResolver.prototype, "follow", null);
 __decorate([
     type_graphql_1.Mutation(() => Boolean),
-    type_graphql_1.UseMiddleware(isAuth_1.isAuth),
-    __param(0, type_graphql_1.Arg("userId")), __param(1, type_graphql_1.Ctx()),
+    type_graphql_1.Authorized(["ACTIVATED"]),
+    __param(0, type_graphql_1.Arg("userId")),
+    __param(1, type_graphql_1.Ctx()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String, Object]),
     __metadata("design:returntype", Promise)

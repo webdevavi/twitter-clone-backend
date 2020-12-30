@@ -39,10 +39,11 @@ const Quack_1 = require("../entities/Quack");
 const Requack_1 = require("../entities/Requack");
 const User_1 = require("../entities/User");
 const UserInput_1 = require("../input/UserInput");
-const isAuth_1 = require("../middleware/isAuth");
 const UserResponse_1 = require("../response/UserResponse");
+const createJWT_1 = require("../utils/createJWT");
 const regexp_1 = require("../utils/regexp");
 const sendEmail_1 = require("../utils/sendEmail");
+const setTokensToCookie_1 = require("../utils/setTokensToCookie");
 const user_1 = require("../validators/user");
 let UserResolver = class UserResolver {
     followers(user) {
@@ -74,9 +75,10 @@ let UserResolver = class UserResolver {
             return null;
         return likeLoaderByUserId.load(user.id);
     }
-    haveIBlockedThisUser(user, { req }) {
+    haveIBlockedThisUser(user, { payload }) {
+        var _a;
         return __awaiter(this, void 0, void 0, function* () {
-            const myUserId = req.session.userId;
+            const myUserId = (_a = payload.user) === null || _a === void 0 ? void 0 : _a.id;
             if (user.id === myUserId)
                 return null;
             const block = yield Block_1.Block.findOne({
@@ -87,9 +89,10 @@ let UserResolver = class UserResolver {
             return true;
         });
     }
-    amIBlockedByThisUser(user, { req }) {
+    amIBlockedByThisUser(user, { payload }) {
+        var _a;
         return __awaiter(this, void 0, void 0, function* () {
-            const myUserId = req.session.userId;
+            const myUserId = (_a = payload.user) === null || _a === void 0 ? void 0 : _a.id;
             if (user.id === myUserId)
                 return null;
             const block = yield Block_1.Block.findOne({
@@ -100,7 +103,7 @@ let UserResolver = class UserResolver {
             return true;
         });
     }
-    signup(input, { req }) {
+    signup(input) {
         return __awaiter(this, void 0, void 0, function* () {
             const errors = new user_1.ValidateUser(input).validate();
             if (errors.length !== 0) {
@@ -120,7 +123,9 @@ let UserResolver = class UserResolver {
                 yield Cache_1.Cache.insert({ key: constants_1.VERIFY_EMAIL_PREFIX + token, value: user.id });
                 const template = verifyEmail_1.verifyEmailTemplate(constants_1.ORIGIN + "/verifyEmail?token=" + token);
                 yield sendEmail_1.sendEmail(user.email, template, "Verify your email - Quacker");
-                req.session.userId = user.id;
+                const accessToken = createJWT_1.createAccessToken(user);
+                const refreshToken = createJWT_1.createRefreshToken(user);
+                return { user, accessToken, refreshToken };
             }
             catch (error) {
                 if (error.detail.includes("already exists")) {
@@ -144,15 +149,12 @@ let UserResolver = class UserResolver {
                             ],
                         };
                     }
-                    else {
-                        throw error;
-                    }
                 }
+                throw error;
             }
-            return { user };
         });
     }
-    login(emailOrUsername, password, { req }) {
+    login(emailOrUsername, password, { res }) {
         return __awaiter(this, void 0, void 0, function* () {
             const isEmail = regexp_1.validEmail.test(emailOrUsername);
             const user = yield User_1.User.findOne({
@@ -171,8 +173,10 @@ let UserResolver = class UserResolver {
                 };
             }
             if (yield argon2_1.default.verify(user.password, password)) {
-                req.session.userId = user.id;
-                return { user };
+                const accessToken = createJWT_1.createAccessToken(user);
+                const refreshToken = createJWT_1.createRefreshToken(user);
+                setTokensToCookie_1.setTokensToCookie(res, accessToken, refreshToken);
+                return { user, accessToken, refreshToken };
             }
             else {
                 return {
@@ -186,26 +190,22 @@ let UserResolver = class UserResolver {
             }
         });
     }
-    sendEmailVerificationLink({ req }) {
+    sendEmailVerificationLink({ payload: { user } }) {
         return __awaiter(this, void 0, void 0, function* () {
-            const user = yield User_1.User.findOne(req.session.userId);
-            if (!user) {
-                throw Error("User not found");
-            }
-            if (user.emailVerified) {
-                return false;
-            }
-            const cache = yield Cache_1.Cache.findOne({ where: { value: user.id } });
+            const cache = yield Cache_1.Cache.findOne({ where: { value: user === null || user === void 0 ? void 0 : user.id } });
             let token;
             if (cache) {
                 token = cache.key.slice(constants_1.VERIFY_EMAIL_PREFIX.length);
             }
             else {
                 token = uuid_1.v4();
-                yield Cache_1.Cache.insert({ key: constants_1.VERIFY_EMAIL_PREFIX + token, value: user.id });
+                yield Cache_1.Cache.insert({
+                    key: constants_1.VERIFY_EMAIL_PREFIX + token,
+                    value: user === null || user === void 0 ? void 0 : user.id,
+                });
             }
             const template = verifyEmail_1.verifyEmailTemplate(constants_1.ORIGIN + "/verify-email?token=" + token);
-            yield sendEmail_1.sendEmail(user.email, template, "Verify your email - Quacker");
+            yield sendEmail_1.sendEmail(user === null || user === void 0 ? void 0 : user.email, template, "Verify your email - Quacker");
             return true;
         });
     }
@@ -244,10 +244,10 @@ let UserResolver = class UserResolver {
                     ],
                 };
             }
-            yield User_1.User.update({ id: cache.value }, {
-                emailVerified: true,
-            });
-            user.emailVerified = true;
+            if (!user.emailVerified) {
+                user.emailVerified = true;
+                yield user.save();
+            }
             yield Cache_1.Cache.delete(key);
             return { user };
         });
@@ -275,7 +275,7 @@ let UserResolver = class UserResolver {
             return true;
         });
     }
-    changePasswordWithToken(token, newPassword, { req }) {
+    changePasswordWithToken(token, newPassword) {
         return __awaiter(this, void 0, void 0, function* () {
             const errors = new user_1.ValidateUser({ newPassword }).validate();
             if (errors.length !== 0) {
@@ -307,27 +307,20 @@ let UserResolver = class UserResolver {
             const hashedPassword = yield argon2_1.default.hash(newPassword);
             user.password = hashedPassword;
             yield User_1.User.update({ id: cache.value }, { password: hashedPassword });
-            req.session.userId = user.id;
             yield Cache_1.Cache.delete(key);
             return { user };
         });
     }
-    changePasswordWithOldPassword(password, newPassword, { req }) {
+    changePasswordWithOldPassword(password, newPassword, { payload: { user } }) {
         return __awaiter(this, void 0, void 0, function* () {
-            const myUserId = req.session.userId;
             const errors = new user_1.ValidateUser({ password, newPassword }).validate();
             if (errors.length !== 0) {
                 return { errors };
             }
-            const user = yield User_1.User.findOne(myUserId);
-            if (!user) {
-                throw Error("Your account no longer exists.");
-            }
             if (yield argon2_1.default.verify(user.password, password)) {
                 const hashedPassword = yield argon2_1.default.hash(newPassword);
                 user.password = hashedPassword;
-                yield user.save();
-                req.session.userId = user.id;
+                yield (user === null || user === void 0 ? void 0 : user.save());
                 return { user };
             }
             else {
@@ -342,21 +335,14 @@ let UserResolver = class UserResolver {
             }
         });
     }
-    deactivate(password, { req }) {
+    deactivate(password, { payload: { user }, res }) {
         return __awaiter(this, void 0, void 0, function* () {
-            const myUserId = req.session.userId;
-            const user = yield User_1.User.findOne(myUserId);
-            if (!user) {
-                throw Error("User not found");
-            }
             if (yield argon2_1.default.verify(user.password, password)) {
                 user.amIDeactivated = true;
                 yield user.save();
-                yield Quack_1.Quack.update({ quackedByUserId: myUserId }, { isVisible: false });
-                req.session.destroy(() => {
-                    var _a;
-                    (_a = req.session) === null || _a === void 0 ? void 0 : _a.userId = null;
-                });
+                yield Quack_1.Quack.update({ quackedByUserId: user === null || user === void 0 ? void 0 : user.id }, { isVisible: false });
+                res.clearCookie(constants_1.ACCESS_TOKEN);
+                res.clearCookie(constants_1.REFRESH_TOKEN);
                 return { user };
             }
             else {
@@ -366,33 +352,21 @@ let UserResolver = class UserResolver {
             }
         });
     }
-    activate({ req }) {
+    activate({ payload: { user } }) {
         return __awaiter(this, void 0, void 0, function* () {
-            const myUserId = req.session.userId;
-            const user = yield User_1.User.findOne(myUserId);
-            if (!user) {
-                throw Error("User not found");
-            }
             user.amIDeactivated = false;
             yield user.save();
-            yield Quack_1.Quack.update({ quackedByUserId: myUserId }, { isVisible: true });
+            yield Quack_1.Quack.update({ quackedByUserId: user === null || user === void 0 ? void 0 : user.id }, { isVisible: true });
             return { user };
         });
     }
-    logout({ req }) {
-        req.session.destroy((err) => {
-            var _a;
-            if (err) {
-                (_a = req.session) === null || _a === void 0 ? void 0 : _a.userId = null;
-            }
-        });
+    logout({ res }) {
+        res.clearCookie(constants_1.ACCESS_TOKEN);
+        res.clearCookie(constants_1.REFRESH_TOKEN);
         return true;
     }
-    me({ req }) {
-        if (!req.session.userId) {
-            return null;
-        }
-        return User_1.User.findOne(req.session.userId);
+    me({ payload: { user } }) {
+        return user;
     }
     user(userId) {
         return User_1.User.findOne(userId);
@@ -435,14 +409,18 @@ __decorate([
 ], UserResolver.prototype, "likes", null);
 __decorate([
     type_graphql_1.FieldResolver(() => Boolean, { nullable: true }),
-    __param(0, type_graphql_1.Root()), __param(1, type_graphql_1.Ctx()),
+    type_graphql_1.Authorized(),
+    __param(0, type_graphql_1.Root()),
+    __param(1, type_graphql_1.Ctx()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [User_1.User, Object]),
     __metadata("design:returntype", Promise)
 ], UserResolver.prototype, "haveIBlockedThisUser", null);
 __decorate([
     type_graphql_1.FieldResolver(() => Boolean, { nullable: true }),
-    __param(0, type_graphql_1.Root()), __param(1, type_graphql_1.Ctx()),
+    type_graphql_1.Authorized(),
+    __param(0, type_graphql_1.Root()),
+    __param(1, type_graphql_1.Ctx()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [User_1.User, Object]),
     __metadata("design:returntype", Promise)
@@ -450,9 +428,8 @@ __decorate([
 __decorate([
     type_graphql_1.Mutation(() => UserResponse_1.UserResponse),
     __param(0, type_graphql_1.Arg("input")),
-    __param(1, type_graphql_1.Ctx()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [UserInput_1.UserInput, Object]),
+    __metadata("design:paramtypes", [UserInput_1.UserInput]),
     __metadata("design:returntype", Promise)
 ], UserResolver.prototype, "signup", null);
 __decorate([
@@ -466,7 +443,7 @@ __decorate([
 ], UserResolver.prototype, "login", null);
 __decorate([
     type_graphql_1.Mutation(() => Boolean),
-    type_graphql_1.UseMiddleware(isAuth_1.isAuth),
+    type_graphql_1.Authorized(["UNVERIFIED"]),
     __param(0, type_graphql_1.Ctx()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [Object]),
@@ -490,14 +467,13 @@ __decorate([
     type_graphql_1.Mutation(() => UserResponse_1.UserResponse),
     __param(0, type_graphql_1.Arg("token")),
     __param(1, type_graphql_1.Arg("newPassword")),
-    __param(2, type_graphql_1.Ctx()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String, String, Object]),
+    __metadata("design:paramtypes", [String, String]),
     __metadata("design:returntype", Promise)
 ], UserResolver.prototype, "changePasswordWithToken", null);
 __decorate([
     type_graphql_1.Mutation(() => UserResponse_1.UserResponse),
-    type_graphql_1.UseMiddleware(isAuth_1.isAuth),
+    type_graphql_1.Authorized(["ACTIVATED"]),
     __param(0, type_graphql_1.Arg("password")),
     __param(1, type_graphql_1.Arg("newPassword")),
     __param(2, type_graphql_1.Ctx()),
@@ -507,7 +483,7 @@ __decorate([
 ], UserResolver.prototype, "changePasswordWithOldPassword", null);
 __decorate([
     type_graphql_1.Mutation(() => UserResponse_1.UserResponse, { nullable: true }),
-    type_graphql_1.UseMiddleware(isAuth_1.isAuth),
+    type_graphql_1.Authorized(["ACTIVATED"]),
     __param(0, type_graphql_1.Arg("password")),
     __param(1, type_graphql_1.Ctx()),
     __metadata("design:type", Function),
@@ -516,7 +492,7 @@ __decorate([
 ], UserResolver.prototype, "deactivate", null);
 __decorate([
     type_graphql_1.Mutation(() => UserResponse_1.UserResponse, { nullable: true }),
-    type_graphql_1.UseMiddleware(isAuth_1.isAuth),
+    type_graphql_1.Authorized(["DEACTIVATED"]),
     __param(0, type_graphql_1.Ctx()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [Object]),
@@ -531,6 +507,7 @@ __decorate([
 ], UserResolver.prototype, "logout", null);
 __decorate([
     type_graphql_1.Query(() => User_1.User, { nullable: true }),
+    type_graphql_1.Authorized(),
     __param(0, type_graphql_1.Ctx()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [Object]),
