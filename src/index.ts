@@ -11,6 +11,14 @@ const main = async () => {
   // await createConnection(typeormConfig);
   const app = express();
 
+  app.get(
+    ".well-known/acme-challenge/VeX5Ry7AHsmfkmh4zvwzM5QkzNkxG481uZtxAXvMxV4",
+    (_, res) =>
+      res.send(
+        "VeX5Ry7AHsmfkmh4zvwzM5QkzNkxG481uZtxAXvMxV4.8OagZ1r5d5ryybc2ain9wkfU-s-9M8T4zELxEtMscQI"
+      )
+  );
+
   // app.use(cors(corsConfig));
 
   // app.use(router);
