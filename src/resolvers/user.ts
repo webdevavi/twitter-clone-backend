@@ -393,8 +393,8 @@ export class UserResolver {
       user!.amIDeactivated = true;
       await user!.save();
       await Quack.update({ quackedByUserId: user?.id }, { isVisible: false });
-      res.clearCookie(ACCESS_TOKEN);
-      res.clearCookie(REFRESH_TOKEN);
+      res.clearCookie(ACCESS_TOKEN, { sameSite: "none" });
+      res.clearCookie(REFRESH_TOKEN, { sameSite: "none" });
 
       return { user };
     } else {
@@ -418,8 +418,8 @@ export class UserResolver {
 
   @Mutation(() => Boolean)
   logout(@Ctx() { res }: MyContext) {
-    res.clearCookie(ACCESS_TOKEN);
-    res.clearCookie(REFRESH_TOKEN);
+    res.clearCookie(ACCESS_TOKEN, { sameSite: "none" });
+    res.clearCookie(REFRESH_TOKEN, { sameSite: "none" });
     return true;
   }
 

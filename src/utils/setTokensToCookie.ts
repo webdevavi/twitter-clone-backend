@@ -8,9 +8,11 @@ export const setTokensToCookie = (
   res.cookie(ACCESS_TOKEN, accessToken, {
     maxAge: 1000 * 60,
     httpOnly: __prod__,
+    sameSite: "none",
   });
   res.cookie(REFRESH_TOKEN, refreshToken, {
     maxAge: 1000 * 60 * 60 * 24 * 365,
     httpOnly: __prod__,
+    sameSite: "none",
   });
 };
