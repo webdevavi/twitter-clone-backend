@@ -16,7 +16,7 @@ const express_1 = __importDefault(require("express"));
 const constants_1 = require("./constants");
 const main = () => __awaiter(void 0, void 0, void 0, function* () {
     const app = express_1.default();
-    app.get(".well-known/acme-challenge/VeX5Ry7AHsmfkmh4zvwzM5QkzNkxG481uZtxAXvMxV4", (_, res) => res.send("VeX5Ry7AHsmfkmh4zvwzM5QkzNkxG481uZtxAXvMxV4.8OagZ1r5d5ryybc2ain9wkfU-s-9M8T4zELxEtMscQI"));
+    app.get("/.well-known/acme-challenge/VeX5Ry7AHsmfkmh4zvwzM5QkzNkxG481uZtxAXvMxV4", (_, res) => res.send("VeX5Ry7AHsmfkmh4zvwzM5QkzNkxG481uZtxAXvMxV4.8OagZ1r5d5ryybc2ain9wkfU-s-9M8T4zELxEtMscQI"));
     app.listen(constants_1.PORT, () => {
         console.log(`The server has started on port ${constants_1.PORT}.`);
         if (!constants_1.__prod__) {
