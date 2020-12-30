@@ -4,6 +4,7 @@ import {
   DATABASE_PASSWORD,
   DATABASE_URL,
   DATABASE_USER,
+  __prod__,
 } from "../constants";
 import { Block } from "../entities/Block";
 import { Cache } from "../entities/Cache";
@@ -22,4 +23,5 @@ export const typeormConfig = {
   logging: true,
   synchronize: true,
   entities: [Quack, User, Follow, Requack, Like, Block, Cache],
+  ssl: __prod__,
 } as Parameters<typeof createConnection>[0];

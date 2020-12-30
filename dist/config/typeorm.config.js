@@ -18,5 +18,6 @@ exports.typeormConfig = {
     logging: true,
     synchronize: true,
     entities: [Quack_1.Quack, User_1.User, Follow_1.Follow, Requack_1.Requack, Like_1.Like, Block_1.Block, Cache_1.Cache],
+    ssl: constants_1.__prod__,
 };
 //# sourceMappingURL=typeorm.config.js.map
