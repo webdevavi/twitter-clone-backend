@@ -356,6 +356,9 @@ let UserResolver = class UserResolver {
             return { user };
         });
     }
+    logout() {
+        return true;
+    }
     me({ payload: { user } }) {
         return user;
     }
@@ -488,6 +491,12 @@ __decorate([
     __metadata("design:paramtypes", [Object]),
     __metadata("design:returntype", Promise)
 ], UserResolver.prototype, "activate", null);
+__decorate([
+    type_graphql_1.Mutation(() => Boolean),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", []),
+    __metadata("design:returntype", void 0)
+], UserResolver.prototype, "logout", null);
 __decorate([
     type_graphql_1.Query(() => User_1.User, { nullable: true }),
     type_graphql_1.Authorized(),

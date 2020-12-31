@@ -404,6 +404,11 @@ export class UserResolver {
     return { user };
   }
 
+  @Mutation(() => Boolean)
+  logout() {
+    return true;
+  }
+
   @Query(() => User, { nullable: true })
   @Authorized()
   me(@Ctx() { payload: { user } }: MyContext) {
