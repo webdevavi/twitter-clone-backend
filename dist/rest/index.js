@@ -14,8 +14,8 @@ const express_1 = require("express");
 const jsonwebtoken_1 = require("jsonwebtoken");
 const constants_1 = require("../constants");
 const User_1 = require("../entities/User");
+const cookies_1 = require("../utils/cookies");
 const createJWT_1 = require("../utils/createJWT");
-const setTokensToCookie_1 = require("../utils/setTokensToCookie");
 exports.router = express_1.Router();
 exports.router.get("/", (_, res) => res.send("<h1>Welcome to Quacker</h1>"));
 exports.router.post("/refresh_token", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
@@ -24,7 +24,6 @@ exports.router.post("/refresh_token", (req, res) => __awaiter(void 0, void 0, vo
     if (!refreshToken || refreshToken === "undefined") {
         return res.status(400).json({ message: "No refresh token" });
     }
-    console.log(refreshToken);
     try {
         const payload = jsonwebtoken_1.verify(refreshToken, constants_1.REFRESH_TOKEN_SECRET);
         const user = yield User_1.User.findOne(payload === null || payload === void 0 ? void 0 : payload.userId);
@@ -33,7 +32,7 @@ exports.router.post("/refresh_token", (req, res) => __awaiter(void 0, void 0, vo
         }
         const accessToken = createJWT_1.createAccessToken(user);
         const newRefreshToken = createJWT_1.createRefreshToken(user);
-        setTokensToCookie_1.setTokensToCookie(res, accessToken, newRefreshToken);
+        cookies_1.setTokens(res, accessToken, newRefreshToken);
         return res.sendStatus(200);
     }
     catch ({ message }) {

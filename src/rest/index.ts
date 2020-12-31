@@ -3,8 +3,8 @@ import { verify } from "jsonwebtoken";
 import { REFRESH_TOKEN_SECRET } from "../constants";
 import { User } from "../entities/User";
 import { JWTPayload } from "../types";
+import { setTokens } from "../utils/cookies";
 import { createAccessToken, createRefreshToken } from "../utils/createJWT";
-import { setTokensToCookie } from "../utils/setTokensToCookie";
 
 export const router = Router();
 
@@ -17,7 +17,6 @@ router.post("/refresh_token", async (req, res) => {
     return res.status(400).json({ message: "No refresh token" });
   }
 
-  console.log(refreshToken);
   try {
     const payload = verify(refreshToken!, REFRESH_TOKEN_SECRET!) as JWTPayload;
 
@@ -30,7 +29,7 @@ router.post("/refresh_token", async (req, res) => {
     const accessToken = createAccessToken(user!);
     const newRefreshToken = createRefreshToken(user!);
 
-    setTokensToCookie(res, accessToken, newRefreshToken);
+    setTokens(res, accessToken, newRefreshToken);
 
     return res.sendStatus(200);
   } catch ({ message }) {

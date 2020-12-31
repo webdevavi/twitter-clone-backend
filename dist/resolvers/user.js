@@ -40,10 +40,10 @@ const Requack_1 = require("../entities/Requack");
 const User_1 = require("../entities/User");
 const UserInput_1 = require("../input/UserInput");
 const UserResponse_1 = require("../response/UserResponse");
+const cookies_1 = require("../utils/cookies");
 const createJWT_1 = require("../utils/createJWT");
 const regexp_1 = require("../utils/regexp");
 const sendEmail_1 = require("../utils/sendEmail");
-const setTokensToCookie_1 = require("../utils/setTokensToCookie");
 const user_1 = require("../validators/user");
 let UserResolver = class UserResolver {
     followers(user) {
@@ -125,7 +125,7 @@ let UserResolver = class UserResolver {
                 yield sendEmail_1.sendEmail(user.email, template, "Verify your email - Quacker");
                 const accessToken = createJWT_1.createAccessToken(user);
                 const refreshToken = createJWT_1.createRefreshToken(user);
-                setTokensToCookie_1.setTokensToCookie(res, accessToken, refreshToken);
+                cookies_1.setTokens(res, accessToken, refreshToken);
                 return { user, accessToken, refreshToken };
             }
             catch (error) {
@@ -176,7 +176,7 @@ let UserResolver = class UserResolver {
             if (yield argon2_1.default.verify(user.password, password)) {
                 const accessToken = createJWT_1.createAccessToken(user);
                 const refreshToken = createJWT_1.createRefreshToken(user);
-                setTokensToCookie_1.setTokensToCookie(res, accessToken, refreshToken);
+                cookies_1.setTokens(res, accessToken, refreshToken);
                 return { user, accessToken, refreshToken };
             }
             else {
@@ -342,8 +342,7 @@ let UserResolver = class UserResolver {
                 user.amIDeactivated = true;
                 yield user.save();
                 yield Quack_1.Quack.update({ quackedByUserId: user === null || user === void 0 ? void 0 : user.id }, { isVisible: false });
-                res.clearCookie(constants_1.ACCESS_TOKEN);
-                res.clearCookie(constants_1.REFRESH_TOKEN);
+                cookies_1.clearTokens(res);
                 return { user };
             }
             else {
@@ -362,8 +361,7 @@ let UserResolver = class UserResolver {
         });
     }
     logout({ res }) {
-        res.clearCookie(constants_1.ACCESS_TOKEN);
-        res.clearCookie(constants_1.REFRESH_TOKEN);
+        cookies_1.clearTokens(res);
         return true;
     }
     me({ payload: { user } }) {

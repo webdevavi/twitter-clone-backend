@@ -11,10 +11,8 @@ import {
 } from "type-graphql";
 import { v4 } from "uuid";
 import {
-  ACCESS_TOKEN,
   FORGOT_PASSWORD_PREFIX,
   ORIGIN,
-  REFRESH_TOKEN,
   VERIFY_EMAIL_PREFIX,
 } from "../constants";
 import { forgotPasswordTemplate } from "../emailTemplates/forgotPassword";
@@ -29,10 +27,10 @@ import { User } from "../entities/User";
 import { UserInput } from "../input/UserInput";
 import { UserResponse } from "../response/UserResponse";
 import { MyContext, UserRole } from "../types";
+import { clearTokens, setTokens } from "../utils/cookies";
 import { createAccessToken, createRefreshToken } from "../utils/createJWT";
 import { validEmail } from "../utils/regexp";
 import { sendEmail } from "../utils/sendEmail";
-import { setTokensToCookie } from "../utils/setTokensToCookie";
 import { ValidateUser } from "../validators/user";
 
 @Resolver(User)
@@ -131,7 +129,7 @@ export class UserResolver {
       await sendEmail(user.email, template, "Verify your email - Quacker");
       const accessToken = createAccessToken(user);
       const refreshToken = createRefreshToken(user);
-      setTokensToCookie(res, accessToken, refreshToken);
+      setTokens(res, accessToken, refreshToken);
       return { user, accessToken, refreshToken };
     } catch (error) {
       if (error.detail.includes("already exists")) {
@@ -187,7 +185,7 @@ export class UserResolver {
     if (await argon.verify(user.password, password)) {
       const accessToken = createAccessToken(user);
       const refreshToken = createRefreshToken(user);
-      setTokensToCookie(res, accessToken, refreshToken);
+      setTokens(res, accessToken, refreshToken);
       return { user, accessToken, refreshToken };
     } else {
       return {
@@ -393,9 +391,7 @@ export class UserResolver {
       user!.amIDeactivated = true;
       await user!.save();
       await Quack.update({ quackedByUserId: user?.id }, { isVisible: false });
-      res.clearCookie(ACCESS_TOKEN, { sameSite: "none" });
-      res.clearCookie(REFRESH_TOKEN, { sameSite: "none" });
-
+      clearTokens(res);
       return { user };
     } else {
       return {
@@ -418,8 +414,7 @@ export class UserResolver {
 
   @Mutation(() => Boolean)
   logout(@Ctx() { res }: MyContext) {
-    res.clearCookie(ACCESS_TOKEN, { sameSite: "none" });
-    res.clearCookie(REFRESH_TOKEN, { sameSite: "none" });
+    clearTokens(res);
     return true;
   }
 
