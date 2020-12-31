@@ -3,7 +3,6 @@ import { verify } from "jsonwebtoken";
 import { REFRESH_TOKEN_SECRET } from "../constants";
 import { User } from "../entities/User";
 import { JWTPayload } from "../types";
-import { setTokens } from "../utils/cookies";
 import { createAccessToken, createRefreshToken } from "../utils/createJWT";
 
 export const router = Router();
@@ -29,9 +28,10 @@ router.post("/refresh_token", async (req, res) => {
     const accessToken = createAccessToken(user!);
     const newRefreshToken = createRefreshToken(user!);
 
-    setTokens(res, accessToken, newRefreshToken);
-
-    return res.sendStatus(200);
+    return res.status(200).json({
+      accessToken,
+      refreshToken: newRefreshToken,
+    });
   } catch ({ message }) {
     return res.status(400).json({ message });
   }

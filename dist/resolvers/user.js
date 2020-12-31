@@ -40,7 +40,6 @@ const Requack_1 = require("../entities/Requack");
 const User_1 = require("../entities/User");
 const UserInput_1 = require("../input/UserInput");
 const UserResponse_1 = require("../response/UserResponse");
-const cookies_1 = require("../utils/cookies");
 const createJWT_1 = require("../utils/createJWT");
 const regexp_1 = require("../utils/regexp");
 const sendEmail_1 = require("../utils/sendEmail");
@@ -103,7 +102,7 @@ let UserResolver = class UserResolver {
             return true;
         });
     }
-    signup(input, { res }) {
+    signup(input) {
         return __awaiter(this, void 0, void 0, function* () {
             const errors = new user_1.ValidateUser(input).validate();
             if (errors.length !== 0) {
@@ -125,7 +124,6 @@ let UserResolver = class UserResolver {
                 yield sendEmail_1.sendEmail(user.email, template, "Verify your email - Quacker");
                 const accessToken = createJWT_1.createAccessToken(user);
                 const refreshToken = createJWT_1.createRefreshToken(user);
-                cookies_1.setTokens(res, accessToken, refreshToken);
                 return { user, accessToken, refreshToken };
             }
             catch (error) {
@@ -155,7 +153,7 @@ let UserResolver = class UserResolver {
             }
         });
     }
-    login(emailOrUsername, password, { res }) {
+    login(emailOrUsername, password) {
         return __awaiter(this, void 0, void 0, function* () {
             const isEmail = regexp_1.validEmail.test(emailOrUsername);
             const user = yield User_1.User.findOne({
@@ -176,7 +174,6 @@ let UserResolver = class UserResolver {
             if (yield argon2_1.default.verify(user.password, password)) {
                 const accessToken = createJWT_1.createAccessToken(user);
                 const refreshToken = createJWT_1.createRefreshToken(user);
-                cookies_1.setTokens(res, accessToken, refreshToken);
                 return { user, accessToken, refreshToken };
             }
             else {
@@ -336,13 +333,12 @@ let UserResolver = class UserResolver {
             }
         });
     }
-    deactivate(password, { payload: { user }, res }) {
+    deactivate(password, { payload: { user } }) {
         return __awaiter(this, void 0, void 0, function* () {
             if (yield argon2_1.default.verify(user.password, password)) {
                 user.amIDeactivated = true;
                 yield user.save();
                 yield Quack_1.Quack.update({ quackedByUserId: user === null || user === void 0 ? void 0 : user.id }, { isVisible: false });
-                cookies_1.clearTokens(res);
                 return { user };
             }
             else {
@@ -359,10 +355,6 @@ let UserResolver = class UserResolver {
             yield Quack_1.Quack.update({ quackedByUserId: user === null || user === void 0 ? void 0 : user.id }, { isVisible: true });
             return { user };
         });
-    }
-    logout({ res }) {
-        cookies_1.clearTokens(res);
-        return true;
     }
     me({ payload: { user } }) {
         return user;
@@ -427,18 +419,16 @@ __decorate([
 __decorate([
     type_graphql_1.Mutation(() => UserResponse_1.UserResponse),
     __param(0, type_graphql_1.Arg("input")),
-    __param(1, type_graphql_1.Ctx()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [UserInput_1.UserInput, Object]),
+    __metadata("design:paramtypes", [UserInput_1.UserInput]),
     __metadata("design:returntype", Promise)
 ], UserResolver.prototype, "signup", null);
 __decorate([
     type_graphql_1.Mutation(() => UserResponse_1.UserResponse),
     __param(0, type_graphql_1.Arg("emailOrUsername")),
     __param(1, type_graphql_1.Arg("password")),
-    __param(2, type_graphql_1.Ctx()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String, String, Object]),
+    __metadata("design:paramtypes", [String, String]),
     __metadata("design:returntype", Promise)
 ], UserResolver.prototype, "login", null);
 __decorate([
@@ -498,13 +488,6 @@ __decorate([
     __metadata("design:paramtypes", [Object]),
     __metadata("design:returntype", Promise)
 ], UserResolver.prototype, "activate", null);
-__decorate([
-    type_graphql_1.Mutation(() => Boolean),
-    __param(0, type_graphql_1.Ctx()),
-    __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Object]),
-    __metadata("design:returntype", void 0)
-], UserResolver.prototype, "logout", null);
 __decorate([
     type_graphql_1.Query(() => User_1.User, { nullable: true }),
     type_graphql_1.Authorized(),

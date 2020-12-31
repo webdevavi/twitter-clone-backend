@@ -14,7 +14,6 @@ const express_1 = require("express");
 const jsonwebtoken_1 = require("jsonwebtoken");
 const constants_1 = require("../constants");
 const User_1 = require("../entities/User");
-const cookies_1 = require("../utils/cookies");
 const createJWT_1 = require("../utils/createJWT");
 exports.router = express_1.Router();
 exports.router.get("/", (_, res) => res.send("<h1>Welcome to Quacker</h1>"));
@@ -32,8 +31,10 @@ exports.router.post("/refresh_token", (req, res) => __awaiter(void 0, void 0, vo
         }
         const accessToken = createJWT_1.createAccessToken(user);
         const newRefreshToken = createJWT_1.createRefreshToken(user);
-        cookies_1.setTokens(res, accessToken, newRefreshToken);
-        return res.sendStatus(200);
+        return res.status(200).json({
+            accessToken,
+            refreshToken: newRefreshToken,
+        });
     }
     catch ({ message }) {
         return res.status(400).json({ message });

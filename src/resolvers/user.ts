@@ -27,7 +27,6 @@ import { User } from "../entities/User";
 import { UserInput } from "../input/UserInput";
 import { UserResponse } from "../response/UserResponse";
 import { MyContext, UserRole } from "../types";
-import { clearTokens, setTokens } from "../utils/cookies";
 import { createAccessToken, createRefreshToken } from "../utils/createJWT";
 import { validEmail } from "../utils/regexp";
 import { sendEmail } from "../utils/sendEmail";
@@ -98,10 +97,7 @@ export class UserResolver {
   }
 
   @Mutation(() => UserResponse)
-  async signup(
-    @Arg("input") input: UserInput,
-    @Ctx() { res }: MyContext
-  ): Promise<UserResponse> {
+  async signup(@Arg("input") input: UserInput): Promise<UserResponse> {
     const errors = new ValidateUser(input).validate();
 
     if (errors.length !== 0) {
@@ -129,7 +125,6 @@ export class UserResolver {
       await sendEmail(user.email, template, "Verify your email - Quacker");
       const accessToken = createAccessToken(user);
       const refreshToken = createRefreshToken(user);
-      setTokens(res, accessToken, refreshToken);
       return { user, accessToken, refreshToken };
     } catch (error) {
       if (error.detail.includes("already exists")) {
@@ -160,8 +155,7 @@ export class UserResolver {
   @Mutation(() => UserResponse)
   async login(
     @Arg("emailOrUsername") emailOrUsername: string,
-    @Arg("password") password: string,
-    @Ctx() { res }: MyContext
+    @Arg("password") password: string
   ): Promise<UserResponse> {
     const isEmail = validEmail.test(emailOrUsername);
 
@@ -185,7 +179,6 @@ export class UserResolver {
     if (await argon.verify(user.password, password)) {
       const accessToken = createAccessToken(user);
       const refreshToken = createRefreshToken(user);
-      setTokens(res, accessToken, refreshToken);
       return { user, accessToken, refreshToken };
     } else {
       return {
@@ -385,13 +378,12 @@ export class UserResolver {
   @Authorized<UserRole>(["ACTIVATED"])
   async deactivate(
     @Arg("password") password: string,
-    @Ctx() { payload: { user }, res }: MyContext
+    @Ctx() { payload: { user } }: MyContext
   ): Promise<UserResponse> {
     if (await argon.verify(user!.password, password)) {
       user!.amIDeactivated = true;
       await user!.save();
       await Quack.update({ quackedByUserId: user?.id }, { isVisible: false });
-      clearTokens(res);
       return { user };
     } else {
       return {
@@ -410,12 +402,6 @@ export class UserResolver {
     await Quack.update({ quackedByUserId: user?.id }, { isVisible: true });
 
     return { user };
-  }
-
-  @Mutation(() => Boolean)
-  logout(@Ctx() { res }: MyContext) {
-    clearTokens(res);
-    return true;
   }
 
   @Query(() => User, { nullable: true })
