@@ -11,10 +11,12 @@ import {
 import { userLoader } from "./utils/userLoader";
 import { Request, Response } from "express";
 import { User } from "./entities/User";
+import { Redis } from "ioredis";
 
 export type MyContext = {
   req: Request;
   res: Response;
+  cache: Redis;
   userLoader: ReturnType<typeof userLoader>;
   requackLoader: ReturnType<typeof requackLoader>;
   requackLoaderByQuackId: ReturnType<typeof requackLoaderByQuackId>;

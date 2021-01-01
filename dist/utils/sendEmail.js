@@ -14,14 +14,14 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.sendEmail = void 0;
 const nodemailer_1 = __importDefault(require("nodemailer"));
+const constants_1 = require("../constants");
 const sendEmail = (to, text, subject) => __awaiter(void 0, void 0, void 0, function* () {
     const transporter = nodemailer_1.default.createTransport({
-        host: "smtp.ethereal.email",
-        port: 587,
-        secure: false,
+        host: constants_1.NODE_MAILER_HOST,
+        port: parseInt(constants_1.NODE_MAILER_PORT),
         auth: {
-            user: "hllqi45vaj27o6jm@ethereal.email",
-            pass: "GeStucsbfhmzMQ4UxV",
+            user: constants_1.NODE_MAILER_USER,
+            pass: constants_1.NODE_MAILER_PASSWORD,
         },
     });
     const info = yield transporter.sendMail({
@@ -31,7 +31,6 @@ const sendEmail = (to, text, subject) => __awaiter(void 0, void 0, void 0, funct
         html: text,
     });
     console.log("Message sent: %s", info.messageId);
-    console.log("Preview: ", nodemailer_1.default.getTestMessageUrl(info));
 });
 exports.sendEmail = sendEmail;
 //# sourceMappingURL=sendEmail.js.map

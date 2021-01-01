@@ -7,7 +7,6 @@ import {
   __prod__,
 } from "../constants";
 import { Block } from "../entities/Block";
-import { Cache } from "../entities/Cache";
 import { Follow } from "../entities/Follow";
 import { Like } from "../entities/Like";
 import { Quack } from "../entities/Quack";
@@ -21,7 +20,7 @@ export const typeormConfig = (): TypeormConfig => {
     type: "postgres",
     logging: true,
     synchronize: true,
-    entities: [Quack, User, Follow, Requack, Like, Block, Cache],
+    entities: [Quack, User, Follow, Requack, Like, Block],
   };
 
   if (__prod__) {

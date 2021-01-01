@@ -32,7 +32,6 @@ const constants_1 = require("../constants");
 const forgotPassword_1 = require("../emailTemplates/forgotPassword");
 const verifyEmail_1 = require("../emailTemplates/verifyEmail");
 const Block_1 = require("../entities/Block");
-const Cache_1 = require("../entities/Cache");
 const Follow_1 = require("../entities/Follow");
 const Like_1 = require("../entities/Like");
 const Quack_1 = require("../entities/Quack");
@@ -102,7 +101,7 @@ let UserResolver = class UserResolver {
             return true;
         });
     }
-    signup(input) {
+    signup(input, { cache }) {
         return __awaiter(this, void 0, void 0, function* () {
             const errors = new user_1.ValidateUser(input).validate();
             if (errors.length !== 0) {
@@ -119,7 +118,8 @@ let UserResolver = class UserResolver {
             try {
                 yield user.save();
                 const token = uuid_1.v4();
-                yield Cache_1.Cache.insert({ key: constants_1.VERIFY_EMAIL_PREFIX + token, value: user.id });
+                const key = constants_1.VERIFY_EMAIL_PREFIX + token;
+                yield cache.set(key, user.id, "ex", 1000 * 60 * 60 * 24 * 3);
                 const template = verifyEmail_1.verifyEmailTemplate(constants_1.ORIGIN + "/verifyEmail?token=" + token);
                 yield sendEmail_1.sendEmail(user.email, template, "Verify your email - Quacker");
                 const accessToken = createJWT_1.createAccessToken(user);
@@ -188,26 +188,17 @@ let UserResolver = class UserResolver {
             }
         });
     }
-    sendEmailVerificationLink({ payload: { user } }) {
+    sendEmailVerificationLink({ payload: { user }, cache }) {
         return __awaiter(this, void 0, void 0, function* () {
-            const cache = yield Cache_1.Cache.findOne({ where: { value: user === null || user === void 0 ? void 0 : user.id } });
-            let token;
-            if (cache) {
-                token = cache.key.slice(constants_1.VERIFY_EMAIL_PREFIX.length);
-            }
-            else {
-                token = uuid_1.v4();
-                yield Cache_1.Cache.insert({
-                    key: constants_1.VERIFY_EMAIL_PREFIX + token,
-                    value: user === null || user === void 0 ? void 0 : user.id,
-                });
-            }
+            const token = uuid_1.v4();
+            const key = constants_1.VERIFY_EMAIL_PREFIX + token;
+            yield cache.set(key, user.id, "ex", 1000 * 60 * 60 * 24 * 3);
             const template = verifyEmail_1.verifyEmailTemplate(constants_1.ORIGIN + "/verify-email?token=" + token);
             yield sendEmail_1.sendEmail(user === null || user === void 0 ? void 0 : user.email, template, "Verify your email - Quacker");
             return true;
         });
     }
-    verifyEmail(token) {
+    verifyEmail(token, { cache }) {
         return __awaiter(this, void 0, void 0, function* () {
             if (!token) {
                 return {
@@ -220,8 +211,8 @@ let UserResolver = class UserResolver {
                 };
             }
             const key = constants_1.VERIFY_EMAIL_PREFIX + token;
-            const cache = yield Cache_1.Cache.findOne(key);
-            if (!cache) {
+            const userId = yield cache.get(key);
+            if (!userId) {
                 return {
                     errors: [
                         {
@@ -231,7 +222,7 @@ let UserResolver = class UserResolver {
                     ],
                 };
             }
-            const user = yield User_1.User.findOne(cache.value);
+            const user = yield User_1.User.findOne(userId);
             if (!user) {
                 return {
                     errors: [
@@ -246,42 +237,33 @@ let UserResolver = class UserResolver {
                 user.emailVerified = true;
                 yield user.save();
             }
-            yield Cache_1.Cache.delete(key);
+            yield cache.del(constants_1.VERIFY_EMAIL_PREFIX + token);
             return { user };
         });
     }
-    forgotPassword(email) {
+    forgotPassword(email, { cache }) {
         return __awaiter(this, void 0, void 0, function* () {
             const user = yield User_1.User.findOne({ where: { email } });
             if (!user) {
                 return true;
             }
-            const cache = yield Cache_1.Cache.findOne({ where: { value: user.id } });
-            let token;
-            if (cache) {
-                token = cache.key.slice(constants_1.FORGOT_PASSWORD_PREFIX.length);
-            }
-            else {
-                token = uuid_1.v4();
-                yield Cache_1.Cache.insert({
-                    key: constants_1.FORGOT_PASSWORD_PREFIX + token,
-                    value: user.id,
-                });
-            }
+            const token = uuid_1.v4();
+            const key = constants_1.FORGOT_PASSWORD_PREFIX + token;
+            yield cache.set(key, user.id, "ex", 1000 * 60 * 60 * 24);
             const template = forgotPassword_1.forgotPasswordTemplate(constants_1.ORIGIN + "/reset-password?token=" + token);
             yield sendEmail_1.sendEmail(user.email, template, "Reset your password - Quacker");
             return true;
         });
     }
-    changePasswordWithToken(token, newPassword) {
+    changePasswordWithToken(token, newPassword, { cache }) {
         return __awaiter(this, void 0, void 0, function* () {
             const errors = new user_1.ValidateUser({ newPassword }).validate();
             if (errors.length !== 0) {
                 return { errors };
             }
             const key = constants_1.FORGOT_PASSWORD_PREFIX + token;
-            const cache = yield Cache_1.Cache.findOne(key);
-            if (!cache) {
+            const userId = yield cache.get(key);
+            if (!userId) {
                 return {
                     errors: [
                         {
@@ -291,7 +273,7 @@ let UserResolver = class UserResolver {
                     ],
                 };
             }
-            const user = yield User_1.User.findOne(cache.value);
+            const user = yield User_1.User.findOne(userId);
             if (!user) {
                 return {
                     errors: [
@@ -304,8 +286,8 @@ let UserResolver = class UserResolver {
             }
             const hashedPassword = yield argon2_1.default.hash(newPassword);
             user.password = hashedPassword;
-            yield User_1.User.update({ id: cache.value }, { password: hashedPassword });
-            yield Cache_1.Cache.delete(key);
+            yield User_1.User.update({ id: userId }, { password: hashedPassword });
+            yield cache.del(key);
             return { user };
         });
     }
@@ -422,8 +404,9 @@ __decorate([
 __decorate([
     type_graphql_1.Mutation(() => UserResponse_1.UserResponse),
     __param(0, type_graphql_1.Arg("input")),
+    __param(1, type_graphql_1.Ctx()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [UserInput_1.UserInput]),
+    __metadata("design:paramtypes", [UserInput_1.UserInput, Object]),
     __metadata("design:returntype", Promise)
 ], UserResolver.prototype, "signup", null);
 __decorate([
@@ -445,23 +428,26 @@ __decorate([
 __decorate([
     type_graphql_1.Mutation(() => UserResponse_1.UserResponse),
     __param(0, type_graphql_1.Arg("token")),
+    __param(1, type_graphql_1.Ctx()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String]),
+    __metadata("design:paramtypes", [String, Object]),
     __metadata("design:returntype", Promise)
 ], UserResolver.prototype, "verifyEmail", null);
 __decorate([
     type_graphql_1.Mutation(() => Boolean),
     __param(0, type_graphql_1.Arg("email")),
+    __param(1, type_graphql_1.Ctx()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String]),
+    __metadata("design:paramtypes", [String, Object]),
     __metadata("design:returntype", Promise)
 ], UserResolver.prototype, "forgotPassword", null);
 __decorate([
     type_graphql_1.Mutation(() => UserResponse_1.UserResponse),
     __param(0, type_graphql_1.Arg("token")),
     __param(1, type_graphql_1.Arg("newPassword")),
+    __param(2, type_graphql_1.Ctx()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String, String]),
+    __metadata("design:paramtypes", [String, String, Object]),
     __metadata("design:returntype", Promise)
 ], UserResolver.prototype, "changePasswordWithToken", null);
 __decorate([

@@ -13,6 +13,14 @@ export const DATABASE_NAME = process.env.DATABASE_NAME;
 export const DATABASE_USER = process.env.DATABASE_USER;
 export const DATABASE_PASSWORD = process.env.DATABASE_PASSWORD;
 
+export const REDIS_URL = process.env.REDIS_URL;
+export const REDIS_PASSWORD = process.env.REDIS_PASSWORD;
+
+export const NODE_MAILER_HOST = process.env.NODE_MAILER_HOST;
+export const NODE_MAILER_PORT = process.env.NODE_MAILER_PORT;
+export const NODE_MAILER_USER = process.env.NODE_MAILER_USER;
+export const NODE_MAILER_PASSWORD = process.env.NODE_MAILER_PASSWORD;
+
 export const ACCESS_TOKEN = process.env.ACCESS_TOKEN || "qat";
 export const REFRESH_TOKEN = process.env.REFRESH_TOKEN || "qrt";
 

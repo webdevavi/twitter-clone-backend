@@ -1,13 +1,18 @@
 import nodemailer from "nodemailer";
+import {
+  NODE_MAILER_HOST,
+  NODE_MAILER_PASSWORD,
+  NODE_MAILER_PORT,
+  NODE_MAILER_USER,
+} from "../constants";
 
 export const sendEmail = async (to: string, text: string, subject: string) => {
   const transporter = nodemailer.createTransport({
-    host: "smtp.ethereal.email",
-    port: 587,
-    secure: false,
+    host: NODE_MAILER_HOST,
+    port: parseInt(NODE_MAILER_PORT!),
     auth: {
-      user: "hllqi45vaj27o6jm@ethereal.email",
-      pass: "GeStucsbfhmzMQ4UxV",
+      user: NODE_MAILER_USER,
+      pass: NODE_MAILER_PASSWORD,
     },
   });
 
@@ -19,5 +24,4 @@ export const sendEmail = async (to: string, text: string, subject: string) => {
   });
 
   console.log("Message sent: %s", info.messageId);
-  console.log("Preview: ", nodemailer.getTestMessageUrl(info));
 };

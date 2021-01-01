@@ -21,7 +21,7 @@ const user_1 = require("../resolvers/user");
 const likeLoader_1 = require("../utils/likeLoader");
 const requackLoader_1 = require("../utils/requackLoader");
 const userLoader_1 = require("../utils/userLoader");
-const apolloConfig = () => __awaiter(void 0, void 0, void 0, function* () {
+const apolloConfig = ({ redis, }) => __awaiter(void 0, void 0, void 0, function* () {
     return ({
         schema: yield type_graphql_1.buildSchema({
             resolvers: [
@@ -38,6 +38,7 @@ const apolloConfig = () => __awaiter(void 0, void 0, void 0, function* () {
         context: ({ req, res }) => ({
             req,
             res,
+            cache: redis,
             userLoader: userLoader_1.userLoader(),
             requackLoader: requackLoader_1.requackLoader(),
             requackLoaderByUserId: requackLoader_1.requackLoaderByUserId(),

@@ -19,8 +19,15 @@ import {
   requackLoaderByUserId,
 } from "../utils/requackLoader";
 import { userLoader } from "../utils/userLoader";
+import { Redis } from "ioredis";
 
-export const apolloConfig = async (): Promise<ApolloServerExpressConfig> => ({
+interface ApolloConfigOptions {
+  redis: Redis;
+}
+
+export const apolloConfig = async ({
+  redis,
+}: ApolloConfigOptions): Promise<ApolloServerExpressConfig> => ({
   schema: await buildSchema({
     resolvers: [
       UserResolver,
@@ -37,6 +44,7 @@ export const apolloConfig = async (): Promise<ApolloServerExpressConfig> => ({
   context: ({ req, res }): MyContext => ({
     req,
     res,
+    cache: redis,
     userLoader: userLoader(),
     requackLoader: requackLoader(),
     requackLoaderByUserId: requackLoaderByUserId(),

@@ -18,7 +18,6 @@ import {
 import { forgotPasswordTemplate } from "../emailTemplates/forgotPassword";
 import { verifyEmailTemplate } from "../emailTemplates/verifyEmail";
 import { Block } from "../entities/Block";
-import { Cache } from "../entities/Cache";
 import { Follow } from "../entities/Follow";
 import { Like } from "../entities/Like";
 import { Quack } from "../entities/Quack";
@@ -97,7 +96,10 @@ export class UserResolver {
   }
 
   @Mutation(() => UserResponse)
-  async signup(@Arg("input") input: UserInput): Promise<UserResponse> {
+  async signup(
+    @Arg("input") input: UserInput,
+    @Ctx() { cache }: MyContext
+  ): Promise<UserResponse> {
     const errors = new ValidateUser(input).validate();
 
     if (errors.length !== 0) {
@@ -118,7 +120,13 @@ export class UserResolver {
     try {
       await user.save();
       const token = v4();
-      await Cache.insert({ key: VERIFY_EMAIL_PREFIX + token, value: user.id });
+      const key = VERIFY_EMAIL_PREFIX + token;
+      await cache.set(
+        key,
+        user.id,
+        "ex",
+        1000 * 60 * 60 * 24 * 3 // 3 days
+      );
       const template = verifyEmailTemplate(
         ORIGIN + "/verifyEmail?token=" + token
       );
@@ -194,20 +202,18 @@ export class UserResolver {
 
   @Mutation(() => Boolean)
   @Authorized<UserRole>(["UNVERIFIED"])
-  async sendEmailVerificationLink(@Ctx() { payload: { user } }: MyContext) {
-    const cache = await Cache.findOne({ where: { value: user?.id } });
+  async sendEmailVerificationLink(
+    @Ctx() { payload: { user }, cache }: MyContext
+  ) {
+    const token = v4();
+    const key = VERIFY_EMAIL_PREFIX + token;
 
-    let token: string;
-
-    if (cache) {
-      token = cache.key.slice(VERIFY_EMAIL_PREFIX.length);
-    } else {
-      token = v4();
-      await Cache.insert({
-        key: VERIFY_EMAIL_PREFIX + token,
-        value: user?.id,
-      });
-    }
+    await cache.set(
+      key,
+      user!.id,
+      "ex",
+      1000 * 60 * 60 * 24 * 3 // 3 days
+    );
 
     const template = verifyEmailTemplate(
       ORIGIN + "/verify-email?token=" + token
@@ -217,7 +223,10 @@ export class UserResolver {
   }
 
   @Mutation(() => UserResponse)
-  async verifyEmail(@Arg("token") token: string): Promise<UserResponse> {
+  async verifyEmail(
+    @Arg("token") token: string,
+    @Ctx() { cache }: MyContext
+  ): Promise<UserResponse> {
     if (!token) {
       return {
         errors: [
@@ -230,9 +239,9 @@ export class UserResolver {
     }
 
     const key = VERIFY_EMAIL_PREFIX + token;
-    const cache = await Cache.findOne(key);
+    const userId = await cache.get(key);
 
-    if (!cache) {
+    if (!userId) {
       return {
         errors: [
           {
@@ -243,7 +252,7 @@ export class UserResolver {
       };
     }
 
-    const user = await User.findOne(cache.value);
+    const user = await User.findOne(userId);
 
     if (!user) {
       return {
@@ -260,30 +269,29 @@ export class UserResolver {
       user.emailVerified = true;
       await user.save();
     }
-    await Cache.delete(key);
+    await cache.del(VERIFY_EMAIL_PREFIX + token);
     return { user };
   }
 
   @Mutation(() => Boolean)
-  async forgotPassword(@Arg("email") email: string): Promise<Boolean> {
+  async forgotPassword(
+    @Arg("email") email: string,
+    @Ctx() { cache }: MyContext
+  ): Promise<Boolean> {
     const user = await User.findOne({ where: { email } });
     if (!user) {
       return true;
     }
 
-    const cache = await Cache.findOne({ where: { value: user.id } });
+    const token = v4();
+    const key = FORGOT_PASSWORD_PREFIX + token;
 
-    let token: string;
-
-    if (cache) {
-      token = cache.key.slice(FORGOT_PASSWORD_PREFIX.length);
-    } else {
-      token = v4();
-      await Cache.insert({
-        key: FORGOT_PASSWORD_PREFIX + token,
-        value: user.id,
-      });
-    }
+    await cache.set(
+      key,
+      user!.id,
+      "ex",
+      1000 * 60 * 60 * 24 // 24 hours
+    );
 
     const template = forgotPasswordTemplate(
       ORIGIN + "/reset-password?token=" + token
@@ -296,7 +304,8 @@ export class UserResolver {
   @Mutation(() => UserResponse)
   async changePasswordWithToken(
     @Arg("token") token: string,
-    @Arg("newPassword") newPassword: string
+    @Arg("newPassword") newPassword: string,
+    @Ctx() { cache }: MyContext
   ): Promise<UserResponse> {
     const errors = new ValidateUser({ newPassword }).validate();
 
@@ -306,9 +315,9 @@ export class UserResolver {
 
     const key = FORGOT_PASSWORD_PREFIX + token;
 
-    const cache = await Cache.findOne(key);
+    const userId = await cache.get(key);
 
-    if (!cache) {
+    if (!userId) {
       return {
         errors: [
           {
@@ -319,7 +328,7 @@ export class UserResolver {
       };
     }
 
-    const user = await User.findOne(cache.value);
+    const user = await User.findOne(userId);
 
     if (!user) {
       return {
@@ -335,9 +344,9 @@ export class UserResolver {
     const hashedPassword = await argon.hash(newPassword);
 
     user.password = hashedPassword;
-    await User.update({ id: cache.value }, { password: hashedPassword });
+    await User.update({ id: userId }, { password: hashedPassword });
 
-    await Cache.delete(key);
+    await cache.del(key);
 
     return { user };
   }

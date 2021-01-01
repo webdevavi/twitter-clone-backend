@@ -5,8 +5,9 @@ import express from "express";
 import "reflect-metadata";
 import { createConnection } from "typeorm";
 import { apolloConfig, corsConfig, typeormConfig } from "./config";
-import { PORT, __prod__ } from "./constants";
+import { PORT, REDIS_PASSWORD, REDIS_URL, __prod__ } from "./constants";
 import { router } from "./rest";
+import Redis from "ioredis";
 
 const main = async () => {
   await createConnection(typeormConfig());
@@ -20,7 +21,11 @@ const main = async () => {
 
   app.use(router);
 
-  const apolloServer = new ApolloServer(await apolloConfig());
+  const redis = new Redis(REDIS_URL, {
+    password: REDIS_PASSWORD,
+  });
+
+  const apolloServer = new ApolloServer(await apolloConfig({ redis }));
 
   apolloServer.applyMiddleware({
     app,
