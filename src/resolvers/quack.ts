@@ -114,19 +114,22 @@ export class QuackResolver {
       return { errors };
     }
 
-    const inReplyToQuack = await Quack.findOne({
-      where: { id: inReplyToQuackId, isVisible: true },
-    });
+    if (inReplyToQuackId) {
+      const inReplyToQuack = await Quack.findOne({
+        where: { id: inReplyToQuackId, isVisible: true },
+      });
 
-    if (!inReplyToQuack)
-      return {
-        errors: [
-          {
-            field: "inReplyToQuackId",
-            message: "The quack you are replying to no longer exists.",
-          },
-        ],
-      };
+      if (!inReplyToQuack) {
+        return {
+          errors: [
+            {
+              field: "inReplyToQuackId",
+              message: "The quack you are replying to no longer exists.",
+            },
+          ],
+        };
+      }
+    }
 
     const quack = Quack.create({
       text,

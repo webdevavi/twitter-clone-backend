@@ -103,18 +103,21 @@ let QuackResolver = class QuackResolver {
             if (errors.length !== 0) {
                 return { errors };
             }
-            const inReplyToQuack = yield Quack_1.Quack.findOne({
-                where: { id: inReplyToQuackId, isVisible: true },
-            });
-            if (!inReplyToQuack)
-                return {
-                    errors: [
-                        {
-                            field: "inReplyToQuackId",
-                            message: "The quack you are replying to no longer exists.",
-                        },
-                    ],
-                };
+            if (inReplyToQuackId) {
+                const inReplyToQuack = yield Quack_1.Quack.findOne({
+                    where: { id: inReplyToQuackId, isVisible: true },
+                });
+                if (!inReplyToQuack) {
+                    return {
+                        errors: [
+                            {
+                                field: "inReplyToQuackId",
+                                message: "The quack you are replying to no longer exists.",
+                            },
+                        ],
+                    };
+                }
+            }
             const quack = Quack_1.Quack.create({
                 text,
                 quackedByUserId: user.id,
