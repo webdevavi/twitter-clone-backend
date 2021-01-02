@@ -141,14 +141,15 @@ let QuackResolver = class QuackResolver {
     quacks() {
         return Quack_1.Quack.find({ where: { isVisible: true } });
     }
-    quacksFromFollowings(limit, offset, { payload: { user } }) {
+    quacksForMe(limit, offset, { payload: { user } }) {
         return __awaiter(this, void 0, void 0, function* () {
             const follows = yield Follow_1.Follow.find({
                 where: { followerId: user.id },
             });
-            const followingIds = follows.map((follow) => follow.userId);
+            const ids = follows.map((follow) => follow.userId);
+            ids.push(user.id);
             return Quack_1.Quack.find({
-                where: { quackedByUserId: typeorm_1.In(followingIds), isVisible: true },
+                where: { quackedByUserId: typeorm_1.In(ids), isVisible: true },
                 take: limit,
                 skip: offset,
             });
@@ -250,7 +251,7 @@ __decorate([
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [Number, Number, Object]),
     __metadata("design:returntype", Promise)
-], QuackResolver.prototype, "quacksFromFollowings", null);
+], QuackResolver.prototype, "quacksForMe", null);
 QuackResolver = __decorate([
     type_graphql_1.Resolver(Quack_1.Quack)
 ], QuackResolver);

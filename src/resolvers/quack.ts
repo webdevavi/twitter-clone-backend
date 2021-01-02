@@ -164,7 +164,7 @@ export class QuackResolver {
 
   @Query(() => [Quack], { nullable: true })
   @Authorized<UserRole>(["ACTIVATED"])
-  async quacksFromFollowings(
+  async quacksForMe(
     @Arg("limit", () => Int, { nullable: true, defaultValue: 20 })
     limit: number,
     @Arg("offset", () => Int, { nullable: true, defaultValue: 0 })
@@ -175,9 +175,10 @@ export class QuackResolver {
     const follows = await Follow.find({
       where: { followerId: user!.id },
     });
-    const followingIds = follows.map((follow) => follow.userId);
+    const ids = follows.map((follow) => follow.userId);
+    ids.push(user!.id);
     return Quack.find({
-      where: { quackedByUserId: In(followingIds), isVisible: true },
+      where: { quackedByUserId: In(ids), isVisible: true },
       take: limit,
       skip: offset,
     });
