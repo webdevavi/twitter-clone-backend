@@ -344,8 +344,14 @@ let UserResolver = class UserResolver {
     me({ payload: { user } }) {
         return user;
     }
-    user(userId) {
+    userById(userId) {
         return User_1.User.findOne(userId);
+    }
+    userByEmail(email) {
+        return User_1.User.findOne({ email });
+    }
+    userByUsername(username) {
+        return User_1.User.findOne({ username });
     }
 };
 __decorate([
@@ -497,7 +503,21 @@ __decorate([
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String]),
     __metadata("design:returntype", void 0)
-], UserResolver.prototype, "user", null);
+], UserResolver.prototype, "userById", null);
+__decorate([
+    type_graphql_1.Query(() => User_1.User, { nullable: true }),
+    __param(0, type_graphql_1.Arg("email")),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String]),
+    __metadata("design:returntype", void 0)
+], UserResolver.prototype, "userByEmail", null);
+__decorate([
+    type_graphql_1.Query(() => User_1.User, { nullable: true }),
+    __param(0, type_graphql_1.Arg("username")),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String]),
+    __metadata("design:returntype", void 0)
+], UserResolver.prototype, "userByUsername", null);
 UserResolver = __decorate([
     type_graphql_1.Resolver(User_1.User)
 ], UserResolver);

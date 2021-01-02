@@ -425,7 +425,17 @@ export class UserResolver {
   }
 
   @Query(() => User, { nullable: true })
-  user(@Arg("userId") userId: string) {
+  userById(@Arg("userId") userId: string) {
     return User.findOne(userId);
+  }
+
+  @Query(() => User, { nullable: true })
+  userByEmail(@Arg("email") email: string) {
+    return User.findOne({ email });
+  }
+
+  @Query(() => User, { nullable: true })
+  userByUsername(@Arg("username") username: string) {
+    return User.findOne({ username });
   }
 }
