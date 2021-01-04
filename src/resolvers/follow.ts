@@ -1,10 +1,28 @@
-import { Arg, Authorized, Ctx, Mutation, Resolver } from "type-graphql";
+import {
+  Arg,
+  Authorized,
+  Ctx,
+  FieldResolver,
+  Mutation,
+  Resolver,
+  Root,
+} from "type-graphql";
 import { Block } from "../entities/Block";
 import { Follow } from "../entities/Follow";
 import { MyContext, UserRole } from "../types";
 
 @Resolver(Follow)
 export class FollowResolver {
+  @FieldResolver()
+  user(@Root() follow: Follow, @Ctx() { userLoader }: MyContext) {
+    return userLoader.load(follow.userId);
+  }
+
+  @FieldResolver()
+  follower(@Root() follow: Follow, @Ctx() { userLoader }: MyContext) {
+    return userLoader.load(follow.followerId);
+  }
+
   @Mutation(() => Boolean)
   @Authorized<UserRole>(["ACTIVATED"])
   async follow(

@@ -32,7 +32,6 @@ const constants_1 = require("../constants");
 const forgotPassword_1 = require("../emailTemplates/forgotPassword");
 const verifyEmail_1 = require("../emailTemplates/verifyEmail");
 const Block_1 = require("../entities/Block");
-const Follow_1 = require("../entities/Follow");
 const Like_1 = require("../entities/Like");
 const Quack_1 = require("../entities/Quack");
 const Requack_1 = require("../entities/Requack");
@@ -44,19 +43,11 @@ const regexp_1 = require("../utils/regexp");
 const sendEmail_1 = require("../utils/sendEmail");
 const user_1 = require("../validators/user");
 let UserResolver = class UserResolver {
-    followers(user) {
-        return __awaiter(this, void 0, void 0, function* () {
-            const follows = yield Follow_1.Follow.find({ where: { userId: user.id } });
-            const followersIds = follows.map((follow) => follow.followerId);
-            return yield User_1.User.findByIds(followersIds);
-        });
+    followers(user, { followLoaderByUserId }) {
+        return followLoaderByUserId.load(user.id);
     }
-    followings(user) {
-        return __awaiter(this, void 0, void 0, function* () {
-            const follows = yield Follow_1.Follow.find({ where: { followerId: user.id } });
-            const followingsIds = follows.map((follow) => follow.userId);
-            return yield User_1.User.findByIds(followingsIds);
-        });
+    followings(user, { followLoaderByFollowerId }) {
+        return followLoaderByFollowerId.load(user.id);
     }
     quacks(user) {
         if (user.amIDeactivated)
@@ -356,17 +347,18 @@ let UserResolver = class UserResolver {
 };
 __decorate([
     type_graphql_1.FieldResolver(),
-    __param(0, type_graphql_1.Root()),
+    __param(0, type_graphql_1.Root()), __param(1, type_graphql_1.Ctx()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [User_1.User]),
-    __metadata("design:returntype", Promise)
+    __metadata("design:paramtypes", [User_1.User, Object]),
+    __metadata("design:returntype", void 0)
 ], UserResolver.prototype, "followers", null);
 __decorate([
     type_graphql_1.FieldResolver(),
     __param(0, type_graphql_1.Root()),
+    __param(1, type_graphql_1.Ctx()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [User_1.User]),
-    __metadata("design:returntype", Promise)
+    __metadata("design:paramtypes", [User_1.User, Object]),
+    __metadata("design:returntype", void 0)
 ], UserResolver.prototype, "followings", null);
 __decorate([
     type_graphql_1.FieldResolver(() => [Quack_1.Quack], { nullable: true }),

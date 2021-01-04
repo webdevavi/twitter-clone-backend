@@ -11,6 +11,16 @@ import { UserResolver } from "../resolvers/user";
 import { MyContext } from "../types";
 import { authChecker } from "../utils/authChecker";
 import {
+  blockLoader,
+  blockLoaderByBlockedByUserId,
+  blockLoaderByUserId,
+} from "../utils/blockLoader";
+import {
+  followLoader,
+  followLoaderByFollowerId,
+  followLoaderByUserId,
+} from "../utils/followLoader";
+import {
   likeLoader,
   likeLoaderByQuackId,
   likeLoaderByUserId,
@@ -54,6 +64,12 @@ export const apolloConfig = async ({
     likeLoader: likeLoader(),
     likeLoaderByQuackId: likeLoaderByQuackId(),
     likeLoaderByUserId: likeLoaderByUserId(),
+    blockLoader: blockLoader(),
+    blockLoaderByUserId: blockLoaderByUserId(),
+    blockLoaderByBlockedByUserId: blockLoaderByBlockedByUserId(),
+    followLoader: followLoader(),
+    followLoaderByUserId: followLoaderByUserId(),
+    followLoaderByFollowerId: followLoaderByFollowerId(),
     payload: {},
   }),
 });

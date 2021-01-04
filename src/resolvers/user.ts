@@ -18,7 +18,6 @@ import {
 import { forgotPasswordTemplate } from "../emailTemplates/forgotPassword";
 import { verifyEmailTemplate } from "../emailTemplates/verifyEmail";
 import { Block } from "../entities/Block";
-import { Follow } from "../entities/Follow";
 import { Like } from "../entities/Like";
 import { Quack } from "../entities/Quack";
 import { Requack } from "../entities/Requack";
@@ -34,17 +33,16 @@ import { ValidateUser } from "../validators/user";
 @Resolver(User)
 export class UserResolver {
   @FieldResolver()
-  async followers(@Root() user: User) {
-    const follows = await Follow.find({ where: { userId: user.id } });
-    const followersIds = follows.map((follow) => follow.followerId);
-    return await User.findByIds(followersIds);
+  followers(@Root() user: User, @Ctx() { followLoaderByUserId }: MyContext) {
+    return followLoaderByUserId.load(user.id);
   }
 
   @FieldResolver()
-  async followings(@Root() user: User) {
-    const follows = await Follow.find({ where: { followerId: user.id } });
-    const followingsIds = follows.map((follow) => follow.userId);
-    return await User.findByIds(followingsIds);
+  followings(
+    @Root() user: User,
+    @Ctx() { followLoaderByFollowerId }: MyContext
+  ) {
+    return followLoaderByFollowerId.load(user.id);
   }
 
   @FieldResolver(() => [Quack], { nullable: true })

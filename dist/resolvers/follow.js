@@ -26,6 +26,12 @@ const type_graphql_1 = require("type-graphql");
 const Block_1 = require("../entities/Block");
 const Follow_1 = require("../entities/Follow");
 let FollowResolver = class FollowResolver {
+    user(follow, { userLoader }) {
+        return userLoader.load(follow.userId);
+    }
+    follower(follow, { userLoader }) {
+        return userLoader.load(follow.followerId);
+    }
     follow(userId, { payload: { user: me }, userLoader }) {
         return __awaiter(this, void 0, void 0, function* () {
             const myUserId = me === null || me === void 0 ? void 0 : me.id;
@@ -73,6 +79,20 @@ let FollowResolver = class FollowResolver {
         });
     }
 };
+__decorate([
+    type_graphql_1.FieldResolver(),
+    __param(0, type_graphql_1.Root()), __param(1, type_graphql_1.Ctx()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Follow_1.Follow, Object]),
+    __metadata("design:returntype", void 0)
+], FollowResolver.prototype, "user", null);
+__decorate([
+    type_graphql_1.FieldResolver(),
+    __param(0, type_graphql_1.Root()), __param(1, type_graphql_1.Ctx()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Follow_1.Follow, Object]),
+    __metadata("design:returntype", void 0)
+], FollowResolver.prototype, "follower", null);
 __decorate([
     type_graphql_1.Mutation(() => Boolean),
     type_graphql_1.Authorized(["ACTIVATED"]),

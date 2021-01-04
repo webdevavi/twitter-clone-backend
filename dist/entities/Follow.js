@@ -10,32 +10,39 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.Follow = void 0;
+const type_graphql_1 = require("type-graphql");
 const typeorm_1 = require("typeorm");
 const User_1 = require("./User");
 let Follow = class Follow extends typeorm_1.BaseEntity {
 };
 __decorate([
     typeorm_1.PrimaryGeneratedColumn("uuid"),
+    type_graphql_1.Field(),
     __metadata("design:type", String)
 ], Follow.prototype, "id", void 0);
 __decorate([
     typeorm_1.Column(),
+    type_graphql_1.Field(),
     __metadata("design:type", String)
 ], Follow.prototype, "userId", void 0);
 __decorate([
     typeorm_1.ManyToOne(() => User_1.User, (user) => user.followers),
+    type_graphql_1.Field(() => User_1.User),
     __metadata("design:type", User_1.User)
 ], Follow.prototype, "user", void 0);
 __decorate([
     typeorm_1.Column(),
+    type_graphql_1.Field(),
     __metadata("design:type", String)
 ], Follow.prototype, "followerId", void 0);
 __decorate([
     typeorm_1.ManyToOne(() => User_1.User, (user) => user.followings),
+    type_graphql_1.Field(() => User_1.User),
     __metadata("design:type", User_1.User)
 ], Follow.prototype, "follower", void 0);
 Follow = __decorate([
-    typeorm_1.Entity()
+    typeorm_1.Entity(),
+    type_graphql_1.ObjectType()
 ], Follow);
 exports.Follow = Follow;
 //# sourceMappingURL=Follow.js.map

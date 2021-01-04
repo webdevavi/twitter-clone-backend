@@ -8,7 +8,6 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
-var User_1;
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.User = void 0;
 const type_graphql_1 = require("type-graphql");
@@ -18,7 +17,7 @@ const Follow_1 = require("./Follow");
 const Like_1 = require("./Like");
 const Quack_1 = require("./Quack");
 const Requack_1 = require("./Requack");
-let User = User_1 = class User extends typeorm_1.BaseEntity {
+let User = class User extends typeorm_1.BaseEntity {
     constructor() {
         super(...arguments);
         this.displayPicture = constants_1.DEFAULT_DP;
@@ -104,16 +103,18 @@ __decorate([
 ], User.prototype, "likes", void 0);
 __decorate([
     typeorm_1.OneToMany(() => Follow_1.Follow, (follow) => follow.user, {
+        nullable: true,
         onDelete: "CASCADE",
     }),
-    type_graphql_1.Field(() => [User_1], { nullable: true }),
+    type_graphql_1.Field(() => [Follow_1.Follow], { nullable: true }),
     __metadata("design:type", Array)
 ], User.prototype, "followers", void 0);
 __decorate([
     typeorm_1.OneToMany(() => Follow_1.Follow, (follow) => follow.follower, {
+        nullable: true,
         onDelete: "CASCADE",
     }),
-    type_graphql_1.Field(() => [User_1], { nullable: true }),
+    type_graphql_1.Field(() => [Follow_1.Follow], { nullable: true }),
     __metadata("design:type", Array)
 ], User.prototype, "followings", void 0);
 __decorate([
@@ -124,7 +125,7 @@ __decorate([
     type_graphql_1.Field(() => Boolean, { nullable: true }),
     __metadata("design:type", Boolean)
 ], User.prototype, "amIBlockedByThisUser", void 0);
-User = User_1 = __decorate([
+User = __decorate([
     typeorm_1.Entity(),
     type_graphql_1.ObjectType()
 ], User);

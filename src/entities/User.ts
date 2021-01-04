@@ -79,16 +79,18 @@ export class User extends BaseEntity {
   likes: Like[];
 
   @OneToMany(() => Follow, (follow) => follow.user, {
+    nullable: true,
     onDelete: "CASCADE",
   })
-  @Field(() => [User], { nullable: true })
-  followers: User[];
+  @Field(() => [Follow], { nullable: true })
+  followers: Follow[];
 
   @OneToMany(() => Follow, (follow) => follow.follower, {
+    nullable: true,
     onDelete: "CASCADE",
   })
-  @Field(() => [User], { nullable: true })
-  followings: User[];
+  @Field(() => [Follow], { nullable: true })
+  followings: Follow[];
 
   @Field(() => Boolean, { nullable: true })
   haveIBlockedThisUser: Boolean;
