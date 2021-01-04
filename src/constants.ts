@@ -34,3 +34,6 @@ export const DEFAULT_CP = "https://picsum.photos/1200";
 
 export const ACCESS_TOKEN_SECRET = process.env.ACCESS_TOKEN_SECRET;
 export const REFRESH_TOKEN_SECRET = process.env.REFRESH_TOKEN_SECRET;
+
+export const NYTIMES_ENDPOINT = process.env.NYTIMES_ENDPOINT;
+export const NYTIMES_API_KEY = process.env.NYTIMES_API_KEY;

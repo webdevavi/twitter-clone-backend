@@ -5,6 +5,7 @@ const constants_1 = require("../constants");
 const Block_1 = require("../entities/Block");
 const Follow_1 = require("../entities/Follow");
 const Like_1 = require("../entities/Like");
+const News_1 = require("../entities/News");
 const Quack_1 = require("../entities/Quack");
 const Requack_1 = require("../entities/Requack");
 const User_1 = require("../entities/User");
@@ -13,7 +14,7 @@ const typeormConfig = () => {
         type: "postgres",
         logging: true,
         synchronize: true,
-        entities: [Quack_1.Quack, User_1.User, Follow_1.Follow, Requack_1.Requack, Like_1.Like, Block_1.Block],
+        entities: [Quack_1.Quack, User_1.User, Follow_1.Follow, Requack_1.Requack, Like_1.Like, Block_1.Block, News_1.News],
     };
     if (constants_1.__prod__) {
         return Object.assign({ url: constants_1.DATABASE_URL }, commonProps);

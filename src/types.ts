@@ -36,3 +36,11 @@ export type JWTPayload = {
 };
 
 export type UserRole = "ACTIVATED" | "DEACTIVATED" | "VERIFIED" | "UNVERIFIED";
+
+export type NewsSection =
+  | "world"
+  | "science"
+  | "health"
+  | "sports"
+  | "business"
+  | "movies";

@@ -1,6 +1,7 @@
 dependencies:
   apollo-server-express: 2.19.1_graphql@15.4.0
   argon2: 0.27.1
+  axios: 0.21.1
   cookie-parser: 1.4.5
   cors: 2.8.5
   dataloader: 2.0.0
@@ -680,6 +681,12 @@ packages:
     dev: false
     resolution:
       integrity: sha512-xh1Rl34h6Fi1DC2WWKfxUTVqRsNnr6LsKz2+hfwDxQJWmrx8+c7ylaqBMcHfl1U1r2dsifOvKX3LQuLNZ+XSvA==
+  /axios/0.21.1:
+    dependencies:
+      follow-redirects: 1.13.1
+    dev: false
+    resolution:
+      integrity: sha512-dKQiRHxGD9PPRIUNIWvZhPTPpl1rf/OxTYKsqKUDjBwYylTvV7SjSHJb9ratfyzM6wCdLCOYLzs73qpg5c4iGA==
   /backo2/1.0.2:
     dev: false
     resolution:
@@ -1376,6 +1383,17 @@ packages:
       node: '>=8'
     resolution:
       integrity: sha512-PpOwAdQ/YlXQ2vj8a3h8IipDuYRi3wceVQQGYWxNINccq40Anw7BlsEXCMbt1Zt+OLA6Fq9suIpIWD0OsnISlw==
+  /follow-redirects/1.13.1:
+    dev: false
+    engines:
+      node: '>=4.0'
+    peerDependencies:
+      debug: '*'
+    peerDependenciesMeta:
+      debug:
+        optional: true
+    resolution:
+      integrity: sha512-SSG5xmZh1mkPGyKzjZP8zLjltIfpW32Y5QpdNJyjcfGxK3qo3NDDkZOZSFiGn1A6SclQxY9GzEwAHQ3dmYRWpg==
   /forever-agent/0.6.1:
     dev: false
     resolution:
@@ -3711,6 +3729,7 @@ specifiers:
   '@types/uuid': ^8.3.0
   apollo-server-express: ^2.19.1
   argon2: ^0.27.1
+  axios: ^0.21.1
   cookie-parser: ^1.4.5
   cors: ^2.8.5
   dataloader: ^2.0.0

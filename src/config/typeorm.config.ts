@@ -9,6 +9,7 @@ import {
 import { Block } from "../entities/Block";
 import { Follow } from "../entities/Follow";
 import { Like } from "../entities/Like";
+import { News } from "../entities/News";
 import { Quack } from "../entities/Quack";
 import { Requack } from "../entities/Requack";
 import { User } from "../entities/User";
@@ -20,7 +21,7 @@ export const typeormConfig = (): TypeormConfig => {
     type: "postgres",
     logging: true,
     synchronize: true,
-    entities: [Quack, User, Follow, Requack, Like, Block],
+    entities: [Quack, User, Follow, Requack, Like, Block, News],
   };
 
   if (__prod__) {

@@ -10,14 +10,15 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.apolloConfig = void 0;
-const authChecker_1 = require("../utils/authChecker");
 const type_graphql_1 = require("type-graphql");
 const block_1 = require("../resolvers/block");
 const follow_1 = require("../resolvers/follow");
 const like_1 = require("../resolvers/like");
+const news_1 = require("../resolvers/news");
 const quack_1 = require("../resolvers/quack");
 const requack_1 = require("../resolvers/requack");
 const user_1 = require("../resolvers/user");
+const authChecker_1 = require("../utils/authChecker");
 const likeLoader_1 = require("../utils/likeLoader");
 const requackLoader_1 = require("../utils/requackLoader");
 const userLoader_1 = require("../utils/userLoader");
@@ -31,6 +32,7 @@ const apolloConfig = ({ redis, }) => __awaiter(void 0, void 0, void 0, function*
                 block_1.BlockResolver,
                 requack_1.RequackResolver,
                 like_1.LikeResolver,
+                news_1.NewsResolver,
             ],
             validate: false,
             authChecker: authChecker_1.authChecker,
