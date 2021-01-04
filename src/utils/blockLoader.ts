@@ -3,10 +3,10 @@ import { In } from "typeorm";
 import { Block } from "../entities/Block";
 
 export const blockLoaderByUserId = () =>
-  new DataLoader<string, Block[]>(async (userIds) => {
+  new DataLoader<number, Block[]>(async (userIds) => {
     const blocks = await Block.find({
       where: {
-        userId: In(userIds as string[]),
+        userId: In(userIds as number[]),
       },
     });
     return userIds.map((userId) =>
@@ -15,10 +15,10 @@ export const blockLoaderByUserId = () =>
   });
 
 export const blockLoaderByBlockedByUserId = () =>
-  new DataLoader<string, Block[]>(async (blockedByUserIds) => {
+  new DataLoader<number, Block[]>(async (blockedByUserIds) => {
     const blocks = await Block.find({
       where: {
-        blockedByUserId: In(blockedByUserIds as string[]),
+        blockedByUserId: In(blockedByUserIds as number[]),
       },
     });
     return blockedByUserIds.map((blockedByUserId) =>
@@ -27,7 +27,7 @@ export const blockLoaderByBlockedByUserId = () =>
   });
 
 export const blockLoader = () =>
-  new DataLoader<{ userId: string; blockedByUserId: string }, Block[]>(
+  new DataLoader<{ userId: number; blockedByUserId: number }, Block[]>(
     async (keys) => {
       const blocks = await Block.find({
         where: {

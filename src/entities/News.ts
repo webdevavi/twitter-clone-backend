@@ -1,4 +1,4 @@
-import { Field, ObjectType } from "type-graphql";
+import { Field, Int, ObjectType } from "type-graphql";
 import { BaseEntity, Column, Entity, PrimaryGeneratedColumn } from "typeorm";
 import { NewsSection } from "../types";
 
@@ -6,7 +6,7 @@ import { NewsSection } from "../types";
 @ObjectType()
 export class News extends BaseEntity {
   @PrimaryGeneratedColumn()
-  @Field()
+  @Field(() => Int)
   id: number;
 
   @Column({ type: "date" })

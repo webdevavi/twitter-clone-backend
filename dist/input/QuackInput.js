@@ -18,8 +18,8 @@ __decorate([
     __metadata("design:type", String)
 ], QuackInput.prototype, "text", void 0);
 __decorate([
-    type_graphql_1.Field(() => String, { nullable: true }),
-    __metadata("design:type", String)
+    type_graphql_1.Field(() => type_graphql_1.Int, { nullable: true }),
+    __metadata("design:type", Number)
 ], QuackInput.prototype, "inReplyToQuackId", void 0);
 QuackInput = __decorate([
     type_graphql_1.InputType()

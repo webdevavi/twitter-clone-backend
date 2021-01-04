@@ -1,4 +1,4 @@
-import { Field, ObjectType } from "type-graphql";
+import { Field, Int, ObjectType } from "type-graphql";
 import {
   BaseEntity,
   Column,
@@ -13,12 +13,12 @@ import { User } from "./User";
 @ObjectType()
 export class Requack extends BaseEntity {
   @PrimaryGeneratedColumn()
-  @Field()
+  @Field(() => Int)
   id: number;
 
   @Column()
   @Field()
-  quackId: string;
+  quackId: number;
 
   @ManyToOne(() => Quack, (quack) => quack.requacks)
   @Field(() => Quack)
@@ -26,7 +26,7 @@ export class Requack extends BaseEntity {
 
   @Column()
   @Field()
-  userId: string;
+  userId: number;
 
   @ManyToOne(() => User, (user) => user.requacks)
   @Field(() => User)

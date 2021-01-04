@@ -1,4 +1,4 @@
-import { Field, ObjectType } from "type-graphql";
+import { Field, Int, ObjectType } from "type-graphql";
 import {
   BaseEntity,
   Column,
@@ -17,9 +17,9 @@ import { Requack } from "./Requack";
 @Entity()
 @ObjectType()
 export class User extends BaseEntity {
-  @PrimaryGeneratedColumn("uuid")
-  @Field()
-  id: string;
+  @PrimaryGeneratedColumn()
+  @Field(() => Int)
+  id: number;
 
   @CreateDateColumn()
   @Field()
@@ -42,6 +42,9 @@ export class User extends BaseEntity {
   coverPicture: string = DEFAULT_CP;
 
   @Column({ unique: true })
+  rawUsername: string;
+
+  @Column()
   @Field()
   username: string;
 

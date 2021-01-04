@@ -7,6 +7,7 @@ import { LikeResolver } from "../resolvers/like";
 import { NewsResolver } from "../resolvers/news";
 import { QuackResolver } from "../resolvers/quack";
 import { RequackResolver } from "../resolvers/requack";
+import { SearchResolver } from "../resolvers/search";
 import { UserResolver } from "../resolvers/user";
 import { MyContext } from "../types";
 import { authChecker } from "../utils/authChecker";
@@ -48,6 +49,7 @@ export const apolloConfig = async ({
       RequackResolver,
       LikeResolver,
       NewsResolver,
+      SearchResolver,
     ],
     validate: false,
     authChecker,

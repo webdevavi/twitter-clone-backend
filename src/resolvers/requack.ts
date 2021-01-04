@@ -27,7 +27,7 @@ export class RequackResolver {
   @Mutation(() => Boolean)
   @Authorized<UserRole>(["ACTIVATED"])
   async requack(
-    @Arg("quackId") quackId: string,
+    @Arg("quackId") quackId: number,
     @Ctx() { payload: { user } }: MyContext
   ): Promise<Boolean> {
     const userId = user!.id;

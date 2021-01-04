@@ -16,14 +16,14 @@ const User_1 = require("./User");
 let Follow = class Follow extends typeorm_1.BaseEntity {
 };
 __decorate([
-    typeorm_1.PrimaryGeneratedColumn("uuid"),
+    typeorm_1.PrimaryGeneratedColumn(),
     type_graphql_1.Field(),
-    __metadata("design:type", String)
+    __metadata("design:type", Number)
 ], Follow.prototype, "id", void 0);
 __decorate([
     typeorm_1.Column(),
     type_graphql_1.Field(),
-    __metadata("design:type", String)
+    __metadata("design:type", Number)
 ], Follow.prototype, "userId", void 0);
 __decorate([
     typeorm_1.ManyToOne(() => User_1.User, (user) => user.followers),
@@ -33,7 +33,7 @@ __decorate([
 __decorate([
     typeorm_1.Column(),
     type_graphql_1.Field(),
-    __metadata("design:type", String)
+    __metadata("design:type", Number)
 ], Follow.prototype, "followerId", void 0);
 __decorate([
     typeorm_1.ManyToOne(() => User_1.User, (user) => user.followings),

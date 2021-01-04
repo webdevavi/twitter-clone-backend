@@ -119,6 +119,7 @@ let QuackResolver = class QuackResolver {
                 }
             }
             const quack = Quack_1.Quack.create({
+                rawText: text.toLowerCase(),
                 text,
                 quackedByUserId: user.id,
                 inReplyToQuackId,
@@ -141,7 +142,7 @@ let QuackResolver = class QuackResolver {
     quacks() {
         return Quack_1.Quack.find({ where: { isVisible: true } });
     }
-    quacksForMe(limit, offset, { payload: { user } }) {
+    quacksForMe(limit, lastIndex, { payload: { user } }) {
         return __awaiter(this, void 0, void 0, function* () {
             const follows = yield Follow_1.Follow.find({
                 where: { followerId: user.id },
@@ -149,9 +150,13 @@ let QuackResolver = class QuackResolver {
             const ids = follows.map((follow) => follow.userId);
             ids.push(user.id);
             return Quack_1.Quack.find({
-                where: { quackedByUserId: typeorm_1.In(ids), isVisible: true },
+                where: {
+                    id: typeorm_1.LessThan(lastIndex),
+                    quackedByUserId: typeorm_1.In(ids),
+                    isVisible: true,
+                },
                 take: limit,
-                skip: offset,
+                order: { id: "DESC" },
             });
         });
     }
@@ -246,7 +251,7 @@ __decorate([
     type_graphql_1.Query(() => [Quack_1.Quack], { nullable: true }),
     type_graphql_1.Authorized(["ACTIVATED"]),
     __param(0, type_graphql_1.Arg("limit", () => type_graphql_1.Int, { nullable: true, defaultValue: 20 })),
-    __param(1, type_graphql_1.Arg("offset", () => type_graphql_1.Int, { nullable: true, defaultValue: 0 })),
+    __param(1, type_graphql_1.Arg("lastIndex", () => type_graphql_1.Int, { nullable: true, defaultValue: 0 })),
     __param(2, type_graphql_1.Ctx()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [Number, Number, Object]),

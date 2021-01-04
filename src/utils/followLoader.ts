@@ -3,10 +3,10 @@ import { In } from "typeorm";
 import { Follow } from "../entities/Follow";
 
 export const followLoaderByUserId = () =>
-  new DataLoader<string, Follow[]>(async (userIds) => {
+  new DataLoader<number, Follow[]>(async (userIds) => {
     const follows = await Follow.find({
       where: {
-        userId: In(userIds as string[]),
+        userId: In(userIds as number[]),
       },
     });
     return userIds.map((userId) =>
@@ -15,10 +15,10 @@ export const followLoaderByUserId = () =>
   });
 
 export const followLoaderByFollowerId = () =>
-  new DataLoader<string, Follow[]>(async (followerIds) => {
+  new DataLoader<number, Follow[]>(async (followerIds) => {
     const follows = await Follow.find({
       where: {
-        followerId: In(followerIds as string[]),
+        followerId: In(followerIds as number[]),
       },
     });
     return followerIds.map((followerId) =>
@@ -27,7 +27,7 @@ export const followLoaderByFollowerId = () =>
   });
 
 export const followLoader = () =>
-  new DataLoader<{ userId: string; followerId: string }, Follow[]>(
+  new DataLoader<{ userId: number; followerId: number }, Follow[]>(
     async (keys) => {
       const follows = await Follow.find({
         where: {

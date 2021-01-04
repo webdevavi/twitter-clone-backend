@@ -23,9 +23,9 @@ let Quack = Quack_1 = class Quack extends typeorm_1.BaseEntity {
     }
 };
 __decorate([
-    typeorm_1.PrimaryGeneratedColumn("uuid"),
+    typeorm_1.PrimaryGeneratedColumn(),
     type_graphql_1.Field(),
-    __metadata("design:type", String)
+    __metadata("design:type", Number)
 ], Quack.prototype, "id", void 0);
 __decorate([
     typeorm_1.CreateDateColumn(),
@@ -37,6 +37,10 @@ __decorate([
     type_graphql_1.Field(),
     __metadata("design:type", Boolean)
 ], Quack.prototype, "isVisible", void 0);
+__decorate([
+    typeorm_1.Column(),
+    __metadata("design:type", String)
+], Quack.prototype, "rawText", void 0);
 __decorate([
     typeorm_1.Column(),
     type_graphql_1.Field(),
@@ -53,7 +57,7 @@ __decorate([
 __decorate([
     typeorm_1.Column(),
     type_graphql_1.Field(),
-    __metadata("design:type", String)
+    __metadata("design:type", Number)
 ], Quack.prototype, "quackedByUserId", void 0);
 __decorate([
     typeorm_1.ManyToOne(() => User_1.User, (user) => user.quacks),
@@ -62,8 +66,8 @@ __decorate([
 ], Quack.prototype, "quackedByUser", void 0);
 __decorate([
     typeorm_1.Column({ nullable: true }),
-    type_graphql_1.Field(() => String, { nullable: true }),
-    __metadata("design:type", String)
+    type_graphql_1.Field(() => type_graphql_1.Int, { nullable: true }),
+    __metadata("design:type", Number)
 ], Quack.prototype, "inReplyToQuackId", void 0);
 __decorate([
     typeorm_1.ManyToOne(() => Quack_1, (quack) => quack.replies, {

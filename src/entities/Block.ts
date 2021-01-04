@@ -2,12 +2,12 @@ import { BaseEntity, Column, Entity, PrimaryGeneratedColumn } from "typeorm";
 
 @Entity()
 export class Block extends BaseEntity {
-  @PrimaryGeneratedColumn("uuid")
-  id: string;
+  @PrimaryGeneratedColumn()
+  id: number;
 
   @Column()
-  userId: string;
+  userId: number;
 
   @Column()
-  blockedByUserId: string;
+  blockedByUserId: number;
 }

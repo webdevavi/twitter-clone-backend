@@ -3,10 +3,10 @@ import { In } from "typeorm";
 import { Like } from "../entities/Like";
 
 export const likeLoaderByQuackId = () =>
-  new DataLoader<string, Like[]>(async (quackids) => {
+  new DataLoader<number, Like[]>(async (quackids) => {
     const likes = await Like.find({
       where: {
-        quackId: In(quackids as string[]),
+        quackId: In(quackids as number[]),
       },
     });
     return quackids.map((quackId) =>
@@ -15,10 +15,10 @@ export const likeLoaderByQuackId = () =>
   });
 
 export const likeLoaderByUserId = () =>
-  new DataLoader<string, Like[]>(async (userIds) => {
+  new DataLoader<number, Like[]>(async (userIds) => {
     const likes = await Like.find({
       where: {
-        userId: In(userIds as string[]),
+        userId: In(userIds as number[]),
       },
     });
     return userIds.map((userId) =>
@@ -27,7 +27,7 @@ export const likeLoaderByUserId = () =>
   });
 
 export const likeLoader = () =>
-  new DataLoader<{ quackId: string; userId: string }, Like[]>(async (keys) => {
+  new DataLoader<{ quackId: number; userId: number }, Like[]>(async (keys) => {
     const likes = await Like.find({
       where: {
         quackId: In(keys.map((key) => key.quackId)),

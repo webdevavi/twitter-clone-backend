@@ -10,7 +10,7 @@ import {
   Resolver,
   Root,
 } from "type-graphql";
-import { In } from "typeorm";
+import { In, LessThan } from "typeorm";
 import { Follow } from "../entities/Follow";
 import { Quack } from "../entities/Quack";
 import { User } from "../entities/User";
@@ -132,6 +132,7 @@ export class QuackResolver {
     }
 
     const quack = Quack.create({
+      rawText: text.toLowerCase(),
       text,
       quackedByUserId: user!.id,
       inReplyToQuackId,
@@ -167,8 +168,8 @@ export class QuackResolver {
   async quacksForMe(
     @Arg("limit", () => Int, { nullable: true, defaultValue: 20 })
     limit: number,
-    @Arg("offset", () => Int, { nullable: true, defaultValue: 0 })
-    offset: number,
+    @Arg("lastIndex", () => Int, { nullable: true, defaultValue: 0 })
+    lastIndex: number,
     @Ctx()
     { payload: { user } }: MyContext
   ): Promise<Quack[]> {
@@ -178,9 +179,13 @@ export class QuackResolver {
     const ids = follows.map((follow) => follow.userId);
     ids.push(user!.id);
     return Quack.find({
-      where: { quackedByUserId: In(ids), isVisible: true },
+      where: {
+        id: LessThan(lastIndex),
+        quackedByUserId: In(ids),
+        isVisible: true,
+      },
       take: limit,
-      skip: offset,
+      order: { id: "DESC" },
     });
   }
 }

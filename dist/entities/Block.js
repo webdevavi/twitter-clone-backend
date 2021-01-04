@@ -14,16 +14,16 @@ const typeorm_1 = require("typeorm");
 let Block = class Block extends typeorm_1.BaseEntity {
 };
 __decorate([
-    typeorm_1.PrimaryGeneratedColumn("uuid"),
-    __metadata("design:type", String)
+    typeorm_1.PrimaryGeneratedColumn(),
+    __metadata("design:type", Number)
 ], Block.prototype, "id", void 0);
 __decorate([
     typeorm_1.Column(),
-    __metadata("design:type", String)
+    __metadata("design:type", Number)
 ], Block.prototype, "userId", void 0);
 __decorate([
     typeorm_1.Column(),
-    __metadata("design:type", String)
+    __metadata("design:type", Number)
 ], Block.prototype, "blockedByUserId", void 0);
 Block = __decorate([
     typeorm_1.Entity()

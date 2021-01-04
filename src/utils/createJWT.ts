@@ -11,7 +11,7 @@ function getPayload(user: User): JWTPayload {
 
 export const createAccessToken = (user: User): string =>
   sign(getPayload(user), ACCESS_TOKEN_SECRET!, {
-    expiresIn: "15m",
+    expiresIn: "2h",
   });
 
 export const createRefreshToken = (user: User): string =>

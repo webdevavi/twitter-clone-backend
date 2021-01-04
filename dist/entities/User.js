@@ -27,9 +27,9 @@ let User = class User extends typeorm_1.BaseEntity {
     }
 };
 __decorate([
-    typeorm_1.PrimaryGeneratedColumn("uuid"),
-    type_graphql_1.Field(),
-    __metadata("design:type", String)
+    typeorm_1.PrimaryGeneratedColumn(),
+    type_graphql_1.Field(() => type_graphql_1.Int),
+    __metadata("design:type", Number)
 ], User.prototype, "id", void 0);
 __decorate([
     typeorm_1.CreateDateColumn(),
@@ -58,6 +58,10 @@ __decorate([
 ], User.prototype, "coverPicture", void 0);
 __decorate([
     typeorm_1.Column({ unique: true }),
+    __metadata("design:type", String)
+], User.prototype, "rawUsername", void 0);
+__decorate([
+    typeorm_1.Column(),
     type_graphql_1.Field(),
     __metadata("design:type", String)
 ], User.prototype, "username", void 0);

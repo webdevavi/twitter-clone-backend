@@ -3,10 +3,10 @@ import { In } from "typeorm";
 import { Requack } from "../entities/Requack";
 
 export const requackLoaderByQuackId = () =>
-  new DataLoader<string, Requack[]>(async (quackids) => {
+  new DataLoader<number, Requack[]>(async (quackids) => {
     const requacks = await Requack.find({
       where: {
-        quackId: In(quackids as string[]),
+        quackId: In(quackids as number[]),
       },
     });
     return quackids.map((quackId) =>
@@ -15,10 +15,10 @@ export const requackLoaderByQuackId = () =>
   });
 
 export const requackLoaderByUserId = () =>
-  new DataLoader<string, Requack[]>(async (userIds) => {
+  new DataLoader<number, Requack[]>(async (userIds) => {
     const requacks = await Requack.find({
       where: {
-        userId: In(userIds as string[]),
+        userId: In(userIds as number[]),
       },
     });
     return userIds.map((userId) =>
@@ -27,7 +27,7 @@ export const requackLoaderByUserId = () =>
   });
 
 export const requackLoader = () =>
-  new DataLoader<{ quackId: string; userId: string }, Requack[]>(
+  new DataLoader<{ quackId: number; userId: number }, Requack[]>(
     async (keys) => {
       const requacks = await Requack.find({
         where: {

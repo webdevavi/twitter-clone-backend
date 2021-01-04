@@ -1,4 +1,4 @@
-import { Field, ObjectType } from "type-graphql";
+import { Field, Int, ObjectType } from "type-graphql";
 import {
   BaseEntity,
   Column,
@@ -15,9 +15,9 @@ import { Like } from "./Like";
 @Entity()
 @ObjectType()
 export class Quack extends BaseEntity {
-  @PrimaryGeneratedColumn("uuid")
+  @PrimaryGeneratedColumn()
   @Field()
-  id: string;
+  id: number;
 
   @CreateDateColumn()
   @Field()
@@ -26,6 +26,9 @@ export class Quack extends BaseEntity {
   @Column({ type: "boolean", default: true })
   @Field()
   isVisible: boolean = true;
+
+  @Column()
+  rawText: string;
 
   @Column()
   @Field()
@@ -39,15 +42,15 @@ export class Quack extends BaseEntity {
 
   @Column()
   @Field()
-  quackedByUserId: string;
+  quackedByUserId: number;
 
   @ManyToOne(() => User, (user) => user.quacks)
   @Field(() => User)
   quackedByUser: User;
 
   @Column({ nullable: true })
-  @Field(() => String, { nullable: true })
-  inReplyToQuackId: string;
+  @Field(() => Int, { nullable: true })
+  inReplyToQuackId: number;
 
   @ManyToOne(() => Quack, (quack) => quack.replies, {
     onDelete: "SET NULL",

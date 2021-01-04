@@ -9,7 +9,7 @@ function getPayload(user) {
     };
 }
 const createAccessToken = (user) => jsonwebtoken_1.sign(getPayload(user), constants_1.ACCESS_TOKEN_SECRET, {
-    expiresIn: "15m",
+    expiresIn: "2h",
 });
 exports.createAccessToken = createAccessToken;
 const createRefreshToken = (user) => jsonwebtoken_1.sign(getPayload(user), constants_1.REFRESH_TOKEN_SECRET, {

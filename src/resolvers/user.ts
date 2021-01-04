@@ -110,8 +110,9 @@ export class UserResolver {
 
     const user = User.create({
       displayName,
+      rawUsername: username.toLowerCase(),
       username,
-      email,
+      email: email.toLowerCase(),
       password: hashedPassword,
     });
 
@@ -143,7 +144,7 @@ export class UserResolver {
               },
             ],
           };
-        } else if (error.detail.includes("username")) {
+        } else if (error.detail.includes("rawUsername")) {
           return {
             errors: [
               {
@@ -167,8 +168,8 @@ export class UserResolver {
 
     const user = await User.findOne({
       where: isEmail
-        ? { email: emailOrUsername }
-        : { username: emailOrUsername },
+        ? { email: emailOrUsername.toLowerCase() }
+        : { rawUsername: emailOrUsername.toLowerCase() },
     });
 
     if (!user) {
@@ -276,7 +277,7 @@ export class UserResolver {
     @Arg("email") email: string,
     @Ctx() { cache }: MyContext
   ): Promise<Boolean> {
-    const user = await User.findOne({ where: { email } });
+    const user = await User.findOne({ where: { email: email.toLowerCase() } });
     if (!user) {
       return true;
     }
@@ -313,9 +314,9 @@ export class UserResolver {
 
     const key = FORGOT_PASSWORD_PREFIX + token;
 
-    const userId = await cache.get(key);
+    const userIdString = await cache.get(key);
 
-    if (!userId) {
+    if (!userIdString) {
       return {
         errors: [
           {
@@ -325,6 +326,8 @@ export class UserResolver {
         ],
       };
     }
+
+    const userId = parseInt(userIdString);
 
     const user = await User.findOne(userId);
 

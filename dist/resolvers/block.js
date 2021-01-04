@@ -76,7 +76,7 @@ __decorate([
     __param(0, type_graphql_1.Arg("userId")),
     __param(1, type_graphql_1.Ctx()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String, Object]),
+    __metadata("design:paramtypes", [Number, Object]),
     __metadata("design:returntype", Promise)
 ], BlockResolver.prototype, "block", null);
 __decorate([
@@ -85,7 +85,7 @@ __decorate([
     __param(0, type_graphql_1.Arg("userId")),
     __param(1, type_graphql_1.Ctx()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String, Object]),
+    __metadata("design:paramtypes", [Number, Object]),
     __metadata("design:returntype", Promise)
 ], BlockResolver.prototype, "unblock", null);
 BlockResolver = __decorate([

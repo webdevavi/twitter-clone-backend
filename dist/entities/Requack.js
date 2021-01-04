@@ -18,13 +18,13 @@ let Requack = class Requack extends typeorm_1.BaseEntity {
 };
 __decorate([
     typeorm_1.PrimaryGeneratedColumn(),
-    type_graphql_1.Field(),
+    type_graphql_1.Field(() => type_graphql_1.Int),
     __metadata("design:type", Number)
 ], Requack.prototype, "id", void 0);
 __decorate([
     typeorm_1.Column(),
     type_graphql_1.Field(),
-    __metadata("design:type", String)
+    __metadata("design:type", Number)
 ], Requack.prototype, "quackId", void 0);
 __decorate([
     typeorm_1.ManyToOne(() => Quack_1.Quack, (quack) => quack.requacks),
@@ -34,7 +34,7 @@ __decorate([
 __decorate([
     typeorm_1.Column(),
     type_graphql_1.Field(),
-    __metadata("design:type", String)
+    __metadata("design:type", Number)
 ], Requack.prototype, "userId", void 0);
 __decorate([
     typeorm_1.ManyToOne(() => User_1.User, (user) => user.requacks),

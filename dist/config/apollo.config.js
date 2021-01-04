@@ -17,6 +17,7 @@ const like_1 = require("../resolvers/like");
 const news_1 = require("../resolvers/news");
 const quack_1 = require("../resolvers/quack");
 const requack_1 = require("../resolvers/requack");
+const search_1 = require("../resolvers/search");
 const user_1 = require("../resolvers/user");
 const authChecker_1 = require("../utils/authChecker");
 const blockLoader_1 = require("../utils/blockLoader");
@@ -35,6 +36,7 @@ const apolloConfig = ({ redis, }) => __awaiter(void 0, void 0, void 0, function*
                 requack_1.RequackResolver,
                 like_1.LikeResolver,
                 news_1.NewsResolver,
+                search_1.SearchResolver,
             ],
             validate: false,
             authChecker: authChecker_1.authChecker,

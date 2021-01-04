@@ -16,7 +16,7 @@ let News = class News extends typeorm_1.BaseEntity {
 };
 __decorate([
     typeorm_1.PrimaryGeneratedColumn(),
-    type_graphql_1.Field(),
+    type_graphql_1.Field(() => type_graphql_1.Int),
     __metadata("design:type", Number)
 ], News.prototype, "id", void 0);
 __decorate([

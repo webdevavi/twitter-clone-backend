@@ -18,7 +18,7 @@ export class Like extends BaseEntity {
 
   @Column()
   @Field()
-  quackId: string;
+  quackId: number;
 
   @ManyToOne(() => Quack, (quack) => quack.likes)
   @Field(() => Quack)
@@ -26,7 +26,7 @@ export class Like extends BaseEntity {
 
   @Column()
   @Field()
-  userId: string;
+  userId: number;
 
   @ManyToOne(() => User, (user) => user.likes)
   @Field(() => User)

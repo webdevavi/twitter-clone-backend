@@ -26,7 +26,7 @@ export class FollowResolver {
   @Mutation(() => Boolean)
   @Authorized<UserRole>(["ACTIVATED"])
   async follow(
-    @Arg("userId") userId: string,
+    @Arg("userId") userId: number,
     @Ctx() { payload: { user: me }, userLoader }: MyContext
   ) {
     const myUserId = me?.id;
@@ -53,7 +53,7 @@ export class FollowResolver {
   @Mutation(() => Boolean)
   @Authorized<UserRole>(["ACTIVATED"])
   async unfollow(
-    @Arg("userId") userId: string,
+    @Arg("userId") userId: number,
     @Ctx() { payload: { user: me }, userLoader }: MyContext
   ) {
     const followerId = me?.id;

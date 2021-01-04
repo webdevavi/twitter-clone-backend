@@ -70,7 +70,7 @@ __decorate([
     __param(0, type_graphql_1.Arg("quackId")),
     __param(1, type_graphql_1.Ctx()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String, Object]),
+    __metadata("design:paramtypes", [Number, Object]),
     __metadata("design:returntype", Promise)
 ], RequackResolver.prototype, "requack", null);
 RequackResolver = __decorate([

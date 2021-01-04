@@ -48,7 +48,7 @@ export type ContextPayload = {
 };
 
 export type JWTPayload = {
-  userId: string;
+  userId: number;
 };
 
 export type UserRole = "ACTIVATED" | "DEACTIVATED" | "VERIFIED" | "UNVERIFIED";

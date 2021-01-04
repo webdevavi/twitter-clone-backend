@@ -102,8 +102,9 @@ let UserResolver = class UserResolver {
             const hashedPassword = yield argon2_1.default.hash(password);
             const user = User_1.User.create({
                 displayName,
+                rawUsername: username.toLowerCase(),
                 username,
-                email,
+                email: email.toLowerCase(),
                 password: hashedPassword,
             });
             try {
@@ -129,7 +130,7 @@ let UserResolver = class UserResolver {
                             ],
                         };
                     }
-                    else if (error.detail.includes("username")) {
+                    else if (error.detail.includes("rawUsername")) {
                         return {
                             errors: [
                                 {
@@ -149,8 +150,8 @@ let UserResolver = class UserResolver {
             const isEmail = regexp_1.validEmail.test(emailOrUsername);
             const user = yield User_1.User.findOne({
                 where: isEmail
-                    ? { email: emailOrUsername }
-                    : { username: emailOrUsername },
+                    ? { email: emailOrUsername.toLowerCase() }
+                    : { rawUsername: emailOrUsername.toLowerCase() },
             });
             if (!user) {
                 return {
@@ -234,7 +235,7 @@ let UserResolver = class UserResolver {
     }
     forgotPassword(email, { cache }) {
         return __awaiter(this, void 0, void 0, function* () {
-            const user = yield User_1.User.findOne({ where: { email } });
+            const user = yield User_1.User.findOne({ where: { email: email.toLowerCase() } });
             if (!user) {
                 return true;
             }
@@ -253,8 +254,8 @@ let UserResolver = class UserResolver {
                 return { errors };
             }
             const key = constants_1.FORGOT_PASSWORD_PREFIX + token;
-            const userId = yield cache.get(key);
-            if (!userId) {
+            const userIdString = yield cache.get(key);
+            if (!userIdString) {
                 return {
                     errors: [
                         {
@@ -264,6 +265,7 @@ let UserResolver = class UserResolver {
                     ],
                 };
             }
+            const userId = parseInt(userIdString);
             const user = yield User_1.User.findOne(userId);
             if (!user) {
                 return {

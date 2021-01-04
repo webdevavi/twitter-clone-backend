@@ -11,13 +11,13 @@ import { User } from "./User";
 @Entity()
 @ObjectType()
 export class Follow extends BaseEntity {
-  @PrimaryGeneratedColumn("uuid")
+  @PrimaryGeneratedColumn()
   @Field()
-  id: string;
+  id: number;
 
   @Column()
   @Field()
-  userId: string;
+  userId: number;
 
   @ManyToOne(() => User, (user) => user.followers)
   @Field(() => User)
@@ -25,7 +25,7 @@ export class Follow extends BaseEntity {
 
   @Column()
   @Field()
-  followerId: string;
+  followerId: number;
 
   @ManyToOne(() => User, (user) => user.followings)
   @Field(() => User)
