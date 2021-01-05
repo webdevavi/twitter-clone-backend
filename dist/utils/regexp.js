@@ -1,7 +1,21 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.validUrl = exports.validEmail = exports.containsSpecialCharacters = void 0;
+exports.or = exports.exactPhrase = exports.sinceDate = exports.untilDate = exports.minRequacks = exports.minLikes = exports.minReplies = exports.filterIn = exports.filterOut = exports.toTheseUsernames = exports.fromTheseUsernames = exports.mentions = exports.hashtags = exports.notTheseWords = exports.validUrl = exports.validEmail = exports.containsSpecialCharacters = void 0;
 exports.containsSpecialCharacters = /[-/:-@[-`{-~]/;
 exports.validEmail = /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9-]+(?:\.[a-zA-Z0-9-]+)*$/;
 exports.validUrl = /^(ftp|http|https):\/\/[^ "]+$/;
+exports.notTheseWords = /(|\()-\w+[a-zA-Z](\)|)/gi;
+exports.hashtags = /(|\()#\w+(\)|)/gi;
+exports.mentions = /(|\()@\w+(\)|)/gi;
+exports.fromTheseUsernames = /(|\()from:\s*\w+(\)|)/gi;
+exports.toTheseUsernames = /(|\()to:\s*\w+(\)|)/gi;
+exports.filterOut = /(|\()-filter:\s*\w+(\)|)/gi;
+exports.filterIn = /(|\()filter:\s*\w+(\)|)/gi;
+exports.minReplies = /(|\()min_replies:\s*\w+(\)|)/gi;
+exports.minLikes = /(|\()min_likes:\s*\w+(\)|)/gi;
+exports.minRequacks = /(|\()min_requacks:\s*\w+(\)|)/gi;
+exports.untilDate = /(|\()until:\s*\w+-\w+-\w+(\)|)/gi;
+exports.sinceDate = /(|\()since:\s*\w+-\w+-\w+(\)|)/gi;
+exports.exactPhrase = /(|\()".*"(\)|)/gi;
+exports.or = /(|\()(\w+\s{1,}OR\s{1,}\w+|\s{1,}OR\s{1,}\w+)(\)|)/gi;
 //# sourceMappingURL=regexp.js.map

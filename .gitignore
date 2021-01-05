@@ -3,3 +3,6 @@
 
 # environment variables
 /*.env
+
+# test files
+/test.js
