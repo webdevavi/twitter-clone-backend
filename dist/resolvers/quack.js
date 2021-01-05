@@ -119,7 +119,6 @@ let QuackResolver = class QuackResolver {
                 }
             }
             const quack = Quack_1.Quack.create({
-                rawText: text.toLowerCase(),
                 text,
                 quackedByUserId: user.id,
                 inReplyToQuackId,

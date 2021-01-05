@@ -39,10 +39,6 @@ __decorate([
 ], Quack.prototype, "isVisible", void 0);
 __decorate([
     typeorm_1.Column(),
-    __metadata("design:type", String)
-], Quack.prototype, "rawText", void 0);
-__decorate([
-    typeorm_1.Column(),
     type_graphql_1.Field(),
     __metadata("design:type", String)
 ], Quack.prototype, "text", void 0);

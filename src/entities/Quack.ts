@@ -28,9 +28,6 @@ export class Quack extends BaseEntity {
   isVisible: boolean = true;
 
   @Column()
-  rawText: string;
-
-  @Column()
   @Field()
   text: string;
 
