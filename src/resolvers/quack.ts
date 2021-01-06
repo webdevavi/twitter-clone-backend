@@ -1,3 +1,4 @@
+import { User } from "src/entities/User";
 import {
   Arg,
   Authorized,
@@ -35,14 +36,51 @@ export class QuackResolver {
   }
 
   @FieldResolver(() => Quack, { nullable: true })
-  inReplyToQuack(@Root() quack: Quack, @Ctx() { quackLoader }: MyContext) {
-    return quack.inReplyToQuackId
-      ? quackLoader.load(quack.inReplyToQuackId)
-      : null;
+  @UseMiddleware(partialAuth)
+  async inReplyToQuack(
+    @Root() quack: Quack,
+    @Ctx() { quackLoader, blockLoader, payload: { user } }: MyContext
+  ) {
+    if (!quack.inReplyToQuackId) {
+      return null;
+    }
+
+    const rQuack = await quackLoader.load(quack.inReplyToQuackId);
+
+    if (!rQuack) {
+      return null;
+    }
+
+    if (user) {
+      const blocked = await blockLoader.load({
+        userId: user.id,
+        blockedByUserId: rQuack.quackedByUserId,
+      });
+
+      if (blocked && blocked.length > 0) {
+        return null;
+      }
+    }
+
+    return rQuack;
   }
 
   @FieldResolver()
-  quackedByUser(@Root() quack: Quack, @Ctx() { userLoader }: MyContext) {
+  @UseMiddleware(partialAuth)
+  async quackedByUser(
+    @Root() quack: Quack,
+    @Ctx() { userLoader, blockLoader, payload: { user } }: MyContext
+  ) {
+    if (user) {
+      const blocked = await blockLoader.load({
+        userId: user.id,
+        blockedByUserId: quack.quackedByUserId,
+      });
+
+      if (blocked && blocked.length > 0) {
+        return null;
+      }
+    }
     return userLoader.load(quack.quackedByUserId);
   }
 
@@ -73,10 +111,23 @@ export class QuackResolver {
   }
 
   @FieldResolver()
-  replies(@Root() quack: Quack) {
-    return Quack.find({
-      where: { inReplyToQuackId: quack.id, isVisible: true },
-    });
+  @UseMiddleware(partialAuth)
+  async replies(
+    @Root() quack: Quack,
+    @Ctx()
+    { quackLoaderByInReplyToQuackId, blockLoader, payload: { user } }: MyContext
+  ) {
+    if (user) {
+      const blocked = await blockLoader.load({
+        userId: user.id,
+        blockedByUserId: quack.quackedByUserId,
+      });
+
+      if (blocked && blocked.length > 0) {
+        return null;
+      }
+    }
+    return quackLoaderByInReplyToQuackId.load(quack.id);
   }
 
   @FieldResolver()
@@ -85,9 +136,23 @@ export class QuackResolver {
   }
 
   @FieldResolver()
-  mentions(@Root() quack: Quack, @Ctx() { userLoaderByUsername }: MyContext) {
+  @UseMiddleware(partialAuth)
+  async mentions(
+    @Root() quack: Quack,
+    @Ctx()
+    { userLoaderByUsername, blockLoaderByUserId, payload: { user } }: MyContext
+  ) {
     const usernames = getMentions(quack.text, false);
-    return userLoaderByUsername.loadMany(usernames);
+    const users = await userLoaderByUsername.loadMany(usernames);
+
+    if (user) {
+      const blocks = (await blockLoaderByUserId.load(user.id)).map(
+        (block) => block.blockedByUserId
+      );
+      return users.filter((user) => !blocks.includes((user as User)?.id));
+    }
+
+    return users;
   }
 
   @FieldResolver()

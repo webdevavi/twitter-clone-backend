@@ -49,6 +49,7 @@ const apolloConfig = ({ redis, }) => __awaiter(void 0, void 0, void 0, function*
             userLoader: userLoader_1.userLoader(),
             userLoaderByUsername: userLoader_1.userLoaderByUsername(),
             quackLoader: quackLoader_1.quackLoader(),
+            quackLoaderByInReplyToQuackId: quackLoader_1.quackLoaderByInReplyToQuackId(),
             requackLoader: requackLoader_1.requackLoader(),
             requackLoaderByUserId: requackLoader_1.requackLoaderByUserId(),
             requackLoaderByQuackId: requackLoader_1.requackLoaderByQuackId(),

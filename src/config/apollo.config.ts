@@ -26,7 +26,10 @@ import {
   likeLoaderByQuackId,
   likeLoaderByUserId,
 } from "../utils/likeLoader";
-import { quackLoader } from "../utils/quackLoader";
+import {
+  quackLoader,
+  quackLoaderByInReplyToQuackId,
+} from "../utils/quackLoader";
 import {
   requackLoader,
   requackLoaderByQuackId,
@@ -63,6 +66,7 @@ export const apolloConfig = async ({
     userLoader: userLoader(),
     userLoaderByUsername: userLoaderByUsername(),
     quackLoader: quackLoader(),
+    quackLoaderByInReplyToQuackId: quackLoaderByInReplyToQuackId(),
     requackLoader: requackLoader(),
     requackLoaderByUserId: requackLoaderByUserId(),
     requackLoaderByQuackId: requackLoaderByQuackId(),

@@ -16,7 +16,10 @@ import {
   likeLoaderByQuackId,
   likeLoaderByUserId,
 } from "./utils/likeLoader";
-import { quackLoader } from "./utils/quackLoader";
+import {
+  quackLoader,
+  quackLoaderByInReplyToQuackId,
+} from "./utils/quackLoader";
 import {
   requackLoader,
   requackLoaderByQuackId,
@@ -31,6 +34,9 @@ export type MyContext = {
   userLoader: ReturnType<typeof userLoader>;
   userLoaderByUsername: ReturnType<typeof userLoaderByUsername>;
   quackLoader: ReturnType<typeof quackLoader>;
+  quackLoaderByInReplyToQuackId: ReturnType<
+    typeof quackLoaderByInReplyToQuackId
+  >;
   requackLoader: ReturnType<typeof requackLoader>;
   requackLoaderByQuackId: ReturnType<typeof requackLoaderByQuackId>;
   requackLoaderByUserId: ReturnType<typeof requackLoaderByUserId>;

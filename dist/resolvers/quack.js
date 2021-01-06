@@ -41,13 +41,40 @@ let QuackResolver = class QuackResolver {
         }
         return null;
     }
-    inReplyToQuack(quack, { quackLoader }) {
-        return quack.inReplyToQuackId
-            ? quackLoader.load(quack.inReplyToQuackId)
-            : null;
+    inReplyToQuack(quack, { quackLoader, blockLoader, payload: { user } }) {
+        return __awaiter(this, void 0, void 0, function* () {
+            if (!quack.inReplyToQuackId) {
+                return null;
+            }
+            const rQuack = yield quackLoader.load(quack.inReplyToQuackId);
+            if (!rQuack) {
+                return null;
+            }
+            if (user) {
+                const blocked = yield blockLoader.load({
+                    userId: user.id,
+                    blockedByUserId: rQuack.quackedByUserId,
+                });
+                if (blocked && blocked.length > 0) {
+                    return null;
+                }
+            }
+            return rQuack;
+        });
     }
-    quackedByUser(quack, { userLoader }) {
-        return userLoader.load(quack.quackedByUserId);
+    quackedByUser(quack, { userLoader, blockLoader, payload: { user } }) {
+        return __awaiter(this, void 0, void 0, function* () {
+            if (user) {
+                const blocked = yield blockLoader.load({
+                    userId: user.id,
+                    blockedByUserId: quack.quackedByUserId,
+                });
+                if (blocked && blocked.length > 0) {
+                    return null;
+                }
+            }
+            return userLoader.load(quack.quackedByUserId);
+        });
     }
     requacks(quack, { userLoader, requackLoaderByQuackId }) {
         return __awaiter(this, void 0, void 0, function* () {
@@ -71,17 +98,33 @@ let QuackResolver = class QuackResolver {
             }));
         });
     }
-    replies(quack) {
-        return Quack_1.Quack.find({
-            where: { inReplyToQuackId: quack.id, isVisible: true },
+    replies(quack, { quackLoaderByInReplyToQuackId, blockLoader, payload: { user } }) {
+        return __awaiter(this, void 0, void 0, function* () {
+            if (user) {
+                const blocked = yield blockLoader.load({
+                    userId: user.id,
+                    blockedByUserId: quack.quackedByUserId,
+                });
+                if (blocked && blocked.length > 0) {
+                    return null;
+                }
+            }
+            return quackLoaderByInReplyToQuackId.load(quack.id);
         });
     }
     links(quack) {
         return getLinks_1.getLinks(quack.text);
     }
-    mentions(quack, { userLoaderByUsername }) {
-        const usernames = getMentions_1.getMentions(quack.text, false);
-        return userLoaderByUsername.loadMany(usernames);
+    mentions(quack, { userLoaderByUsername, blockLoaderByUserId, payload: { user } }) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const usernames = getMentions_1.getMentions(quack.text, false);
+            const users = yield userLoaderByUsername.loadMany(usernames);
+            if (user) {
+                const blocks = (yield blockLoaderByUserId.load(user.id)).map((block) => block.blockedByUserId);
+                return users.filter((user) => { var _a; return !blocks.includes((_a = user) === null || _a === void 0 ? void 0 : _a.id); });
+            }
+            return users;
+        });
     }
     hashtags(quack) {
         return getHashtags_1.getHashtags(quack.text);
@@ -204,17 +247,21 @@ __decorate([
 ], QuackResolver.prototype, "truncatedText", null);
 __decorate([
     type_graphql_1.FieldResolver(() => Quack_1.Quack, { nullable: true }),
-    __param(0, type_graphql_1.Root()), __param(1, type_graphql_1.Ctx()),
+    type_graphql_1.UseMiddleware(partialAuth_1.partialAuth),
+    __param(0, type_graphql_1.Root()),
+    __param(1, type_graphql_1.Ctx()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [Quack_1.Quack, Object]),
-    __metadata("design:returntype", void 0)
+    __metadata("design:returntype", Promise)
 ], QuackResolver.prototype, "inReplyToQuack", null);
 __decorate([
     type_graphql_1.FieldResolver(),
-    __param(0, type_graphql_1.Root()), __param(1, type_graphql_1.Ctx()),
+    type_graphql_1.UseMiddleware(partialAuth_1.partialAuth),
+    __param(0, type_graphql_1.Root()),
+    __param(1, type_graphql_1.Ctx()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [Quack_1.Quack, Object]),
-    __metadata("design:returntype", void 0)
+    __metadata("design:returntype", Promise)
 ], QuackResolver.prototype, "quackedByUser", null);
 __decorate([
     type_graphql_1.FieldResolver(),
@@ -234,10 +281,12 @@ __decorate([
 ], QuackResolver.prototype, "likes", null);
 __decorate([
     type_graphql_1.FieldResolver(),
+    type_graphql_1.UseMiddleware(partialAuth_1.partialAuth),
     __param(0, type_graphql_1.Root()),
+    __param(1, type_graphql_1.Ctx()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Quack_1.Quack]),
-    __metadata("design:returntype", void 0)
+    __metadata("design:paramtypes", [Quack_1.Quack, Object]),
+    __metadata("design:returntype", Promise)
 ], QuackResolver.prototype, "replies", null);
 __decorate([
     type_graphql_1.FieldResolver(),
@@ -248,10 +297,12 @@ __decorate([
 ], QuackResolver.prototype, "links", null);
 __decorate([
     type_graphql_1.FieldResolver(),
-    __param(0, type_graphql_1.Root()), __param(1, type_graphql_1.Ctx()),
+    type_graphql_1.UseMiddleware(partialAuth_1.partialAuth),
+    __param(0, type_graphql_1.Root()),
+    __param(1, type_graphql_1.Ctx()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [Quack_1.Quack, Object]),
-    __metadata("design:returntype", void 0)
+    __metadata("design:returntype", Promise)
 ], QuackResolver.prototype, "mentions", null);
 __decorate([
     type_graphql_1.FieldResolver(),
