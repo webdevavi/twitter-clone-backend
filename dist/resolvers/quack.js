@@ -27,6 +27,8 @@ const typeorm_1 = require("typeorm");
 const Follow_1 = require("../entities/Follow");
 const Quack_1 = require("../entities/Quack");
 const QuackInput_1 = require("../input/QuackInput");
+const partialAuth_1 = require("../middleware/partialAuth");
+const PaginatedQuacks_1 = require("../response/PaginatedQuacks");
 const QuackResponse_1 = require("../response/QuackResponse");
 const getHashtags_1 = require("../utils/getHashtags");
 const getLinks_1 = require("../utils/getLinks");
@@ -147,25 +149,49 @@ let QuackResolver = class QuackResolver {
             return true;
         });
     }
-    quacks() {
-        return Quack_1.Quack.find({ where: { isVisible: true } });
+    quackById(id, { payload: { user }, blockLoaderByUserId }) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const q = typeorm_1.getConnection()
+                .getRepository(Quack_1.Quack)
+                .createQueryBuilder("q")
+                .where(`q.id = ${id}`)
+                .andWhere(`q."isVisible" = true`);
+            if (user) {
+                const ids = (yield blockLoaderByUserId.load(user.id)).map((block) => block.blockedByUserId);
+                if (ids.length > 0) {
+                    q.andWhere(`q."quackedByUserId" not in (${ids.join(", ")})`);
+                }
+            }
+            return yield q.getOne();
+        });
     }
     quacksForMe(limit, lastIndex, { payload: { user } }) {
         return __awaiter(this, void 0, void 0, function* () {
-            const follows = yield Follow_1.Follow.find({
-                where: { followerId: user.id },
-            });
-            const ids = follows.map((follow) => follow.userId);
-            ids.push(user.id);
-            return Quack_1.Quack.find({
-                where: {
-                    id: typeorm_1.LessThan(lastIndex),
-                    quackedByUserId: typeorm_1.In(ids),
-                    isVisible: true,
-                },
-                take: limit,
-                order: { id: "DESC" },
-            });
+            const realLimit = Math.min(50, limit);
+            const realLimitPlusOne = realLimit + 1;
+            const q = typeorm_1.getConnection()
+                .createQueryBuilder()
+                .select("q.*")
+                .from(Quack_1.Quack, "q")
+                .where(`q."isVisible" = true`)
+                .take(realLimitPlusOne)
+                .orderBy({ "q.id": "DESC" });
+            if (user) {
+                const follows = yield Follow_1.Follow.find({
+                    where: { followerId: user.id },
+                });
+                const ids = follows.map((follow) => follow.userId);
+                ids.push(user.id);
+                q.andWhere(`q."quackedByUserId" in (${ids.join(", ")})`);
+            }
+            if (lastIndex) {
+                q.andWhere(`q.id < ${lastIndex}`);
+            }
+            const quacks = yield q.execute();
+            return {
+                quacks: quacks === null || quacks === void 0 ? void 0 : quacks.slice(0, realLimit),
+                hasMore: (quacks === null || quacks === void 0 ? void 0 : quacks.length) === realLimitPlusOne,
+            };
         });
     }
 };
@@ -271,16 +297,19 @@ __decorate([
     __metadata("design:returntype", Promise)
 ], QuackResolver.prototype, "deleteQuack", null);
 __decorate([
-    type_graphql_1.Query(() => [Quack_1.Quack], { nullable: true }),
+    type_graphql_1.Query(() => Quack_1.Quack, { nullable: true }),
+    type_graphql_1.UseMiddleware(partialAuth_1.partialAuth),
+    __param(0, type_graphql_1.Arg("id")),
+    __param(1, type_graphql_1.Ctx()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", []),
-    __metadata("design:returntype", void 0)
-], QuackResolver.prototype, "quacks", null);
+    __metadata("design:paramtypes", [Number, Object]),
+    __metadata("design:returntype", Promise)
+], QuackResolver.prototype, "quackById", null);
 __decorate([
-    type_graphql_1.Query(() => [Quack_1.Quack], { nullable: true }),
-    type_graphql_1.Authorized(["ACTIVATED"]),
+    type_graphql_1.Query(() => PaginatedQuacks_1.PaginatedQuacks, { nullable: true }),
+    type_graphql_1.UseMiddleware(partialAuth_1.partialAuth),
     __param(0, type_graphql_1.Arg("limit", () => type_graphql_1.Int, { nullable: true, defaultValue: 20 })),
-    __param(1, type_graphql_1.Arg("lastIndex", () => type_graphql_1.Int, { nullable: true, defaultValue: 0 })),
+    __param(1, type_graphql_1.Arg("lastIndex", () => type_graphql_1.Int, { nullable: true })),
     __param(2, type_graphql_1.Ctx()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [Number, Number, Object]),

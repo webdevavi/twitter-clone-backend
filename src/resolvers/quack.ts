@@ -8,11 +8,14 @@ import {
   Query,
   Resolver,
   Root,
+  UseMiddleware,
 } from "type-graphql";
-import { In, LessThan } from "typeorm";
+import { getConnection } from "typeorm";
 import { Follow } from "../entities/Follow";
 import { Quack } from "../entities/Quack";
 import { QuackInput } from "../input/QuackInput";
+import { partialAuth } from "../middleware/partialAuth";
+import { PaginatedQuacks } from "../response/PaginatedQuacks";
 import { QuackResponse } from "../response/QuackResponse";
 import { MyContext, UserRole } from "../types";
 import { getHashtags } from "../utils/getHashtags";
@@ -175,34 +178,69 @@ export class QuackResolver {
     return true;
   }
 
-  @Query(() => [Quack], { nullable: true })
-  quacks() {
-    return Quack.find({ where: { isVisible: true } });
+  @Query(() => Quack, { nullable: true })
+  @UseMiddleware(partialAuth)
+  async quackById(
+    @Arg("id") id: number,
+    @Ctx() { payload: { user }, blockLoaderByUserId }: MyContext
+  ) {
+    const q = getConnection()
+      .getRepository(Quack)
+      .createQueryBuilder("q")
+      .where(`q.id = ${id}`)
+      .andWhere(`q."isVisible" = true`);
+
+    if (user) {
+      const ids = (await blockLoaderByUserId.load(user.id)).map(
+        (block) => block.blockedByUserId
+      );
+      if (ids.length > 0) {
+        q.andWhere(`q."quackedByUserId" not in (${ids.join(", ")})`);
+      }
+    }
+    return await q.getOne();
   }
 
-  @Query(() => [Quack], { nullable: true })
-  @Authorized<UserRole>(["ACTIVATED"])
+  @Query(() => PaginatedQuacks, { nullable: true })
+  @UseMiddleware(partialAuth)
   async quacksForMe(
     @Arg("limit", () => Int, { nullable: true, defaultValue: 20 })
     limit: number,
-    @Arg("lastIndex", () => Int, { nullable: true, defaultValue: 0 })
+    @Arg("lastIndex", () => Int, { nullable: true })
     lastIndex: number,
     @Ctx()
     { payload: { user } }: MyContext
-  ): Promise<Quack[]> {
-    const follows = await Follow.find({
-      where: { followerId: user!.id },
-    });
-    const ids = follows.map((follow) => follow.userId);
-    ids.push(user!.id);
-    return Quack.find({
-      where: {
-        id: LessThan(lastIndex),
-        quackedByUserId: In(ids),
-        isVisible: true,
-      },
-      take: limit,
-      order: { id: "DESC" },
-    });
+  ): Promise<PaginatedQuacks> {
+    const realLimit = Math.min(50, limit);
+    const realLimitPlusOne = realLimit + 1;
+
+    const q = getConnection()
+      .createQueryBuilder()
+      .select("q.*")
+      .from(Quack, "q")
+      .where(`q."isVisible" = true`)
+      .take(realLimitPlusOne)
+      .orderBy({ "q.id": "DESC" });
+
+    if (user) {
+      const follows = await Follow.find({
+        where: { followerId: user.id },
+      });
+      const ids = follows.map((follow) => follow.userId);
+      ids.push(user.id);
+
+      q.andWhere(`q."quackedByUserId" in (${ids.join(", ")})`);
+    }
+
+    if (lastIndex) {
+      q.andWhere(`q.id < ${lastIndex}`);
+    }
+
+    const quacks = await q.execute();
+
+    return {
+      quacks: quacks?.slice(0, realLimit),
+      hasMore: quacks?.length === realLimitPlusOne,
+    };
   }
 }
