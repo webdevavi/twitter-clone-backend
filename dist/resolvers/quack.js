@@ -299,7 +299,7 @@ __decorate([
 __decorate([
     type_graphql_1.Query(() => Quack_1.Quack, { nullable: true }),
     type_graphql_1.UseMiddleware(partialAuth_1.partialAuth),
-    __param(0, type_graphql_1.Arg("id")),
+    __param(0, type_graphql_1.Arg("id", () => type_graphql_1.Int)),
     __param(1, type_graphql_1.Ctx()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [Number, Object]),

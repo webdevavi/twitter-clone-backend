@@ -181,7 +181,7 @@ export class QuackResolver {
   @Query(() => Quack, { nullable: true })
   @UseMiddleware(partialAuth)
   async quackById(
-    @Arg("id") id: number,
+    @Arg("id", () => Int) id: number,
     @Ctx() { payload: { user }, blockLoaderByUserId }: MyContext
   ) {
     const q = getConnection()
