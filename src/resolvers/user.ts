@@ -17,7 +17,6 @@ import {
 } from "../constants";
 import { forgotPasswordTemplate } from "../emailTemplates/forgotPassword";
 import { verifyEmailTemplate } from "../emailTemplates/verifyEmail";
-import { Block } from "../entities/Block";
 import { Like } from "../entities/Like";
 import { Quack } from "../entities/Quack";
 import { Requack } from "../entities/Requack";
@@ -67,12 +66,13 @@ export class UserResolver {
   @Authorized()
   async haveIBlockedThisUser(
     @Root() user: User,
-    @Ctx() { payload }: MyContext
+    @Ctx() { payload, blockLoader }: MyContext
   ) {
     const myUserId = payload.user?.id;
     if (user.id === myUserId) return null;
-    const block = await Block.findOne({
-      where: { userId: user.id, blockedByUserId: myUserId },
+    const block = await blockLoader.load({
+      userId: user.id,
+      blockedByUserId: myUserId!,
     });
     if (!block) return false;
     return true;
@@ -82,14 +82,47 @@ export class UserResolver {
   @Authorized()
   async amIBlockedByThisUser(
     @Root() user: User,
-    @Ctx() { payload }: MyContext
+    @Ctx() { payload, blockLoader }: MyContext
   ) {
     const myUserId = payload.user?.id;
     if (user.id === myUserId) return null;
-    const block = await Block.findOne({
-      where: { userId: myUserId, blockedByUserId: user.id },
+    const block = await blockLoader.load({
+      userId: myUserId!,
+      blockedByUserId: user.id,
     });
     if (!block) return false;
+    return true;
+  }
+
+  @FieldResolver(() => Boolean, { nullable: true })
+  @Authorized()
+  async followStatus(
+    @Root() user: User,
+    @Ctx() { payload, followLoader }: MyContext
+  ) {
+    const myUserId = payload.user?.id;
+    if (user.id === myUserId) return null;
+    const follow = await followLoader.load({
+      userId: user.id,
+      followerId: myUserId!,
+    });
+    if (!follow) return false;
+    return true;
+  }
+
+  @FieldResolver(() => Boolean, { nullable: true })
+  @Authorized()
+  async followBackStatus(
+    @Root() user: User,
+    @Ctx() { payload, followLoader }: MyContext
+  ) {
+    const myUserId = payload.user?.id;
+    if (user.id === myUserId) return null;
+    const follow = await followLoader.load({
+      followerId: user.id,
+      userId: myUserId!,
+    });
+    if (!follow) return false;
     return true;
   }
 

@@ -100,4 +100,10 @@ export class User extends BaseEntity {
 
   @Field(() => Boolean, { nullable: true })
   amIBlockedByThisUser: Boolean;
+
+  @Field(() => Boolean, { nullable: true })
+  followStatus: Boolean;
+
+  @Field(() => Boolean, { nullable: true })
+  followBackStatus: Boolean;
 }

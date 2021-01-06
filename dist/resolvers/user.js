@@ -31,7 +31,6 @@ const uuid_1 = require("uuid");
 const constants_1 = require("../constants");
 const forgotPassword_1 = require("../emailTemplates/forgotPassword");
 const verifyEmail_1 = require("../emailTemplates/verifyEmail");
-const Block_1 = require("../entities/Block");
 const Like_1 = require("../entities/Like");
 const Quack_1 = require("../entities/Quack");
 const Requack_1 = require("../entities/Requack");
@@ -64,30 +63,62 @@ let UserResolver = class UserResolver {
             return null;
         return likeLoaderByUserId.load(user.id);
     }
-    haveIBlockedThisUser(user, { payload }) {
+    haveIBlockedThisUser(user, { payload, blockLoader }) {
         var _a;
         return __awaiter(this, void 0, void 0, function* () {
             const myUserId = (_a = payload.user) === null || _a === void 0 ? void 0 : _a.id;
             if (user.id === myUserId)
                 return null;
-            const block = yield Block_1.Block.findOne({
-                where: { userId: user.id, blockedByUserId: myUserId },
+            const block = yield blockLoader.load({
+                userId: user.id,
+                blockedByUserId: myUserId,
             });
             if (!block)
                 return false;
             return true;
         });
     }
-    amIBlockedByThisUser(user, { payload }) {
+    amIBlockedByThisUser(user, { payload, blockLoader }) {
         var _a;
         return __awaiter(this, void 0, void 0, function* () {
             const myUserId = (_a = payload.user) === null || _a === void 0 ? void 0 : _a.id;
             if (user.id === myUserId)
                 return null;
-            const block = yield Block_1.Block.findOne({
-                where: { userId: myUserId, blockedByUserId: user.id },
+            const block = yield blockLoader.load({
+                userId: myUserId,
+                blockedByUserId: user.id,
             });
             if (!block)
+                return false;
+            return true;
+        });
+    }
+    followStatus(user, { payload, followLoader }) {
+        var _a;
+        return __awaiter(this, void 0, void 0, function* () {
+            const myUserId = (_a = payload.user) === null || _a === void 0 ? void 0 : _a.id;
+            if (user.id === myUserId)
+                return null;
+            const follow = yield followLoader.load({
+                userId: user.id,
+                followerId: myUserId,
+            });
+            if (!follow)
+                return false;
+            return true;
+        });
+    }
+    followBackStatus(user, { payload, followLoader }) {
+        var _a;
+        return __awaiter(this, void 0, void 0, function* () {
+            const myUserId = (_a = payload.user) === null || _a === void 0 ? void 0 : _a.id;
+            if (user.id === myUserId)
+                return null;
+            const follow = yield followLoader.load({
+                followerId: user.id,
+                userId: myUserId,
+            });
+            if (!follow)
                 return false;
             return true;
         });
@@ -401,6 +432,24 @@ __decorate([
     __metadata("design:paramtypes", [User_1.User, Object]),
     __metadata("design:returntype", Promise)
 ], UserResolver.prototype, "amIBlockedByThisUser", null);
+__decorate([
+    type_graphql_1.FieldResolver(() => Boolean, { nullable: true }),
+    type_graphql_1.Authorized(),
+    __param(0, type_graphql_1.Root()),
+    __param(1, type_graphql_1.Ctx()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [User_1.User, Object]),
+    __metadata("design:returntype", Promise)
+], UserResolver.prototype, "followStatus", null);
+__decorate([
+    type_graphql_1.FieldResolver(() => Boolean, { nullable: true }),
+    type_graphql_1.Authorized(),
+    __param(0, type_graphql_1.Root()),
+    __param(1, type_graphql_1.Ctx()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [User_1.User, Object]),
+    __metadata("design:returntype", Promise)
+], UserResolver.prototype, "followBackStatus", null);
 __decorate([
     type_graphql_1.Mutation(() => UserResponse_1.UserResponse),
     __param(0, type_graphql_1.Arg("input")),
