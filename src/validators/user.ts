@@ -85,14 +85,14 @@ export class ValidateUser {
     if (this.displayPicture && !validUrl.test(this.displayPicture)) {
       errors.push({
         field: "displayPicture",
-        message: "The link for display picture must be a valid url.",
+        message: "The link for display picture must be a valid validUrl.",
       });
     }
 
     if (this.coverPicture && !validUrl.test(this.coverPicture)) {
       errors.push({
         field: "coverPicture",
-        message: "The link for cover picture must be a valid url.",
+        message: "The link for cover picture must be a valid validUrl.",
       });
     }
 

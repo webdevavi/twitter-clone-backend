@@ -30,7 +30,6 @@ const type_graphql_1 = require("type-graphql");
 const typeorm_1 = require("typeorm");
 const Follow_1 = require("../entities/Follow");
 const Quack_1 = require("../entities/Quack");
-const User_1 = require("../entities/User");
 const QuackInput_1 = require("../input/QuackInput");
 const QuackResponse_1 = require("../response/QuackResponse");
 const quack_1 = require("../validators/quack");
@@ -41,8 +40,13 @@ let QuackResolver = class QuackResolver {
         }
         return null;
     }
-    quackedByUser(quack) {
-        return User_1.User.findOne(quack.quackedByUserId);
+    inReplyToQuack(quack, { quackLoader }) {
+        return quack.inReplyToQuackId
+            ? quackLoader.load(quack.inReplyToQuackId)
+            : null;
+    }
+    quackedByUser(quack, { userLoader }) {
+        return userLoader.load(quack.quackedByUserId);
     }
     requacks(quack, { userLoader, requackLoaderByQuackId }) {
         return __awaiter(this, void 0, void 0, function* () {
@@ -168,10 +172,17 @@ __decorate([
     __metadata("design:returntype", void 0)
 ], QuackResolver.prototype, "truncatedText", null);
 __decorate([
-    type_graphql_1.FieldResolver(),
-    __param(0, type_graphql_1.Root()),
+    type_graphql_1.FieldResolver(() => Quack_1.Quack, { nullable: true }),
+    __param(0, type_graphql_1.Root()), __param(1, type_graphql_1.Ctx()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Quack_1.Quack]),
+    __metadata("design:paramtypes", [Quack_1.Quack, Object]),
+    __metadata("design:returntype", void 0)
+], QuackResolver.prototype, "inReplyToQuack", null);
+__decorate([
+    type_graphql_1.FieldResolver(),
+    __param(0, type_graphql_1.Root()), __param(1, type_graphql_1.Ctx()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Quack_1.Quack, Object]),
     __metadata("design:returntype", void 0)
 ], QuackResolver.prototype, "quackedByUser", null);
 __decorate([

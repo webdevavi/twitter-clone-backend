@@ -23,6 +23,7 @@ const authChecker_1 = require("../utils/authChecker");
 const blockLoader_1 = require("../utils/blockLoader");
 const followLoader_1 = require("../utils/followLoader");
 const likeLoader_1 = require("../utils/likeLoader");
+const quackLoader_1 = require("../utils/quackLoader");
 const requackLoader_1 = require("../utils/requackLoader");
 const userLoader_1 = require("../utils/userLoader");
 const apolloConfig = ({ redis, }) => __awaiter(void 0, void 0, void 0, function* () {
@@ -46,6 +47,7 @@ const apolloConfig = ({ redis, }) => __awaiter(void 0, void 0, void 0, function*
             res,
             cache: redis,
             userLoader: userLoader_1.userLoader(),
+            quackLoader: quackLoader_1.quackLoader(),
             requackLoader: requackLoader_1.requackLoader(),
             requackLoaderByUserId: requackLoader_1.requackLoaderByUserId(),
             requackLoaderByQuackId: requackLoader_1.requackLoaderByQuackId(),

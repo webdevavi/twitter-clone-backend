@@ -37,6 +37,7 @@ let LikeResolver = class LikeResolver {
         return __awaiter(this, void 0, void 0, function* () {
             const userId = user.id;
             const quack = yield Quack_1.Quack.findOne(quackId);
+            console.log(quack);
             if (!quack) {
                 return false;
             }

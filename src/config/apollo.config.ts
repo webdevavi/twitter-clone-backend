@@ -26,6 +26,7 @@ import {
   likeLoaderByQuackId,
   likeLoaderByUserId,
 } from "../utils/likeLoader";
+import { quackLoader } from "../utils/quackLoader";
 import {
   requackLoader,
   requackLoaderByQuackId,
@@ -60,6 +61,7 @@ export const apolloConfig = async ({
     res,
     cache: redis,
     userLoader: userLoader(),
+    quackLoader: quackLoader(),
     requackLoader: requackLoader(),
     requackLoaderByUserId: requackLoaderByUserId(),
     requackLoaderByQuackId: requackLoaderByQuackId(),

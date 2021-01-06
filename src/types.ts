@@ -16,6 +16,7 @@ import {
   likeLoaderByQuackId,
   likeLoaderByUserId,
 } from "./utils/likeLoader";
+import { quackLoader } from "./utils/quackLoader";
 import {
   requackLoader,
   requackLoaderByQuackId,
@@ -28,6 +29,7 @@ export type MyContext = {
   res: Response;
   cache: Redis;
   userLoader: ReturnType<typeof userLoader>;
+  quackLoader: ReturnType<typeof quackLoader>;
   requackLoader: ReturnType<typeof requackLoader>;
   requackLoaderByQuackId: ReturnType<typeof requackLoaderByQuackId>;
   requackLoaderByUserId: ReturnType<typeof requackLoaderByUserId>;

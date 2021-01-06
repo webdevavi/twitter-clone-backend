@@ -13,7 +13,6 @@ import {
 import { In, LessThan } from "typeorm";
 import { Follow } from "../entities/Follow";
 import { Quack } from "../entities/Quack";
-import { User } from "../entities/User";
 import { QuackInput } from "../input/QuackInput";
 import { QuackResponse } from "../response/QuackResponse";
 import { MyContext, UserRole } from "../types";
@@ -30,9 +29,16 @@ export class QuackResolver {
     return null;
   }
 
+  @FieldResolver(() => Quack, { nullable: true })
+  inReplyToQuack(@Root() quack: Quack, @Ctx() { quackLoader }: MyContext) {
+    return quack.inReplyToQuackId
+      ? quackLoader.load(quack.inReplyToQuackId)
+      : null;
+  }
+
   @FieldResolver()
-  quackedByUser(@Root() quack: Quack) {
-    return User.findOne(quack.quackedByUserId);
+  quackedByUser(@Root() quack: Quack, @Ctx() { userLoader }: MyContext) {
+    return userLoader.load(quack.quackedByUserId);
   }
 
   @FieldResolver()

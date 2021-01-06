@@ -1,3 +1,4 @@
+import { formatDate } from "./formatDate";
 import {
   notTheseWords,
   hashtags,
@@ -38,8 +39,8 @@ interface Query {
     minRequacks?: number;
   };
   dates?: {
-    sinceDate?: Date;
-    untilDate?: Date;
+    sinceDate?: string;
+    untilDate?: string;
   };
 }
 
@@ -50,10 +51,16 @@ export class Parser {
     return {
       filters: {
         filterOut: this.filterQuery<string>(filterOut, (o) => {
-          return o.replace(/(\(|\)|-filter:)/gi, "")?.trim();
+          return o
+            .replace(/(\(|\)|-filter:)/gi, "")
+            ?.trim()
+            .toLowerCase();
         }),
         filterIn: this.filterQuery<string>(filterIn, (o) => {
-          return o.replace(/(\(|\)|filter:)/gi, "")?.trim();
+          return o
+            .replace(/(\(|\)|filter:)/gi, "")
+            ?.trim()
+            .toLowerCase();
         }),
       },
 
@@ -65,7 +72,7 @@ export class Parser {
           o.replace(/(\(|\)|to:)/gi, "")?.trim()
         ),
         mentions: this.filterQuery<string>(mentions, (o) =>
-          o.replace(/(\(|\)|@)/gi, "")?.trim()
+          o.replace(/(\(|\))/gi, "")?.trim()
         ),
       },
       engagement: {
@@ -86,16 +93,22 @@ export class Parser {
         ),
       },
       dates: {
-        sinceDate: new Date(
-          this.filterQuery<string>(sinceDate, (o) =>
-            o.replace(/(\(|\)|since:)/gi, "")
-          )[0]?.trim()
-        ),
-        untilDate: new Date(
-          this.filterQuery<string>(untilDate, (o) =>
-            o.replace(/(\(|\)|until:)/gi, "")
-          )[0]?.trim()
-        ),
+        sinceDate:
+          formatDate(
+            new Date(
+              this.filterQuery<string>(sinceDate, (o) =>
+                o.replace(/(\(|\)|since:)/gi, "")
+              )[0]?.trim()
+            )
+          ) || undefined,
+        untilDate:
+          formatDate(
+            new Date(
+              this.filterQuery<string>(untilDate, (o) =>
+                o.replace(/(\(|\)|until:)/gi, "")
+              )[0]?.trim()
+            )
+          ) || undefined,
       },
       words: {
         exactPhrase: this.filterQuery<string>(exactPhrase, (o) =>
@@ -103,7 +116,8 @@ export class Parser {
         )[0]?.trim(),
         or: this.filterQuery<string[]>(or, (o) => {
           return o
-            .replace(/(\(|\)|or)/gi, "")
+            .replace(/(\(|\))/g, "")
+            .replace(/\s{1,}or\s{1,}/gi, " ")
             .replace(/\s+/g, " ")
             .split(" ")
             .map((i) => i.trim());
@@ -114,9 +128,13 @@ export class Parser {
           o.replace(/(\(|\)|-)/gi, "")?.trim()
         ),
         hashtags: this.filterQuery<string>(hashtags, (o) =>
-          o.replace(/(\(|\)|#)/gi, "")?.trim()
+          o.replace(/(\(|\))/gi, "")?.trim()
         ),
-        like: this.string.replace(/\s+/g, " ").trim().toLowerCase(),
+        like: this.string
+          .replace(/('|\*|"|\(|\))/g, " ")
+          .replace(/\s+/g, " ")
+          .trim()
+          .toLowerCase(),
       },
     };
   }

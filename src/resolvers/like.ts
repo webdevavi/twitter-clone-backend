@@ -33,6 +33,7 @@ export class LikeResolver {
     const userId = user!.id;
 
     const quack = await Quack.findOne(quackId);
+    console.log(quack);
     if (!quack) {
       return false;
     }
