@@ -1,6 +1,6 @@
 export const containsSpecialCharacters: RegExp = /[-/:-@[-`{-~]/;
 export const validEmail: RegExp = /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9-]+(?:\.[a-zA-Z0-9-]+)*$/;
-export const validUrl: RegExp = /^(ftp|http|https):\/\/[^ "]+$/;
+export const validUrl: RegExp = /(?:http(s)?:\/\/)?[\w.-]+(?:\.[\w\.-]+)+[\w\-\._~:/?#[\]@!\$&'\(\)\*\+,;=.]+/gi;
 export const notTheseWords = /(|\()-\w+[a-zA-Z](\)|)/gi;
 export const hashtags = /(|\()#\w+(\)|)/gi;
 export const mentions = /(|\()@\w+(\)|)/gi;

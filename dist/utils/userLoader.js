@@ -12,8 +12,9 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.userLoader = void 0;
+exports.userLoaderByUsername = exports.userLoader = void 0;
 const dataloader_1 = __importDefault(require("dataloader"));
+const typeorm_1 = require("typeorm");
 const User_1 = require("../entities/User");
 const userLoader = () => new dataloader_1.default((userIds) => __awaiter(void 0, void 0, void 0, function* () {
     const users = yield User_1.User.findByIds(userIds);
@@ -24,4 +25,17 @@ const userLoader = () => new dataloader_1.default((userIds) => __awaiter(void 0,
     return userIds.map((userId) => userIdToUser[userId]);
 }));
 exports.userLoader = userLoader;
+const userLoaderByUsername = () => new dataloader_1.default((usernames) => __awaiter(void 0, void 0, void 0, function* () {
+    const users = yield User_1.User.find({
+        where: {
+            rawUsername: typeorm_1.In(usernames.map((username) => username.toLowerCase())),
+        },
+    });
+    const usernameToUser = {};
+    users.forEach((u) => {
+        usernameToUser[u.username] = u;
+    });
+    return usernames.map((username) => usernameToUser[username]);
+}));
+exports.userLoaderByUsername = userLoaderByUsername;
 //# sourceMappingURL=userLoader.js.map

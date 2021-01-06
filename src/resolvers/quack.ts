@@ -1,4 +1,3 @@
-import getUrls from "get-urls";
 import {
   Arg,
   Authorized,
@@ -16,6 +15,9 @@ import { Quack } from "../entities/Quack";
 import { QuackInput } from "../input/QuackInput";
 import { QuackResponse } from "../response/QuackResponse";
 import { MyContext, UserRole } from "../types";
+import { getHashtags } from "../utils/getHashtags";
+import { getLinks } from "../utils/getLinks";
+import { getMentions } from "../utils/getMentions";
 import { QuackValidator } from "../validators/quack";
 
 @Resolver(Quack)
@@ -75,9 +77,19 @@ export class QuackResolver {
   }
 
   @FieldResolver()
-  urls(@Root() quack: Quack) {
-    const urlsSet = getUrls(quack.text);
-    return [...urlsSet];
+  links(@Root() quack: Quack) {
+    return getLinks(quack.text);
+  }
+
+  @FieldResolver()
+  mentions(@Root() quack: Quack, @Ctx() { userLoaderByUsername }: MyContext) {
+    const usernames = getMentions(quack.text, false);
+    return userLoaderByUsername.loadMany(usernames);
+  }
+
+  @FieldResolver()
+  hashtags(@Root() quack: Quack) {
+    return getHashtags(quack.text);
   }
 
   @FieldResolver()

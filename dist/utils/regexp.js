@@ -3,7 +3,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.or = exports.exactPhrase = exports.sinceDate = exports.untilDate = exports.minRequacks = exports.minLikes = exports.minReplies = exports.filterIn = exports.filterOut = exports.toTheseUsernames = exports.fromTheseUsernames = exports.mentions = exports.hashtags = exports.notTheseWords = exports.validUrl = exports.validEmail = exports.containsSpecialCharacters = void 0;
 exports.containsSpecialCharacters = /[-/:-@[-`{-~]/;
 exports.validEmail = /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9-]+(?:\.[a-zA-Z0-9-]+)*$/;
-exports.validUrl = /^(ftp|http|https):\/\/[^ "]+$/;
+exports.validUrl = /(?:http(s)?:\/\/)?[\w.-]+(?:\.[\w\.-]+)+[\w\-\._~:/?#[\]@!\$&'\(\)\*\+,;=.]+/gi;
 exports.notTheseWords = /(|\()-\w+[a-zA-Z](\)|)/gi;
 exports.hashtags = /(|\()#\w+(\)|)/gi;
 exports.mentions = /(|\()@\w+(\)|)/gi;

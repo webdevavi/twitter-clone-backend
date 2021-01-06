@@ -32,7 +32,7 @@ import {
   requackLoaderByQuackId,
   requackLoaderByUserId,
 } from "../utils/requackLoader";
-import { userLoader } from "../utils/userLoader";
+import { userLoader, userLoaderByUsername } from "../utils/userLoader";
 
 interface ApolloConfigOptions {
   redis: Redis;
@@ -61,6 +61,7 @@ export const apolloConfig = async ({
     res,
     cache: redis,
     userLoader: userLoader(),
+    userLoaderByUsername: userLoaderByUsername(),
     quackLoader: quackLoader(),
     requackLoader: requackLoader(),
     requackLoaderByUserId: requackLoaderByUserId(),

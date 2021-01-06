@@ -22,13 +22,14 @@ import {
   requackLoaderByQuackId,
   requackLoaderByUserId,
 } from "./utils/requackLoader";
-import { userLoader } from "./utils/userLoader";
+import { userLoader, userLoaderByUsername } from "./utils/userLoader";
 
 export type MyContext = {
   req: Request;
   res: Response;
   cache: Redis;
   userLoader: ReturnType<typeof userLoader>;
+  userLoaderByUsername: ReturnType<typeof userLoaderByUsername>;
   quackLoader: ReturnType<typeof quackLoader>;
   requackLoader: ReturnType<typeof requackLoader>;
   requackLoaderByQuackId: ReturnType<typeof requackLoaderByQuackId>;

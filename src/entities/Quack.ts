@@ -35,7 +35,13 @@ export class Quack extends BaseEntity {
   truncatedText: string;
 
   @Field(() => [String], { nullable: true })
-  urls: string[];
+  links: string[] | null;
+
+  @Field(() => [User], { nullable: true })
+  mentions: User[] | null;
+
+  @Field(() => [String], { nullable: true })
+  hashtags: string[] | null;
 
   @Column()
   @Field()

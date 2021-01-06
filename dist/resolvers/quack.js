@@ -20,18 +20,17 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.QuackResolver = void 0;
-const get_urls_1 = __importDefault(require("get-urls"));
 const type_graphql_1 = require("type-graphql");
 const typeorm_1 = require("typeorm");
 const Follow_1 = require("../entities/Follow");
 const Quack_1 = require("../entities/Quack");
 const QuackInput_1 = require("../input/QuackInput");
 const QuackResponse_1 = require("../response/QuackResponse");
+const getHashtags_1 = require("../utils/getHashtags");
+const getLinks_1 = require("../utils/getLinks");
+const getMentions_1 = require("../utils/getMentions");
 const quack_1 = require("../validators/quack");
 let QuackResolver = class QuackResolver {
     truncatedText(quack) {
@@ -75,9 +74,15 @@ let QuackResolver = class QuackResolver {
             where: { inReplyToQuackId: quack.id, isVisible: true },
         });
     }
-    urls(quack) {
-        const urlsSet = get_urls_1.default(quack.text);
-        return [...urlsSet];
+    links(quack) {
+        return getLinks_1.getLinks(quack.text);
+    }
+    mentions(quack, { userLoaderByUsername }) {
+        const usernames = getMentions_1.getMentions(quack.text, false);
+        return userLoaderByUsername.loadMany(usernames);
+    }
+    hashtags(quack) {
+        return getHashtags_1.getHashtags(quack.text);
     }
     requackStatus(quack, { payload: { user }, requackLoader }) {
         return __awaiter(this, void 0, void 0, function* () {
@@ -214,7 +219,21 @@ __decorate([
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [Quack_1.Quack]),
     __metadata("design:returntype", void 0)
-], QuackResolver.prototype, "urls", null);
+], QuackResolver.prototype, "links", null);
+__decorate([
+    type_graphql_1.FieldResolver(),
+    __param(0, type_graphql_1.Root()), __param(1, type_graphql_1.Ctx()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Quack_1.Quack, Object]),
+    __metadata("design:returntype", void 0)
+], QuackResolver.prototype, "mentions", null);
+__decorate([
+    type_graphql_1.FieldResolver(),
+    __param(0, type_graphql_1.Root()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Quack_1.Quack]),
+    __metadata("design:returntype", void 0)
+], QuackResolver.prototype, "hashtags", null);
 __decorate([
     type_graphql_1.FieldResolver(),
     type_graphql_1.Authorized(),

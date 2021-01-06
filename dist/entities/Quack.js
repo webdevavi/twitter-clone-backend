@@ -48,8 +48,16 @@ __decorate([
 ], Quack.prototype, "truncatedText", void 0);
 __decorate([
     type_graphql_1.Field(() => [String], { nullable: true }),
-    __metadata("design:type", Array)
-], Quack.prototype, "urls", void 0);
+    __metadata("design:type", Object)
+], Quack.prototype, "links", void 0);
+__decorate([
+    type_graphql_1.Field(() => [User_1.User], { nullable: true }),
+    __metadata("design:type", Object)
+], Quack.prototype, "mentions", void 0);
+__decorate([
+    type_graphql_1.Field(() => [String], { nullable: true }),
+    __metadata("design:type", Object)
+], Quack.prototype, "hashtags", void 0);
 __decorate([
     typeorm_1.Column(),
     type_graphql_1.Field(),
