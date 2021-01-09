@@ -11,6 +11,7 @@ import {
 import { Requack } from "./Requack";
 import { User } from "./User";
 import { Like } from "./Like";
+import { Link } from "./Link";
 
 @Entity()
 @ObjectType()
@@ -34,8 +35,8 @@ export class Quack extends BaseEntity {
   @Field(() => String, { nullable: true })
   truncatedText: string;
 
-  @Field(() => [String], { nullable: true })
-  links: string[] | null;
+  @Field(() => [Link], { nullable: true })
+  links: Link[] | null;
 
   @Field(() => [User], { nullable: true })
   mentions: User[] | null;

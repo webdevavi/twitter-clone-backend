@@ -16,6 +16,7 @@ const typeorm_1 = require("typeorm");
 const Requack_1 = require("./Requack");
 const User_1 = require("./User");
 const Like_1 = require("./Like");
+const Link_1 = require("./Link");
 let Quack = Quack_1 = class Quack extends typeorm_1.BaseEntity {
     constructor() {
         super(...arguments);
@@ -47,7 +48,7 @@ __decorate([
     __metadata("design:type", String)
 ], Quack.prototype, "truncatedText", void 0);
 __decorate([
-    type_graphql_1.Field(() => [String], { nullable: true }),
+    type_graphql_1.Field(() => [Link_1.Link], { nullable: true }),
     __metadata("design:type", Object)
 ], Quack.prototype, "links", void 0);
 __decorate([

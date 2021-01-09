@@ -1,4 +1,3 @@
-import { User } from "src/entities/User";
 import {
   Arg,
   Authorized,
@@ -13,15 +12,17 @@ import {
 } from "type-graphql";
 import { getConnection } from "typeorm";
 import { Follow } from "../entities/Follow";
+import { Link } from "../entities/Link";
 import { Quack } from "../entities/Quack";
+import { User } from "../entities/User";
 import { QuackInput } from "../input/QuackInput";
 import { partialAuth } from "../middleware/partialAuth";
 import { PaginatedQuacks } from "../response/PaginatedQuacks";
 import { QuackResponse } from "../response/QuackResponse";
 import { MyContext, UserRole } from "../types";
 import { getHashtags } from "../utils/getHashtags";
-import { getLinks } from "../utils/getLinks";
 import { getMentions } from "../utils/getMentions";
+import { scrapeMetatags } from "../utils/scrapeMetatags";
 import { QuackValidator } from "../validators/quack";
 
 @Resolver(Quack)
@@ -131,8 +132,8 @@ export class QuackResolver {
   }
 
   @FieldResolver()
-  links(@Root() quack: Quack) {
-    return getLinks(quack.text);
+  links(@Root() quack: Quack): Promise<Link[] | null> {
+    return scrapeMetatags(quack.text);
   }
 
   @FieldResolver()

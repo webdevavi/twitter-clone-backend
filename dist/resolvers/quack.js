@@ -31,8 +31,8 @@ const partialAuth_1 = require("../middleware/partialAuth");
 const PaginatedQuacks_1 = require("../response/PaginatedQuacks");
 const QuackResponse_1 = require("../response/QuackResponse");
 const getHashtags_1 = require("../utils/getHashtags");
-const getLinks_1 = require("../utils/getLinks");
 const getMentions_1 = require("../utils/getMentions");
+const scrapeMetatags_1 = require("../utils/scrapeMetatags");
 const quack_1 = require("../validators/quack");
 let QuackResolver = class QuackResolver {
     truncatedText(quack) {
@@ -113,7 +113,7 @@ let QuackResolver = class QuackResolver {
         });
     }
     links(quack) {
-        return getLinks_1.getLinks(quack.text);
+        return scrapeMetatags_1.scrapeMetatags(quack.text);
     }
     mentions(quack, { userLoaderByUsername, blockLoaderByUserId, payload: { user } }) {
         return __awaiter(this, void 0, void 0, function* () {
@@ -293,7 +293,7 @@ __decorate([
     __param(0, type_graphql_1.Root()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [Quack_1.Quack]),
-    __metadata("design:returntype", void 0)
+    __metadata("design:returntype", Promise)
 ], QuackResolver.prototype, "links", null);
 __decorate([
     type_graphql_1.FieldResolver(),
