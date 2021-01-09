@@ -19,14 +19,29 @@ export const scrapeMetatags = (text: string): Promise<Link[] | null> => {
         $(`meta[name=${name}]`).attr("content") ||
         $(name).first().text();
 
+      const image = getMetatag("image");
+
+      const imageURL = image
+        ? image.startsWith("/")
+          ? url + image
+          : image
+        : undefined;
+
+      const favicon = $('link[rel="shortcut-icon"]').attr("href");
+      const faviconURL = favicon
+        ? favicon.startsWith("/")
+          ? url + favicon
+          : favicon
+        : undefined;
+
       return {
         id: index,
         url,
         title: getMetatag("title"),
-        favicon: $('link[rel="shortcut-icon"]').attr("href"),
+        favicon: faviconURL,
         description: getMetatag("description"),
-        image: getMetatag("image"),
-        author: getMetatag("autho"),
+        image: imageURL,
+        author: getMetatag("author"),
       } as Link;
     } catch (_) {
       return { id: index, url };

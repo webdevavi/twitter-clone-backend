@@ -28,14 +28,26 @@ const scrapeMetatags = (text) => {
                 $(`meta[property="og:${name}"]`).attr("content") ||
                 $(`meta[name=${name}]`).attr("content") ||
                 $(name).first().text();
+            const image = getMetatag("image");
+            const imageURL = image
+                ? image.startsWith("/")
+                    ? url + image
+                    : image
+                : undefined;
+            const favicon = $('link[rel="shortcut-icon"]').attr("href");
+            const faviconURL = favicon
+                ? favicon.startsWith("/")
+                    ? url + favicon
+                    : favicon
+                : undefined;
             return {
                 id: index,
                 url,
                 title: getMetatag("title"),
-                favicon: $('link[rel="shortcut-icon"]').attr("href"),
+                favicon: faviconURL,
                 description: getMetatag("description"),
-                image: getMetatag("image"),
-                author: getMetatag("autho"),
+                image: imageURL,
+                author: getMetatag("author"),
             };
         }
         catch (_) {
