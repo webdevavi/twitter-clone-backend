@@ -113,7 +113,7 @@ let QuackResolver = class QuackResolver {
         });
     }
     links(quack) {
-        return scrapeMetatags_1.scrapeMetatags(quack.text);
+        return scrapeMetatags_1.scrapeMetatags(quack.text, quack.id);
     }
     mentions(quack, { userLoaderByUsername, blockLoaderByUserId, payload: { user } }) {
         return __awaiter(this, void 0, void 0, function* () {

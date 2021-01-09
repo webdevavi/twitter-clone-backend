@@ -8,6 +8,9 @@ export class Link {
   @Field(() => String)
   url: string;
 
+  @Field(() => String)
+  exactUrl: string;
+
   @Field(() => String, { nullable: true })
   title?: string | null;
 

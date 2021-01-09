@@ -133,7 +133,7 @@ export class QuackResolver {
 
   @FieldResolver()
   links(@Root() quack: Quack): Promise<Link[] | null> {
-    return scrapeMetatags(quack.text);
+    return scrapeMetatags(quack.text, quack.id);
   }
 
   @FieldResolver()

@@ -2,9 +2,14 @@ import cheerio from "cheerio";
 import getUrls from "get-urls";
 import fetch from "node-fetch";
 import { Link } from "../entities/Link";
+import { getLinks } from "./getLinks";
 
-export const scrapeMetatags = (text: string): Promise<Link[] | null> => {
+export const scrapeMetatags = (
+  text: string,
+  id: number
+): Promise<Link[] | null> => {
   const urls = Array.from(getUrls(text));
+  const exactUrls = Array.from(getLinks(text));
 
   const requests = urls.map(async (url, index) => {
     try {
@@ -35,8 +40,9 @@ export const scrapeMetatags = (text: string): Promise<Link[] | null> => {
         : undefined;
 
       return {
-        id: index,
+        id: parseInt(`${id}${index}`),
         url,
+        exactUrl: exactUrls[index],
         title: getMetatag("title"),
         favicon: faviconURL,
         description: getMetatag("description"),
@@ -44,7 +50,7 @@ export const scrapeMetatags = (text: string): Promise<Link[] | null> => {
         author: getMetatag("author"),
       } as Link;
     } catch (_) {
-      return { id: index, url };
+      return { id: parseInt(`${id}${index}`), url, exactUrl: exactUrls[index] };
     }
   });
 

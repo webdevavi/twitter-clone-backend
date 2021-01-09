@@ -16,8 +16,10 @@ exports.scrapeMetatags = void 0;
 const cheerio_1 = __importDefault(require("cheerio"));
 const get_urls_1 = __importDefault(require("get-urls"));
 const node_fetch_1 = __importDefault(require("node-fetch"));
-const scrapeMetatags = (text) => {
+const getLinks_1 = require("./getLinks");
+const scrapeMetatags = (text, id) => {
     const urls = Array.from(get_urls_1.default(text));
+    const exactUrls = Array.from(getLinks_1.getLinks(text));
     const requests = urls.map((url, index) => __awaiter(void 0, void 0, void 0, function* () {
         try {
             const res = yield node_fetch_1.default(url);
@@ -41,8 +43,9 @@ const scrapeMetatags = (text) => {
                     : favicon
                 : undefined;
             return {
-                id: index,
+                id: parseInt(`${id}${index}`),
                 url,
+                exactUrl: exactUrls[index],
                 title: getMetatag("title"),
                 favicon: faviconURL,
                 description: getMetatag("description"),
@@ -51,7 +54,7 @@ const scrapeMetatags = (text) => {
             };
         }
         catch (_) {
-            return { id: index, url };
+            return { id: parseInt(`${id}${index}`), url, exactUrl: exactUrls[index] };
         }
     }));
     return Promise.all(requests);

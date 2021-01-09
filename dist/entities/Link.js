@@ -22,6 +22,10 @@ __decorate([
     __metadata("design:type", String)
 ], Link.prototype, "url", void 0);
 __decorate([
+    type_graphql_1.Field(() => String),
+    __metadata("design:type", String)
+], Link.prototype, "exactUrl", void 0);
+__decorate([
     type_graphql_1.Field(() => String, { nullable: true }),
     __metadata("design:type", Object)
 ], Link.prototype, "title", void 0);
