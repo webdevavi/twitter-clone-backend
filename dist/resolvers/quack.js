@@ -39,7 +39,7 @@ let QuackResolver = class QuackResolver {
         if (quack.text.length > 50) {
             return quack.text.slice(0, 50) + "...";
         }
-        return null;
+        return quack.text;
     }
     inReplyToQuack(quack, { quackLoader, blockLoader, payload: { user } }) {
         return __awaiter(this, void 0, void 0, function* () {

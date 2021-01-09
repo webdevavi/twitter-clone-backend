@@ -33,7 +33,7 @@ export class QuackResolver {
       return quack.text.slice(0, 50) + "...";
     }
 
-    return null;
+    return quack.text;
   }
 
   @FieldResolver(() => Quack, { nullable: true })
