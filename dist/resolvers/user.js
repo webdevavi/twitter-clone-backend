@@ -103,7 +103,7 @@ let UserResolver = class UserResolver {
                 userId: user.id,
                 followerId: myUserId,
             });
-            if (!follow)
+            if (!follow || follow.length < 1)
                 return false;
             return true;
         });
@@ -118,7 +118,7 @@ let UserResolver = class UserResolver {
                 followerId: user.id,
                 userId: myUserId,
             });
-            if (!follow)
+            if (!follow || follow.length < 1)
                 return false;
             return true;
         });
@@ -372,10 +372,10 @@ let UserResolver = class UserResolver {
         return User_1.User.findOne(userId);
     }
     userByEmail(email) {
-        return User_1.User.findOne({ email });
+        return User_1.User.findOne({ where: `email ~* '${email}'` });
     }
     userByUsername(username) {
-        return User_1.User.findOne({ username });
+        return User_1.User.findOne({ where: `username ~* '${username}'` });
     }
 };
 __decorate([

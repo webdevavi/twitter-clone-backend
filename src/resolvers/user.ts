@@ -106,7 +106,7 @@ export class UserResolver {
       userId: user.id,
       followerId: myUserId!,
     });
-    if (!follow) return false;
+    if (!follow || follow.length < 1) return false;
     return true;
   }
 
@@ -122,7 +122,7 @@ export class UserResolver {
       followerId: user.id,
       userId: myUserId!,
     });
-    if (!follow) return false;
+    if (!follow || follow.length < 1) return false;
     return true;
   }
 
@@ -465,11 +465,11 @@ export class UserResolver {
 
   @Query(() => User, { nullable: true })
   userByEmail(@Arg("email") email: string) {
-    return User.findOne({ email });
+    return User.findOne({ where: `email ~* '${email}'` });
   }
 
   @Query(() => User, { nullable: true })
   userByUsername(@Arg("username") username: string) {
-    return User.findOne({ username });
+    return User.findOne({ where: `username ~* '${username}'` });
   }
 }
