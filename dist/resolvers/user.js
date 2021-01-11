@@ -73,7 +73,7 @@ let UserResolver = class UserResolver {
                 userId: user.id,
                 blockedByUserId: myUserId,
             });
-            if (!block)
+            if (!block || block.length < 1)
                 return false;
             return true;
         });
@@ -88,7 +88,7 @@ let UserResolver = class UserResolver {
                 userId: myUserId,
                 blockedByUserId: user.id,
             });
-            if (!block)
+            if (!block || block.length < 1)
                 return false;
             return true;
         });

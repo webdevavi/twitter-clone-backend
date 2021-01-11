@@ -74,7 +74,7 @@ export class UserResolver {
       userId: user.id,
       blockedByUserId: myUserId!,
     });
-    if (!block) return false;
+    if (!block || block.length < 1) return false;
     return true;
   }
 
@@ -90,7 +90,7 @@ export class UserResolver {
       userId: myUserId!,
       blockedByUserId: user.id,
     });
-    if (!block) return false;
+    if (!block || block.length < 1) return false;
     return true;
   }
 
