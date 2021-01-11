@@ -3,6 +3,7 @@ import {
   Authorized,
   Ctx,
   FieldResolver,
+  Int,
   Mutation,
   Resolver,
   Root,
@@ -26,7 +27,7 @@ export class FollowResolver {
   @Mutation(() => Boolean)
   @Authorized<UserRole>(["ACTIVATED"])
   async follow(
-    @Arg("userId") userId: number,
+    @Arg("userId", () => Int) userId: number,
     @Ctx() { payload: { user: me }, userLoader }: MyContext
   ) {
     const myUserId = me?.id;

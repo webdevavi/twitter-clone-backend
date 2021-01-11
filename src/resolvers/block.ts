@@ -1,4 +1,4 @@
-import { Arg, Authorized, Ctx, Mutation, Resolver } from "type-graphql";
+import { Arg, Authorized, Ctx, Int, Mutation, Resolver } from "type-graphql";
 import { getConnection } from "typeorm";
 import { Block } from "../entities/Block";
 import { Follow } from "../entities/Follow";
@@ -9,7 +9,7 @@ export class BlockResolver {
   @Mutation(() => Boolean)
   @Authorized<UserRole>(["ACTIVATED"])
   async block(
-    @Arg("userId") userId: number,
+    @Arg("userId", () => Int) userId: number,
     @Ctx() { payload: { user: me }, userLoader }: MyContext
   ) {
     const myUserId = me?.id;
@@ -32,7 +32,7 @@ export class BlockResolver {
   @Mutation(() => Boolean)
   @Authorized<UserRole>(["ACTIVATED"])
   async unblock(
-    @Arg("userId") userId: number,
+    @Arg("userId", () => Int) userId: number,
     @Ctx() { payload: { user: me }, userLoader }: MyContext
   ) {
     const myUserId = me?.id;

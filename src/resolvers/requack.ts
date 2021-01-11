@@ -3,6 +3,7 @@ import {
   Authorized,
   Ctx,
   FieldResolver,
+  Int,
   Mutation,
   Resolver,
   Root,
@@ -27,7 +28,7 @@ export class RequackResolver {
   @Mutation(() => Boolean)
   @Authorized<UserRole>(["ACTIVATED"])
   async requack(
-    @Arg("quackId") quackId: number,
+    @Arg("quackId", () => Int) quackId: number,
     @Ctx() { payload: { user } }: MyContext
   ): Promise<Boolean> {
     const userId = user!.id;
