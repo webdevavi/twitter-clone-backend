@@ -231,7 +231,7 @@ export class QuackResolver {
   @Mutation(() => Boolean)
   @Authorized<UserRole>(["ACTIVATED"])
   async deleteQuack(
-    @Arg("quackId") quackId: string,
+    @Arg("quackId", () => Int) quackId: number,
     @Ctx() { payload: { user } }: MyContext
   ) {
     const quack = await Quack.findOne(quackId);

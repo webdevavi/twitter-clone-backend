@@ -341,10 +341,10 @@ __decorate([
 __decorate([
     type_graphql_1.Mutation(() => Boolean),
     type_graphql_1.Authorized(["ACTIVATED"]),
-    __param(0, type_graphql_1.Arg("quackId")),
+    __param(0, type_graphql_1.Arg("quackId", () => type_graphql_1.Int)),
     __param(1, type_graphql_1.Ctx()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String, Object]),
+    __metadata("design:paramtypes", [Number, Object]),
     __metadata("design:returntype", Promise)
 ], QuackResolver.prototype, "deleteQuack", null);
 __decorate([
