@@ -5,6 +5,7 @@ import {
   FieldResolver,
   Int,
   Mutation,
+  Query,
   Resolver,
   Root,
 } from "type-graphql";
@@ -45,5 +46,41 @@ export class LikeResolver {
     }
     await Like.insert({ quackId, userId });
     return true;
+  }
+
+  @Query(() => [Like], { nullable: true })
+  async likesByQuackId(
+    @Arg("quackId", () => Int) quackId: number,
+    @Ctx() { userLoader, likeLoaderByQuackId }: MyContext
+  ): Promise<(Like | undefined)[] | null> {
+    const likes = await likeLoaderByQuackId.load(quackId);
+
+    if (!likes || likes.length === 0) return null;
+
+    return await Promise.all(
+      likes.map(async (like) => {
+        const user = await userLoader.load(like.userId);
+        if (user && !user.amIDeactivated) return like;
+        return;
+      })
+    );
+  }
+
+  @Query(() => [Like], { nullable: true })
+  async likesByUserId(
+    @Arg("userId", () => Int) userId: number,
+    @Ctx() { userLoader, likeLoaderByUserId }: MyContext
+  ): Promise<(Like | undefined)[] | null> {
+    const likes = await likeLoaderByUserId.load(userId);
+
+    if (!likes || likes.length === 0) return null;
+
+    return await Promise.all(
+      likes.map(async (like) => {
+        const user = await userLoader.load(like.userId);
+        if (user && !user.amIDeactivated) return like;
+        return;
+      })
+    );
   }
 }

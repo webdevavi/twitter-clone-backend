@@ -50,6 +50,32 @@ let LikeResolver = class LikeResolver {
             return true;
         });
     }
+    likesByQuackId(quackId, { userLoader, likeLoaderByQuackId }) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const likes = yield likeLoaderByQuackId.load(quackId);
+            if (!likes || likes.length === 0)
+                return null;
+            return yield Promise.all(likes.map((like) => __awaiter(this, void 0, void 0, function* () {
+                const user = yield userLoader.load(like.userId);
+                if (user && !user.amIDeactivated)
+                    return like;
+                return;
+            })));
+        });
+    }
+    likesByUserId(userId, { userLoader, likeLoaderByUserId }) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const likes = yield likeLoaderByUserId.load(userId);
+            if (!likes || likes.length === 0)
+                return null;
+            return yield Promise.all(likes.map((like) => __awaiter(this, void 0, void 0, function* () {
+                const user = yield userLoader.load(like.userId);
+                if (user && !user.amIDeactivated)
+                    return like;
+                return;
+            })));
+        });
+    }
 };
 __decorate([
     type_graphql_1.FieldResolver(),
@@ -74,6 +100,22 @@ __decorate([
     __metadata("design:paramtypes", [Number, Object]),
     __metadata("design:returntype", Promise)
 ], LikeResolver.prototype, "like", null);
+__decorate([
+    type_graphql_1.Query(() => [Like_1.Like], { nullable: true }),
+    __param(0, type_graphql_1.Arg("quackId", () => type_graphql_1.Int)),
+    __param(1, type_graphql_1.Ctx()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Number, Object]),
+    __metadata("design:returntype", Promise)
+], LikeResolver.prototype, "likesByQuackId", null);
+__decorate([
+    type_graphql_1.Query(() => [Like_1.Like], { nullable: true }),
+    __param(0, type_graphql_1.Arg("userId", () => type_graphql_1.Int)),
+    __param(1, type_graphql_1.Ctx()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Number, Object]),
+    __metadata("design:returntype", Promise)
+], LikeResolver.prototype, "likesByUserId", null);
 LikeResolver = __decorate([
     type_graphql_1.Resolver(Like_1.Like)
 ], LikeResolver);

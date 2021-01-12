@@ -88,27 +88,19 @@ export class QuackResolver {
   @FieldResolver()
   async requacks(
     @Root() quack: Quack,
-    @Ctx() { userLoader, requackLoaderByQuackId }: MyContext
-  ) {
+    @Ctx() { requackLoaderByQuackId }: MyContext
+  ): Promise<number> {
     const requacks = await requackLoaderByQuackId.load(quack.id);
-    return requacks.map(async (requack) => {
-      const user = await userLoader.load(requack.userId);
-      if (user && !user.amIDeactivated) return requack;
-      return;
-    });
+    return requacks ? requacks.length : 0;
   }
 
   @FieldResolver()
   async likes(
     @Root() quack: Quack,
-    @Ctx() { userLoader, likeLoaderByQuackId }: MyContext
-  ) {
+    @Ctx() { likeLoaderByQuackId }: MyContext
+  ): Promise<number> {
     const likes = await likeLoaderByQuackId.load(quack.id);
-    return likes.map(async (like) => {
-      const user = await userLoader.load(like.userId);
-      if (user && !user.amIDeactivated) return like;
-      return;
-    });
+    return likes ? likes.length : 0;
   }
 
   @FieldResolver()

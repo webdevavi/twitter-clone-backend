@@ -8,10 +8,8 @@ import {
   OneToMany,
   PrimaryGeneratedColumn,
 } from "typeorm";
-import { Requack } from "./Requack";
-import { User } from "./User";
-import { Like } from "./Like";
 import { Link } from "./Link";
+import { User } from "./User";
 
 @Entity()
 @ObjectType()
@@ -69,17 +67,11 @@ export class Quack extends BaseEntity {
   @Field(() => [Quack], { nullable: true })
   replies: Quack[];
 
-  @OneToMany(() => Requack, (requacks) => requacks.quack, {
-    nullable: true,
-  })
-  @Field(() => [Requack], { nullable: true })
-  requacks: Requack[];
+  @Field(() => Int, { defaultValue: 0 })
+  requacks: number = 0;
 
-  @OneToMany(() => Like, (like) => like.quack, {
-    nullable: true,
-  })
-  @Field(() => [Like], { nullable: true })
-  likes: Like[];
+  @Field(() => Int, { defaultValue: 0 })
+  likes: number = 0;
 
   @Field()
   requackStatus: Boolean;

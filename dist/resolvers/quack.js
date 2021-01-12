@@ -76,26 +76,16 @@ let QuackResolver = class QuackResolver {
             return userLoader.load(quack.quackedByUserId);
         });
     }
-    requacks(quack, { userLoader, requackLoaderByQuackId }) {
+    requacks(quack, { requackLoaderByQuackId }) {
         return __awaiter(this, void 0, void 0, function* () {
             const requacks = yield requackLoaderByQuackId.load(quack.id);
-            return requacks.map((requack) => __awaiter(this, void 0, void 0, function* () {
-                const user = yield userLoader.load(requack.userId);
-                if (user && !user.amIDeactivated)
-                    return requack;
-                return;
-            }));
+            return requacks ? requacks.length : 0;
         });
     }
-    likes(quack, { userLoader, likeLoaderByQuackId }) {
+    likes(quack, { likeLoaderByQuackId }) {
         return __awaiter(this, void 0, void 0, function* () {
             const likes = yield likeLoaderByQuackId.load(quack.id);
-            return likes.map((like) => __awaiter(this, void 0, void 0, function* () {
-                const user = yield userLoader.load(like.userId);
-                if (user && !user.amIDeactivated)
-                    return like;
-                return;
-            }));
+            return likes ? likes.length : 0;
         });
     }
     replies(quack, { quackLoaderByInReplyToQuackId, blockLoader, payload: { user } }) {

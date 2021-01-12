@@ -5,6 +5,7 @@ import {
   FieldResolver,
   Int,
   Mutation,
+  Query,
   Resolver,
   Root,
 } from "type-graphql";
@@ -44,5 +45,41 @@ export class RequackResolver {
     }
     await Requack.insert({ quackId, userId });
     return true;
+  }
+
+  @Query(() => [Requack], { nullable: true })
+  async requacksByQuackId(
+    @Arg("quackId", () => Int) quackId: number,
+    @Ctx() { userLoader, requackLoaderByQuackId }: MyContext
+  ): Promise<(Requack | undefined)[] | null> {
+    const requacks = await requackLoaderByQuackId.load(quackId);
+
+    if (!requacks || requacks.length === 0) return null;
+
+    return await Promise.all(
+      requacks.map(async (requack) => {
+        const user = await userLoader.load(requack.userId);
+        if (user && !user.amIDeactivated) return requack;
+        return;
+      })
+    );
+  }
+
+  @Query(() => [Requack], { nullable: true })
+  async requacksByUserId(
+    @Arg("userId", () => Int) userId: number,
+    @Ctx() { userLoader, requackLoaderByUserId }: MyContext
+  ): Promise<(Requack | undefined)[] | null> {
+    const requacks = await requackLoaderByUserId.load(userId);
+
+    if (!requacks || requacks.length === 0) return null;
+
+    return await Promise.all(
+      requacks.map(async (requack) => {
+        const user = await userLoader.load(requack.userId);
+        if (user && !user.amIDeactivated) return requack;
+        return;
+      })
+    );
   }
 }

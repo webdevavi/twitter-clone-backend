@@ -27,7 +27,6 @@ __decorate([
     __metadata("design:type", Number)
 ], Like.prototype, "quackId", void 0);
 __decorate([
-    typeorm_1.ManyToOne(() => Quack_1.Quack, (quack) => quack.likes),
     type_graphql_1.Field(() => Quack_1.Quack),
     __metadata("design:type", Quack_1.Quack)
 ], Like.prototype, "quack", void 0);
@@ -37,7 +36,6 @@ __decorate([
     __metadata("design:type", Number)
 ], Like.prototype, "userId", void 0);
 __decorate([
-    typeorm_1.ManyToOne(() => User_1.User, (user) => user.likes),
     type_graphql_1.Field(() => User_1.User),
     __metadata("design:type", User_1.User)
 ], Like.prototype, "user", void 0);

@@ -49,6 +49,32 @@ let RequackResolver = class RequackResolver {
             return true;
         });
     }
+    requacksByQuackId(quackId, { userLoader, requackLoaderByQuackId }) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const requacks = yield requackLoaderByQuackId.load(quackId);
+            if (!requacks || requacks.length === 0)
+                return null;
+            return yield Promise.all(requacks.map((requack) => __awaiter(this, void 0, void 0, function* () {
+                const user = yield userLoader.load(requack.userId);
+                if (user && !user.amIDeactivated)
+                    return requack;
+                return;
+            })));
+        });
+    }
+    requacksByUserId(userId, { userLoader, requackLoaderByUserId }) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const requacks = yield requackLoaderByUserId.load(userId);
+            if (!requacks || requacks.length === 0)
+                return null;
+            return yield Promise.all(requacks.map((requack) => __awaiter(this, void 0, void 0, function* () {
+                const user = yield userLoader.load(requack.userId);
+                if (user && !user.amIDeactivated)
+                    return requack;
+                return;
+            })));
+        });
+    }
 };
 __decorate([
     type_graphql_1.FieldResolver(),
@@ -73,6 +99,22 @@ __decorate([
     __metadata("design:paramtypes", [Number, Object]),
     __metadata("design:returntype", Promise)
 ], RequackResolver.prototype, "requack", null);
+__decorate([
+    type_graphql_1.Query(() => [Requack_1.Requack], { nullable: true }),
+    __param(0, type_graphql_1.Arg("quackId", () => type_graphql_1.Int)),
+    __param(1, type_graphql_1.Ctx()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Number, Object]),
+    __metadata("design:returntype", Promise)
+], RequackResolver.prototype, "requacksByQuackId", null);
+__decorate([
+    type_graphql_1.Query(() => [Requack_1.Requack], { nullable: true }),
+    __param(0, type_graphql_1.Arg("userId", () => type_graphql_1.Int)),
+    __param(1, type_graphql_1.Ctx()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Number, Object]),
+    __metadata("design:returntype", Promise)
+], RequackResolver.prototype, "requacksByUserId", null);
 RequackResolver = __decorate([
     type_graphql_1.Resolver(Requack_1.Requack)
 ], RequackResolver);
