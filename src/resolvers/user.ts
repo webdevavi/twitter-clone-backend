@@ -9,6 +9,7 @@ import {
   Query,
   Resolver,
   Root,
+  UseMiddleware,
 } from "type-graphql";
 import { v4 } from "uuid";
 import {
@@ -18,11 +19,10 @@ import {
 } from "../constants";
 import { forgotPasswordTemplate } from "../emailTemplates/forgotPassword";
 import { verifyEmailTemplate } from "../emailTemplates/verifyEmail";
-import { Like } from "../entities/Like";
 import { Quack } from "../entities/Quack";
-import { Requack } from "../entities/Requack";
 import { User } from "../entities/User";
 import { UserInput } from "../input/UserInput";
+import { partialAuth } from "../middleware/partialAuth";
 import { UserResponse } from "../response/UserResponse";
 import { MyContext, UserRole } from "../types";
 import { createAccessToken, createRefreshToken } from "../utils/createJWT";
@@ -48,31 +48,20 @@ export class UserResolver {
     return (await followLoaderByFollowerId.load(user.id))?.length || 0;
   }
 
-  @FieldResolver(() => [Quack], { nullable: true })
-  quacks(@Root() user: User) {
+  @FieldResolver(() => [Quack], { defaultValue: 0 })
+  async quacks(@Root() user: User, @Ctx() { quackLoaderByUserId }: MyContext) {
     if (user.amIDeactivated) return null;
-    return Quack.find({ where: { quackedByUserId: user.id } });
-  }
-
-  @FieldResolver(() => [Requack], { nullable: true })
-  requacks(@Root() user: User, @Ctx() { requackLoaderByUserId }: MyContext) {
-    if (user.amIDeactivated) return null;
-    return requackLoaderByUserId.load(user.id);
-  }
-
-  @FieldResolver(() => [Like], { nullable: true })
-  likes(@Root() user: User, @Ctx() { likeLoaderByUserId }: MyContext) {
-    if (user.amIDeactivated) return null;
-    return likeLoaderByUserId.load(user.id);
+    return (await quackLoaderByUserId.load(user.id))?.length || 0;
   }
 
   @FieldResolver(() => Boolean, { nullable: true })
-  @Authorized()
+  @UseMiddleware(partialAuth)
   async haveIBlockedThisUser(
     @Root() user: User,
-    @Ctx() { payload, blockLoader }: MyContext
+    @Ctx() { payload: { user: me }, blockLoader }: MyContext
   ) {
-    const myUserId = payload.user?.id;
+    if (!me) return null;
+    const myUserId = me?.id;
     if (user.id === myUserId) return null;
     const block = await blockLoader.load({
       userId: user.id,
@@ -83,12 +72,13 @@ export class UserResolver {
   }
 
   @FieldResolver(() => Boolean, { nullable: true })
-  @Authorized()
+  @UseMiddleware(partialAuth)
   async amIBlockedByThisUser(
     @Root() user: User,
-    @Ctx() { payload, blockLoader }: MyContext
+    @Ctx() { payload: { user: me }, blockLoader }: MyContext
   ) {
-    const myUserId = payload.user?.id;
+    if (!me) return null;
+    const myUserId = me?.id;
     if (user.id === myUserId) return null;
     const block = await blockLoader.load({
       userId: myUserId!,
@@ -99,28 +89,30 @@ export class UserResolver {
   }
 
   @FieldResolver(() => Boolean, { nullable: true })
-  @Authorized()
+  @UseMiddleware(partialAuth)
   async followStatus(
     @Root() user: User,
-    @Ctx() { payload, followLoader }: MyContext
+    @Ctx() { payload: { user: me }, followLoader }: MyContext
   ) {
-    const myUserId = payload.user?.id;
+    if (!me) return null;
+    const myUserId = me.id;
     if (user.id === myUserId) return null;
     const follow = await followLoader.load({
       userId: user.id,
-      followerId: myUserId!,
+      followerId: myUserId,
     });
     if (!follow || follow.length < 1) return false;
     return true;
   }
 
   @FieldResolver(() => Boolean, { nullable: true })
-  @Authorized()
+  @UseMiddleware(partialAuth)
   async followBackStatus(
     @Root() user: User,
-    @Ctx() { payload, followLoader }: MyContext
+    @Ctx() { payload: { user: me }, followLoader }: MyContext
   ) {
-    const myUserId = payload.user?.id;
+    if (!me) return null;
+    const myUserId = me.id;
     if (user.id === myUserId) return null;
     const follow = await followLoader.load({
       followerId: user.id,

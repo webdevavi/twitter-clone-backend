@@ -8,7 +8,9 @@ import {
   OneToMany,
   PrimaryGeneratedColumn,
 } from "typeorm";
+import { Like } from "./Like";
 import { Link } from "./Link";
+import { Requack } from "./Requack";
 import { User } from "./User";
 
 @Entity()
@@ -72,6 +74,16 @@ export class Quack extends BaseEntity {
 
   @Field(() => Int, { defaultValue: 0 })
   likes: number = 0;
+
+  @ManyToOne(() => Like, (like) => like.userId, {
+    onDelete: "CASCADE",
+  })
+  _likes: Quack[];
+
+  @ManyToOne(() => Requack, (requack) => requack.userId, {
+    onDelete: "CASCADE",
+  })
+  _requacks: Quack[];
 
   @Field()
   requackStatus: Boolean;

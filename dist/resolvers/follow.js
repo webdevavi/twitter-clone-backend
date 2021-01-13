@@ -23,9 +23,13 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.FollowResolver = void 0;
 const type_graphql_1 = require("type-graphql");
+const typeorm_1 = require("typeorm");
 const Block_1 = require("../entities/Block");
 const Follow_1 = require("../entities/Follow");
 const User_1 = require("../entities/User");
+const partialAuth_1 = require("../middleware/partialAuth");
+const PaginatedUsers_1 = require("../response/PaginatedUsers");
+const paginate_1 = require("../utils/paginate");
 let FollowResolver = class FollowResolver {
     follow(userId, { payload: { user: me }, userLoader }) {
         return __awaiter(this, void 0, void 0, function* () {
@@ -73,22 +77,30 @@ let FollowResolver = class FollowResolver {
             return true;
         });
     }
-    followersByUserId(userId, { followLoaderByUserId, userLoader }) {
+    followersByUserId(userId, limit, lastIndex, { followLoaderByUserId, blockLoaderByUserId, payload: { user } }) {
         return __awaiter(this, void 0, void 0, function* () {
-            const follows = yield followLoaderByUserId.load(userId);
-            if (!follows)
-                return [];
-            const userIds = follows.map((follow) => follow.followerId);
-            return yield userLoader.loadMany(userIds);
+            return yield _fetchFollowsUsers({
+                userId,
+                followLoader: followLoaderByUserId,
+                blockLoaderByUserId,
+                user,
+                limit,
+                lastIndex,
+                key: "followerId",
+            });
         });
     }
-    followingsByUserId(userId, { followLoaderByFollowerId, userLoader }) {
+    followingsByUserId(userId, limit, lastIndex, { followLoaderByFollowerId, blockLoaderByUserId, payload: { user }, }) {
         return __awaiter(this, void 0, void 0, function* () {
-            const follows = yield followLoaderByFollowerId.load(userId);
-            if (!follows)
-                return [];
-            const userIds = follows.map((follow) => follow.userId);
-            return yield userLoader.loadMany(userIds);
+            return yield _fetchFollowsUsers({
+                userId,
+                followLoader: followLoaderByFollowerId,
+                blockLoaderByUserId,
+                user,
+                limit,
+                lastIndex,
+                key: "userId",
+            });
         });
     }
 };
@@ -111,23 +123,63 @@ __decorate([
     __metadata("design:returntype", Promise)
 ], FollowResolver.prototype, "unfollow", null);
 __decorate([
-    type_graphql_1.Query(() => [User_1.User], { nullable: true }),
+    type_graphql_1.Query(() => PaginatedUsers_1.PaginatedUsers, { nullable: true }),
+    type_graphql_1.UseMiddleware(partialAuth_1.partialAuth),
     __param(0, type_graphql_1.Arg("userId", () => type_graphql_1.Int)),
-    __param(1, type_graphql_1.Ctx()),
+    __param(1, type_graphql_1.Arg("limit", () => type_graphql_1.Int, { nullable: true, defaultValue: 20 })),
+    __param(2, type_graphql_1.Arg("lastIndex", () => type_graphql_1.Int, { nullable: true })),
+    __param(3, type_graphql_1.Ctx()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Number, Object]),
+    __metadata("design:paramtypes", [Number, Number, Number, Object]),
     __metadata("design:returntype", Promise)
 ], FollowResolver.prototype, "followersByUserId", null);
 __decorate([
-    type_graphql_1.Query(() => [User_1.User], { nullable: true }),
+    type_graphql_1.Query(() => PaginatedUsers_1.PaginatedUsers, { nullable: true }),
+    type_graphql_1.UseMiddleware(partialAuth_1.partialAuth),
     __param(0, type_graphql_1.Arg("userId", () => type_graphql_1.Int)),
-    __param(1, type_graphql_1.Ctx()),
+    __param(1, type_graphql_1.Arg("limit", () => type_graphql_1.Int, { nullable: true, defaultValue: 20 })),
+    __param(2, type_graphql_1.Arg("lastIndex", () => type_graphql_1.Int, { nullable: true })),
+    __param(3, type_graphql_1.Ctx()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Number, Object]),
+    __metadata("design:paramtypes", [Number, Number, Number, Object]),
     __metadata("design:returntype", Promise)
 ], FollowResolver.prototype, "followingsByUserId", null);
 FollowResolver = __decorate([
     type_graphql_1.Resolver(Follow_1.Follow)
 ], FollowResolver);
 exports.FollowResolver = FollowResolver;
+function _fetchFollowsUsers({ userId, followLoader, blockLoaderByUserId, user, limit, lastIndex, key, }) {
+    return __awaiter(this, void 0, void 0, function* () {
+        userId;
+        const follows = yield followLoader.load(userId);
+        if (!follows || follows.length < 1)
+            return { users: [], hasMore: false };
+        const userIds = follows.map((follow) => follow[key]);
+        const u = typeorm_1.getConnection()
+            .createQueryBuilder()
+            .select("u.*")
+            .from(User_1.User, "u")
+            .orderBy({ "u.id": "DESC" }).where(`
+        u.id in (${userIds.join(",")})
+      `);
+        if (user) {
+            const blockIds = (yield blockLoaderByUserId.load(user.id)).map((block) => block.blockedByUserId);
+            if (blockIds && blockIds.length > 0) {
+                u.andWhere(`
+        u.id not in (${blockIds.join(",")})
+    `);
+            }
+        }
+        const { data: users, hasMore } = yield paginate_1.paginate({
+            queryBuilder: u,
+            limit,
+            index: "u.id",
+            lastIndex,
+        });
+        return {
+            users,
+            hasMore,
+        };
+    });
+}
 //# sourceMappingURL=follow.js.map

@@ -2,30 +2,21 @@ import {
   Arg,
   Authorized,
   Ctx,
-  FieldResolver,
   Int,
   Mutation,
   Query,
   Resolver,
-  Root,
 } from "type-graphql";
 import { Like } from "../entities/Like";
 import { Quack } from "../entities/Quack";
-import { User } from "../entities/User";
+import { PaginatedQuacks } from "../response/PaginatedQuacks";
+import { PaginatedUsers } from "../response/PaginatedUsers";
 import { MyContext, UserRole } from "../types";
+import { likesOrRequacksByQuackId } from "../utils/likesOrRequacksByQuackId";
+import { likesOrRequacksByUserId } from "../utils/likesOrRequacksByUserId";
 
 @Resolver(Like)
 export class LikeResolver {
-  @FieldResolver()
-  quack(@Root() like: Like) {
-    return Quack.findOne(like.quackId);
-  }
-
-  @FieldResolver()
-  user(@Root() like: Like) {
-    return User.findOne(like.userId);
-  }
-
   @Mutation(() => Boolean)
   @Authorized<UserRole>(["ACTIVATED"])
   async like(
@@ -48,39 +39,53 @@ export class LikeResolver {
     return true;
   }
 
-  @Query(() => [Like], { nullable: true })
+  @Query(() => PaginatedUsers, { nullable: true })
   async likesByQuackId(
     @Arg("quackId", () => Int) quackId: number,
-    @Ctx() { userLoader, likeLoaderByQuackId }: MyContext
-  ): Promise<(Like | undefined)[] | null> {
-    const likes = await likeLoaderByQuackId.load(quackId);
+    @Arg("limit", () => Int, { nullable: true, defaultValue: 20 })
+    limit: number,
+    @Arg("lastIndex", () => Int, { nullable: true })
+    lastIndex: number,
+    @Ctx()
+    { likeLoaderByQuackId, blockLoaderByUserId, payload: { user } }: MyContext
+  ): Promise<PaginatedUsers> {
+    const { users, hasMore } = await likesOrRequacksByQuackId({
+      quackId,
+      user,
+      limit,
+      lastIndex,
+      blockLoaderByUserId,
+      loaderByQuackId: likeLoaderByQuackId,
+    });
 
-    if (!likes || likes.length === 0) return null;
-
-    return await Promise.all(
-      likes.map(async (like) => {
-        const user = await userLoader.load(like.userId);
-        if (user && !user.amIDeactivated) return like;
-        return;
-      })
-    );
+    return {
+      users,
+      hasMore,
+    };
   }
 
-  @Query(() => [Like], { nullable: true })
+  @Query(() => PaginatedQuacks, { nullable: true })
   async likesByUserId(
     @Arg("userId", () => Int) userId: number,
-    @Ctx() { userLoader, likeLoaderByUserId }: MyContext
-  ): Promise<(Like | undefined)[] | null> {
-    const likes = await likeLoaderByUserId.load(userId);
+    @Arg("limit", () => Int, { nullable: true, defaultValue: 20 })
+    limit: number,
+    @Arg("lastIndex", () => Int, { nullable: true })
+    lastIndex: number,
+    @Ctx()
+    { likeLoaderByUserId, blockLoaderByUserId, payload: { user } }: MyContext
+  ): Promise<PaginatedQuacks> {
+    const { quacks, hasMore } = await likesOrRequacksByUserId<Like>({
+      userId,
+      user,
+      limit,
+      lastIndex,
+      blockLoaderByUserId,
+      loaderByUserId: likeLoaderByUserId,
+    });
 
-    if (!likes || likes.length === 0) return null;
-
-    return await Promise.all(
-      likes.map(async (like) => {
-        const user = await userLoader.load(like.userId);
-        if (user && !user.amIDeactivated) return like;
-        return;
-      })
-    );
+    return {
+      quacks,
+      hasMore,
+    };
   }
 }

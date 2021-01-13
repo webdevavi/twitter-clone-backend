@@ -1,26 +1,27 @@
-import { Field, ObjectType } from "type-graphql";
-import { BaseEntity, Column, Entity, PrimaryGeneratedColumn } from "typeorm";
+import {
+  BaseEntity,
+  Column,
+  Entity,
+  OneToMany,
+  PrimaryGeneratedColumn,
+} from "typeorm";
 import { Quack } from "./Quack";
 import { User } from "./User";
 
 @Entity()
-@ObjectType()
 export class Like extends BaseEntity {
   @PrimaryGeneratedColumn()
-  @Field()
   id: number;
 
   @Column()
-  @Field()
   quackId: number;
 
-  @Field(() => Quack)
+  @OneToMany(() => Quack, (quack) => quack._likes)
   quack: Quack;
 
   @Column()
-  @Field()
   userId: number;
 
-  @Field(() => User)
+  @OneToMany(() => User, (user) => user._likes)
   user: User;
 }

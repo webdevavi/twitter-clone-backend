@@ -7,6 +7,7 @@ import { User } from "../entities/User";
 import { partialAuth } from "../middleware/partialAuth";
 import { SearchResponse } from "../response/SearchResponse";
 import { MyContext } from "../types";
+import { paginate } from "../utils/paginate";
 import { Parser } from "../utils/searchQueryParser";
 
 @Resolver()
@@ -21,7 +22,7 @@ export class SearchResolver {
       nullable: true,
       defaultValue: false,
     })
-    fromFollowing: boolean,
+    fromFollowing: boolean = false,
     @Arg("limit", () => Int, { nullable: true, defaultValue: 20 })
     limit: number,
     @Arg("lastIndex", () => Int, { nullable: true, defaultValue: 0 })
@@ -57,13 +58,7 @@ export class SearchResolver {
         .createQueryBuilder()
         .select("q.*")
         .from(Quack, "q")
-        .where(`q."isVisible" = true`)
-        .take(realLimitPlusOne)
-        .orderBy({ "q.id": "DESC" });
-
-      if (lastIndex) {
-        q.andWhere(`q.id < ${lastIndex}`);
-      }
+        .where(`q."isVisible" = true`);
 
       if (user) {
         const ids = (await blockLoaderByUserId.load(user.id)).map(
@@ -199,11 +194,17 @@ export class SearchResolver {
           .andHaving(`count(rpl.id) >= ${pq.engagement.minReplies}`);
       }
 
-      const quacks: Quack[] = await q.execute();
+      const { data: quacks, hasMore } = await paginate<Quack>({
+        queryBuilder: q,
+        limit,
+        index: "q.id",
+        lastIndex,
+      });
+
       return {
         paginatedQuacks: {
-          quacks: quacks?.slice(0, realLimit),
-          hasMore: quacks?.length === realLimitPlusOne,
+          quacks,
+          hasMore,
         },
       };
     } else if (type === "user") {
@@ -268,11 +269,17 @@ export class SearchResolver {
         );
       }
 
-      const users: User[] = await u.execute();
+      const { data: users, hasMore } = await paginate<User>({
+        queryBuilder: u,
+        limit,
+        index: "u.id",
+        lastIndex,
+      });
+
       return {
         paginatedUsers: {
-          users: users?.slice(0, realLimit),
-          hasMore: users?.length === realLimitPlusOne,
+          users,
+          hasMore,
         },
       };
     }

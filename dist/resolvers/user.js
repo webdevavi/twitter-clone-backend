@@ -31,11 +31,10 @@ const uuid_1 = require("uuid");
 const constants_1 = require("../constants");
 const forgotPassword_1 = require("../emailTemplates/forgotPassword");
 const verifyEmail_1 = require("../emailTemplates/verifyEmail");
-const Like_1 = require("../entities/Like");
 const Quack_1 = require("../entities/Quack");
-const Requack_1 = require("../entities/Requack");
 const User_1 = require("../entities/User");
 const UserInput_1 = require("../input/UserInput");
+const partialAuth_1 = require("../middleware/partialAuth");
 const UserResponse_1 = require("../response/UserResponse");
 const createJWT_1 = require("../utils/createJWT");
 const regexp_1 = require("../utils/regexp");
@@ -54,25 +53,19 @@ let UserResolver = class UserResolver {
             return ((_a = (yield followLoaderByFollowerId.load(user.id))) === null || _a === void 0 ? void 0 : _a.length) || 0;
         });
     }
-    quacks(user) {
-        if (user.amIDeactivated)
-            return null;
-        return Quack_1.Quack.find({ where: { quackedByUserId: user.id } });
-    }
-    requacks(user, { requackLoaderByUserId }) {
-        if (user.amIDeactivated)
-            return null;
-        return requackLoaderByUserId.load(user.id);
-    }
-    likes(user, { likeLoaderByUserId }) {
-        if (user.amIDeactivated)
-            return null;
-        return likeLoaderByUserId.load(user.id);
-    }
-    haveIBlockedThisUser(user, { payload, blockLoader }) {
+    quacks(user, { quackLoaderByUserId }) {
         var _a;
         return __awaiter(this, void 0, void 0, function* () {
-            const myUserId = (_a = payload.user) === null || _a === void 0 ? void 0 : _a.id;
+            if (user.amIDeactivated)
+                return null;
+            return ((_a = (yield quackLoaderByUserId.load(user.id))) === null || _a === void 0 ? void 0 : _a.length) || 0;
+        });
+    }
+    haveIBlockedThisUser(user, { payload: { user: me }, blockLoader }) {
+        return __awaiter(this, void 0, void 0, function* () {
+            if (!me)
+                return null;
+            const myUserId = me === null || me === void 0 ? void 0 : me.id;
             if (user.id === myUserId)
                 return null;
             const block = yield blockLoader.load({
@@ -84,10 +77,11 @@ let UserResolver = class UserResolver {
             return true;
         });
     }
-    amIBlockedByThisUser(user, { payload, blockLoader }) {
-        var _a;
+    amIBlockedByThisUser(user, { payload: { user: me }, blockLoader }) {
         return __awaiter(this, void 0, void 0, function* () {
-            const myUserId = (_a = payload.user) === null || _a === void 0 ? void 0 : _a.id;
+            if (!me)
+                return null;
+            const myUserId = me === null || me === void 0 ? void 0 : me.id;
             if (user.id === myUserId)
                 return null;
             const block = yield blockLoader.load({
@@ -99,10 +93,11 @@ let UserResolver = class UserResolver {
             return true;
         });
     }
-    followStatus(user, { payload, followLoader }) {
-        var _a;
+    followStatus(user, { payload: { user: me }, followLoader }) {
         return __awaiter(this, void 0, void 0, function* () {
-            const myUserId = (_a = payload.user) === null || _a === void 0 ? void 0 : _a.id;
+            if (!me)
+                return null;
+            const myUserId = me.id;
             if (user.id === myUserId)
                 return null;
             const follow = yield followLoader.load({
@@ -114,10 +109,11 @@ let UserResolver = class UserResolver {
             return true;
         });
     }
-    followBackStatus(user, { payload, followLoader }) {
-        var _a;
+    followBackStatus(user, { payload: { user: me }, followLoader }) {
         return __awaiter(this, void 0, void 0, function* () {
-            const myUserId = (_a = payload.user) === null || _a === void 0 ? void 0 : _a.id;
+            if (!me)
+                return null;
+            const myUserId = me.id;
             if (user.id === myUserId)
                 return null;
             const follow = yield followLoader.load({
@@ -401,29 +397,15 @@ __decorate([
     __metadata("design:returntype", Promise)
 ], UserResolver.prototype, "followings", null);
 __decorate([
-    type_graphql_1.FieldResolver(() => [Quack_1.Quack], { nullable: true }),
-    __param(0, type_graphql_1.Root()),
+    type_graphql_1.FieldResolver(() => [Quack_1.Quack], { defaultValue: 0 }),
+    __param(0, type_graphql_1.Root()), __param(1, type_graphql_1.Ctx()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [User_1.User]),
-    __metadata("design:returntype", void 0)
+    __metadata("design:paramtypes", [User_1.User, Object]),
+    __metadata("design:returntype", Promise)
 ], UserResolver.prototype, "quacks", null);
 __decorate([
-    type_graphql_1.FieldResolver(() => [Requack_1.Requack], { nullable: true }),
-    __param(0, type_graphql_1.Root()), __param(1, type_graphql_1.Ctx()),
-    __metadata("design:type", Function),
-    __metadata("design:paramtypes", [User_1.User, Object]),
-    __metadata("design:returntype", void 0)
-], UserResolver.prototype, "requacks", null);
-__decorate([
-    type_graphql_1.FieldResolver(() => [Like_1.Like], { nullable: true }),
-    __param(0, type_graphql_1.Root()), __param(1, type_graphql_1.Ctx()),
-    __metadata("design:type", Function),
-    __metadata("design:paramtypes", [User_1.User, Object]),
-    __metadata("design:returntype", void 0)
-], UserResolver.prototype, "likes", null);
-__decorate([
     type_graphql_1.FieldResolver(() => Boolean, { nullable: true }),
-    type_graphql_1.Authorized(),
+    type_graphql_1.UseMiddleware(partialAuth_1.partialAuth),
     __param(0, type_graphql_1.Root()),
     __param(1, type_graphql_1.Ctx()),
     __metadata("design:type", Function),
@@ -432,7 +414,7 @@ __decorate([
 ], UserResolver.prototype, "haveIBlockedThisUser", null);
 __decorate([
     type_graphql_1.FieldResolver(() => Boolean, { nullable: true }),
-    type_graphql_1.Authorized(),
+    type_graphql_1.UseMiddleware(partialAuth_1.partialAuth),
     __param(0, type_graphql_1.Root()),
     __param(1, type_graphql_1.Ctx()),
     __metadata("design:type", Function),
@@ -441,7 +423,7 @@ __decorate([
 ], UserResolver.prototype, "amIBlockedByThisUser", null);
 __decorate([
     type_graphql_1.FieldResolver(() => Boolean, { nullable: true }),
-    type_graphql_1.Authorized(),
+    type_graphql_1.UseMiddleware(partialAuth_1.partialAuth),
     __param(0, type_graphql_1.Root()),
     __param(1, type_graphql_1.Ctx()),
     __metadata("design:type", Function),
@@ -450,7 +432,7 @@ __decorate([
 ], UserResolver.prototype, "followStatus", null);
 __decorate([
     type_graphql_1.FieldResolver(() => Boolean, { nullable: true }),
-    type_graphql_1.Authorized(),
+    type_graphql_1.UseMiddleware(partialAuth_1.partialAuth),
     __param(0, type_graphql_1.Root()),
     __param(1, type_graphql_1.Ctx()),
     __metadata("design:type", Function),

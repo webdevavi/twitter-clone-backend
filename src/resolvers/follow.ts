@@ -1,3 +1,4 @@
+import DataLoader from "dataloader";
 import {
   Arg,
   Authorized,
@@ -6,11 +7,16 @@ import {
   Mutation,
   Query,
   Resolver,
+  UseMiddleware,
 } from "type-graphql";
+import { getConnection } from "typeorm";
 import { Block } from "../entities/Block";
 import { Follow } from "../entities/Follow";
 import { User } from "../entities/User";
+import { partialAuth } from "../middleware/partialAuth";
+import { PaginatedUsers } from "../response/PaginatedUsers";
 import { MyContext, UserRole } from "../types";
+import { paginate } from "../utils/paginate";
 
 @Resolver(Follow)
 export class FollowResolver {
@@ -58,31 +64,108 @@ export class FollowResolver {
     return true;
   }
 
-  @Query(() => [User], { nullable: true })
+  @Query(() => PaginatedUsers, { nullable: true })
+  @UseMiddleware(partialAuth)
   async followersByUserId(
     @Arg("userId", () => Int) userId: number,
-    @Ctx() { followLoaderByUserId, userLoader }: MyContext
-  ): Promise<(User | Error)[]> {
-    const follows = await followLoaderByUserId.load(userId);
-
-    if (!follows) return [];
-
-    const userIds = follows.map((follow) => follow.followerId);
-
-    return await userLoader.loadMany(userIds);
+    @Arg("limit", () => Int, { nullable: true, defaultValue: 20 })
+    limit: number,
+    @Arg("lastIndex", () => Int, { nullable: true })
+    lastIndex: number,
+    @Ctx()
+    { followLoaderByUserId, blockLoaderByUserId, payload: { user } }: MyContext
+  ): Promise<PaginatedUsers> {
+    return await _fetchFollowsUsers({
+      userId,
+      followLoader: followLoaderByUserId,
+      blockLoaderByUserId,
+      user,
+      limit,
+      lastIndex,
+      key: "followerId",
+    });
   }
 
-  @Query(() => [User], { nullable: true })
+  @Query(() => PaginatedUsers, { nullable: true })
+  @UseMiddleware(partialAuth)
   async followingsByUserId(
     @Arg("userId", () => Int) userId: number,
-    @Ctx() { followLoaderByFollowerId, userLoader }: MyContext
-  ): Promise<(User | Error)[]> {
-    const follows = await followLoaderByFollowerId.load(userId);
-
-    if (!follows) return [];
-
-    const userIds = follows.map((follow) => follow.userId);
-
-    return await userLoader.loadMany(userIds);
+    @Arg("limit", () => Int, { nullable: true, defaultValue: 20 })
+    limit: number,
+    @Arg("lastIndex", () => Int, { nullable: true })
+    lastIndex: number,
+    @Ctx()
+    {
+      followLoaderByFollowerId,
+      blockLoaderByUserId,
+      payload: { user },
+    }: MyContext
+  ): Promise<PaginatedUsers> {
+    return await _fetchFollowsUsers({
+      userId,
+      followLoader: followLoaderByFollowerId,
+      blockLoaderByUserId,
+      user,
+      limit,
+      lastIndex,
+      key: "userId",
+    });
   }
+}
+
+async function _fetchFollowsUsers({
+  userId,
+  followLoader,
+  blockLoaderByUserId,
+  user,
+  limit,
+  lastIndex,
+  key,
+}: {
+  userId: number;
+  followLoader: DataLoader<number, Follow[], number>;
+  blockLoaderByUserId: DataLoader<number, Block[], number>;
+  user: User | undefined;
+  limit: number;
+  lastIndex: number;
+  key: "userId" | "followerId";
+}) {
+  userId;
+  const follows = await followLoader.load(userId);
+
+  if (!follows || follows.length < 1) return { users: [], hasMore: false };
+
+  const userIds = follows.map((follow) => follow[key]);
+
+  const u = getConnection()
+    .createQueryBuilder()
+    .select("u.*")
+    .from(User, "u")
+    .orderBy({ "u.id": "DESC" }).where(`
+        u.id in (${userIds.join(",")})
+      `);
+
+  if (user) {
+    const blockIds = (await blockLoaderByUserId.load(user.id)).map(
+      (block) => block.blockedByUserId
+    );
+
+    if (blockIds && blockIds.length > 0) {
+      u.andWhere(`
+        u.id not in (${blockIds.join(",")})
+    `);
+    }
+  }
+
+  const { data: users, hasMore } = await paginate<User>({
+    queryBuilder: u,
+    limit,
+    index: "u.id",
+    lastIndex,
+  });
+
+  return {
+    users,
+    hasMore,
+  };
 }

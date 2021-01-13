@@ -25,14 +25,11 @@ exports.LikeResolver = void 0;
 const type_graphql_1 = require("type-graphql");
 const Like_1 = require("../entities/Like");
 const Quack_1 = require("../entities/Quack");
-const User_1 = require("../entities/User");
+const PaginatedQuacks_1 = require("../response/PaginatedQuacks");
+const PaginatedUsers_1 = require("../response/PaginatedUsers");
+const likesOrRequacksByQuackId_1 = require("../utils/likesOrRequacksByQuackId");
+const likesOrRequacksByUserId_1 = require("../utils/likesOrRequacksByUserId");
 let LikeResolver = class LikeResolver {
-    quack(like) {
-        return Quack_1.Quack.findOne(like.quackId);
-    }
-    user(like) {
-        return User_1.User.findOne(like.userId);
-    }
     like(quackId, { payload: { user } }) {
         return __awaiter(this, void 0, void 0, function* () {
             const userId = user.id;
@@ -50,47 +47,39 @@ let LikeResolver = class LikeResolver {
             return true;
         });
     }
-    likesByQuackId(quackId, { userLoader, likeLoaderByQuackId }) {
+    likesByQuackId(quackId, limit, lastIndex, { likeLoaderByQuackId, blockLoaderByUserId, payload: { user } }) {
         return __awaiter(this, void 0, void 0, function* () {
-            const likes = yield likeLoaderByQuackId.load(quackId);
-            if (!likes || likes.length === 0)
-                return null;
-            return yield Promise.all(likes.map((like) => __awaiter(this, void 0, void 0, function* () {
-                const user = yield userLoader.load(like.userId);
-                if (user && !user.amIDeactivated)
-                    return like;
-                return;
-            })));
+            const { users, hasMore } = yield likesOrRequacksByQuackId_1.likesOrRequacksByQuackId({
+                quackId,
+                user,
+                limit,
+                lastIndex,
+                blockLoaderByUserId,
+                loaderByQuackId: likeLoaderByQuackId,
+            });
+            return {
+                users,
+                hasMore,
+            };
         });
     }
-    likesByUserId(userId, { userLoader, likeLoaderByUserId }) {
+    likesByUserId(userId, limit, lastIndex, { likeLoaderByUserId, blockLoaderByUserId, payload: { user } }) {
         return __awaiter(this, void 0, void 0, function* () {
-            const likes = yield likeLoaderByUserId.load(userId);
-            if (!likes || likes.length === 0)
-                return null;
-            return yield Promise.all(likes.map((like) => __awaiter(this, void 0, void 0, function* () {
-                const user = yield userLoader.load(like.userId);
-                if (user && !user.amIDeactivated)
-                    return like;
-                return;
-            })));
+            const { quacks, hasMore } = yield likesOrRequacksByUserId_1.likesOrRequacksByUserId({
+                userId,
+                user,
+                limit,
+                lastIndex,
+                blockLoaderByUserId,
+                loaderByUserId: likeLoaderByUserId,
+            });
+            return {
+                quacks,
+                hasMore,
+            };
         });
     }
 };
-__decorate([
-    type_graphql_1.FieldResolver(),
-    __param(0, type_graphql_1.Root()),
-    __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Like_1.Like]),
-    __metadata("design:returntype", void 0)
-], LikeResolver.prototype, "quack", null);
-__decorate([
-    type_graphql_1.FieldResolver(),
-    __param(0, type_graphql_1.Root()),
-    __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Like_1.Like]),
-    __metadata("design:returntype", void 0)
-], LikeResolver.prototype, "user", null);
 __decorate([
     type_graphql_1.Mutation(() => Boolean),
     type_graphql_1.Authorized(["ACTIVATED"]),
@@ -101,19 +90,23 @@ __decorate([
     __metadata("design:returntype", Promise)
 ], LikeResolver.prototype, "like", null);
 __decorate([
-    type_graphql_1.Query(() => [Like_1.Like], { nullable: true }),
+    type_graphql_1.Query(() => PaginatedUsers_1.PaginatedUsers, { nullable: true }),
     __param(0, type_graphql_1.Arg("quackId", () => type_graphql_1.Int)),
-    __param(1, type_graphql_1.Ctx()),
+    __param(1, type_graphql_1.Arg("limit", () => type_graphql_1.Int, { nullable: true, defaultValue: 20 })),
+    __param(2, type_graphql_1.Arg("lastIndex", () => type_graphql_1.Int, { nullable: true })),
+    __param(3, type_graphql_1.Ctx()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Number, Object]),
+    __metadata("design:paramtypes", [Number, Number, Number, Object]),
     __metadata("design:returntype", Promise)
 ], LikeResolver.prototype, "likesByQuackId", null);
 __decorate([
-    type_graphql_1.Query(() => [Like_1.Like], { nullable: true }),
+    type_graphql_1.Query(() => PaginatedQuacks_1.PaginatedQuacks, { nullable: true }),
     __param(0, type_graphql_1.Arg("userId", () => type_graphql_1.Int)),
-    __param(1, type_graphql_1.Ctx()),
+    __param(1, type_graphql_1.Arg("limit", () => type_graphql_1.Int, { nullable: true, defaultValue: 20 })),
+    __param(2, type_graphql_1.Arg("lastIndex", () => type_graphql_1.Int, { nullable: true })),
+    __param(3, type_graphql_1.Ctx()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Number, Object]),
+    __metadata("design:paramtypes", [Number, Number, Number, Object]),
     __metadata("design:returntype", Promise)
 ], LikeResolver.prototype, "likesByUserId", null);
 LikeResolver = __decorate([

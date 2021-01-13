@@ -22,7 +22,13 @@ const followLoaderByUserId = () => new dataloader_1.default((userIds) => __await
             userId: typeorm_1.In(userIds),
         },
     });
-    return userIds.map((userId) => follows.filter((follow) => follow.userId === userId));
+    const userIdToFollow = {};
+    follows.forEach((f) => {
+        userIdToFollow[f.userId] = userIdToFollow[f.userId]
+            ? [...userIdToFollow[f.userId], f]
+            : [f];
+    });
+    return userIds.map((userId) => userIdToFollow[userId]);
 }));
 exports.followLoaderByUserId = followLoaderByUserId;
 const followLoaderByFollowerId = () => new dataloader_1.default((followerIds) => __awaiter(void 0, void 0, void 0, function* () {
@@ -31,7 +37,13 @@ const followLoaderByFollowerId = () => new dataloader_1.default((followerIds) =>
             followerId: typeorm_1.In(followerIds),
         },
     });
-    return followerIds.map((followerId) => follows.filter((follow) => follow.followerId === followerId));
+    const followerIdToFollow = {};
+    follows.forEach((f) => {
+        followerIdToFollow[f.followerId] = followerIdToFollow[f.followerId]
+            ? [...followerIdToFollow[f.followerId], f]
+            : [f];
+    });
+    return followerIds.map((followerId) => followerIdToFollow[followerId]);
 }));
 exports.followLoaderByFollowerId = followLoaderByFollowerId;
 const followLoader = () => new dataloader_1.default((keys) => __awaiter(void 0, void 0, void 0, function* () {

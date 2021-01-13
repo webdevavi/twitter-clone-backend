@@ -13,7 +13,9 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.Quack = void 0;
 const type_graphql_1 = require("type-graphql");
 const typeorm_1 = require("typeorm");
+const Like_1 = require("./Like");
 const Link_1 = require("./Link");
+const Requack_1 = require("./Requack");
 const User_1 = require("./User");
 let Quack = Quack_1 = class Quack extends typeorm_1.BaseEntity {
     constructor() {
@@ -97,6 +99,18 @@ __decorate([
     type_graphql_1.Field(() => type_graphql_1.Int, { defaultValue: 0 }),
     __metadata("design:type", Number)
 ], Quack.prototype, "likes", void 0);
+__decorate([
+    typeorm_1.ManyToOne(() => Like_1.Like, (like) => like.userId, {
+        onDelete: "CASCADE",
+    }),
+    __metadata("design:type", Array)
+], Quack.prototype, "_likes", void 0);
+__decorate([
+    typeorm_1.ManyToOne(() => Requack_1.Requack, (requack) => requack.userId, {
+        onDelete: "CASCADE",
+    }),
+    __metadata("design:type", Array)
+], Quack.prototype, "_requacks", void 0);
 __decorate([
     type_graphql_1.Field(),
     __metadata("design:type", Boolean)

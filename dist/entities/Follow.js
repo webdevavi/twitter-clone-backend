@@ -12,6 +12,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.Follow = void 0;
 const type_graphql_1 = require("type-graphql");
 const typeorm_1 = require("typeorm");
+const User_1 = require("./User");
 let Follow = class Follow extends typeorm_1.BaseEntity {
 };
 __decorate([
@@ -23,9 +24,17 @@ __decorate([
     __metadata("design:type", Number)
 ], Follow.prototype, "userId", void 0);
 __decorate([
+    typeorm_1.OneToMany(() => User_1.User, (user) => user._followers),
+    __metadata("design:type", User_1.User)
+], Follow.prototype, "user", void 0);
+__decorate([
     typeorm_1.Column(),
     __metadata("design:type", Number)
 ], Follow.prototype, "followerId", void 0);
+__decorate([
+    typeorm_1.OneToMany(() => User_1.User, (user) => user._followings),
+    __metadata("design:type", User_1.User)
+], Follow.prototype, "follower", void 0);
 Follow = __decorate([
     typeorm_1.Entity(),
     type_graphql_1.ObjectType()

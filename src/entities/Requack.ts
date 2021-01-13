@@ -1,26 +1,27 @@
-import { Field, Int, ObjectType } from "type-graphql";
-import { BaseEntity, Column, Entity, PrimaryGeneratedColumn } from "typeorm";
+import {
+  BaseEntity,
+  Column,
+  Entity,
+  OneToMany,
+  PrimaryGeneratedColumn,
+} from "typeorm";
 import { Quack } from "./Quack";
 import { User } from "./User";
 
 @Entity()
-@ObjectType()
 export class Requack extends BaseEntity {
   @PrimaryGeneratedColumn()
-  @Field(() => Int)
   id: number;
 
   @Column()
-  @Field()
   quackId: number;
 
-  @Field(() => Quack)
+  @OneToMany(() => Quack, (quack) => quack._requacks)
   quack: Quack;
 
   @Column()
-  @Field()
   userId: number;
 
-  @Field(() => User)
+  @OneToMany(() => User, (user) => user._requacks)
   user: User;
 }

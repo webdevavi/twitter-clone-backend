@@ -24,7 +24,6 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.QuackResolver = void 0;
 const type_graphql_1 = require("type-graphql");
 const typeorm_1 = require("typeorm");
-const Follow_1 = require("../entities/Follow");
 const Quack_1 = require("../entities/Quack");
 const QuackInput_1 = require("../input/QuackInput");
 const partialAuth_1 = require("../middleware/partialAuth");
@@ -32,6 +31,7 @@ const PaginatedQuacks_1 = require("../response/PaginatedQuacks");
 const QuackResponse_1 = require("../response/QuackResponse");
 const getHashtags_1 = require("../utils/getHashtags");
 const getMentions_1 = require("../utils/getMentions");
+const paginate_1 = require("../utils/paginate");
 const scrapeMetatags_1 = require("../utils/scrapeMetatags");
 const quack_1 = require("../validators/quack");
 let QuackResolver = class QuackResolver {
@@ -121,6 +121,8 @@ let QuackResolver = class QuackResolver {
     }
     requackStatus(quack, { payload: { user }, requackLoader }) {
         return __awaiter(this, void 0, void 0, function* () {
+            if (!user)
+                return null;
             const requacks = yield requackLoader.load({
                 quackId: quack.id,
                 userId: user === null || user === void 0 ? void 0 : user.id,
@@ -132,6 +134,8 @@ let QuackResolver = class QuackResolver {
     }
     likeStatus(quack, { payload: { user }, likeLoader }) {
         return __awaiter(this, void 0, void 0, function* () {
+            if (!user)
+                return null;
             const likes = yield likeLoader.load({
                 quackId: quack.id,
                 userId: user === null || user === void 0 ? void 0 : user.id,
@@ -198,32 +202,28 @@ let QuackResolver = class QuackResolver {
             return yield q.getOne();
         });
     }
-    quacksForMe(limit, lastIndex, { payload: { user } }) {
+    quacksForMe(limit, lastIndex, { payload: { user }, followLoaderByFollowerId }) {
         return __awaiter(this, void 0, void 0, function* () {
-            const realLimit = Math.min(50, limit);
-            const realLimitPlusOne = realLimit + 1;
             const q = typeorm_1.getConnection()
                 .createQueryBuilder()
                 .select("q.*")
                 .from(Quack_1.Quack, "q")
-                .where(`q."isVisible" = true`)
-                .take(realLimitPlusOne)
-                .orderBy({ "q.id": "DESC" });
+                .where(`q."isVisible" = true`);
             if (user) {
-                const follows = yield Follow_1.Follow.find({
-                    where: { followerId: user.id },
-                });
+                const follows = yield followLoaderByFollowerId.load(user.id);
                 const ids = follows.map((follow) => follow.userId);
                 ids.push(user.id);
                 q.andWhere(`q."quackedByUserId" in (${ids.join(", ")})`);
             }
-            if (lastIndex) {
-                q.andWhere(`q.id < ${lastIndex}`);
-            }
-            const quacks = yield q.execute();
+            const { data: quacks, hasMore } = yield paginate_1.paginate({
+                queryBuilder: q,
+                index: "q.id",
+                limit,
+                lastIndex,
+            });
             return {
-                quacks: quacks === null || quacks === void 0 ? void 0 : quacks.slice(0, realLimit),
-                hasMore: (quacks === null || quacks === void 0 ? void 0 : quacks.length) === realLimitPlusOne,
+                quacks,
+                hasMore,
             };
         });
     }
@@ -303,7 +303,7 @@ __decorate([
 ], QuackResolver.prototype, "hashtags", null);
 __decorate([
     type_graphql_1.FieldResolver(),
-    type_graphql_1.Authorized(),
+    type_graphql_1.UseMiddleware(partialAuth_1.partialAuth),
     __param(0, type_graphql_1.Root()),
     __param(1, type_graphql_1.Ctx()),
     __metadata("design:type", Function),
@@ -312,7 +312,7 @@ __decorate([
 ], QuackResolver.prototype, "requackStatus", null);
 __decorate([
     type_graphql_1.FieldResolver(),
-    type_graphql_1.Authorized(),
+    type_graphql_1.UseMiddleware(partialAuth_1.partialAuth),
     __param(0, type_graphql_1.Root()),
     __param(1, type_graphql_1.Ctx()),
     __metadata("design:type", Function),

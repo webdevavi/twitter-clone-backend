@@ -2,30 +2,23 @@ import {
   Arg,
   Authorized,
   Ctx,
-  FieldResolver,
   Int,
   Mutation,
   Query,
   Resolver,
-  Root,
+  UseMiddleware,
 } from "type-graphql";
 import { Quack } from "../entities/Quack";
 import { Requack } from "../entities/Requack";
-import { User } from "../entities/User";
+import { partialAuth } from "../middleware/partialAuth";
+import { PaginatedQuacks } from "../response/PaginatedQuacks";
+import { PaginatedUsers } from "../response/PaginatedUsers";
 import { MyContext, UserRole } from "../types";
+import { likesOrRequacksByQuackId } from "../utils/likesOrRequacksByQuackId";
+import { likesOrRequacksByUserId } from "../utils/likesOrRequacksByUserId";
 
 @Resolver(Requack)
 export class RequackResolver {
-  @FieldResolver()
-  quack(@Root() requack: Requack) {
-    return Quack.findOne(requack.quackId);
-  }
-
-  @FieldResolver()
-  user(@Root() requack: Requack) {
-    return User.findOne(requack.userId);
-  }
-
   @Mutation(() => Boolean)
   @Authorized<UserRole>(["ACTIVATED"])
   async requack(
@@ -47,39 +40,59 @@ export class RequackResolver {
     return true;
   }
 
-  @Query(() => [Requack], { nullable: true })
+  @Query(() => PaginatedUsers, { nullable: true })
+  @UseMiddleware(partialAuth)
   async requacksByQuackId(
     @Arg("quackId", () => Int) quackId: number,
-    @Ctx() { userLoader, requackLoaderByQuackId }: MyContext
-  ): Promise<(Requack | undefined)[] | null> {
-    const requacks = await requackLoaderByQuackId.load(quackId);
+    @Arg("limit", () => Int, { nullable: true, defaultValue: 20 })
+    limit: number,
+    @Arg("lastIndex", () => Int, { nullable: true })
+    lastIndex: number,
+    @Ctx()
+    {
+      requackLoaderByQuackId,
+      blockLoaderByUserId,
+      payload: { user },
+    }: MyContext
+  ): Promise<PaginatedUsers> {
+    const { users, hasMore } = await likesOrRequacksByQuackId({
+      quackId,
+      user,
+      limit,
+      lastIndex,
+      blockLoaderByUserId,
+      loaderByQuackId: requackLoaderByQuackId,
+    });
 
-    if (!requacks || requacks.length === 0) return null;
-
-    return await Promise.all(
-      requacks.map(async (requack) => {
-        const user = await userLoader.load(requack.userId);
-        if (user && !user.amIDeactivated) return requack;
-        return;
-      })
-    );
+    return {
+      users,
+      hasMore,
+    };
   }
 
-  @Query(() => [Requack], { nullable: true })
+  @Query(() => PaginatedQuacks, { nullable: true })
+  @UseMiddleware(partialAuth)
   async requacksByUserId(
     @Arg("userId", () => Int) userId: number,
-    @Ctx() { userLoader, requackLoaderByUserId }: MyContext
-  ): Promise<(Requack | undefined)[] | null> {
-    const requacks = await requackLoaderByUserId.load(userId);
+    @Arg("limit", () => Int, { nullable: true, defaultValue: 20 })
+    limit: number,
+    @Arg("lastIndex", () => Int, { nullable: true })
+    lastIndex: number,
+    @Ctx()
+    { requackLoaderByUserId, blockLoaderByUserId, payload: { user } }: MyContext
+  ): Promise<PaginatedQuacks> {
+    const { quacks, hasMore } = await likesOrRequacksByUserId<Requack>({
+      userId,
+      user,
+      limit,
+      lastIndex,
+      blockLoaderByUserId,
+      loaderByUserId: requackLoaderByUserId,
+    });
 
-    if (!requacks || requacks.length === 0) return null;
-
-    return await Promise.all(
-      requacks.map(async (requack) => {
-        const user = await userLoader.load(requack.userId);
-        if (user && !user.amIDeactivated) return requack;
-        return;
-      })
-    );
+    return {
+      quacks,
+      hasMore,
+    };
   }
 }

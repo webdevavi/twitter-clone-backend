@@ -25,14 +25,12 @@ exports.RequackResolver = void 0;
 const type_graphql_1 = require("type-graphql");
 const Quack_1 = require("../entities/Quack");
 const Requack_1 = require("../entities/Requack");
-const User_1 = require("../entities/User");
+const partialAuth_1 = require("../middleware/partialAuth");
+const PaginatedQuacks_1 = require("../response/PaginatedQuacks");
+const PaginatedUsers_1 = require("../response/PaginatedUsers");
+const likesOrRequacksByQuackId_1 = require("../utils/likesOrRequacksByQuackId");
+const likesOrRequacksByUserId_1 = require("../utils/likesOrRequacksByUserId");
 let RequackResolver = class RequackResolver {
-    quack(requack) {
-        return Quack_1.Quack.findOne(requack.quackId);
-    }
-    user(requack) {
-        return User_1.User.findOne(requack.userId);
-    }
     requack(quackId, { payload: { user } }) {
         return __awaiter(this, void 0, void 0, function* () {
             const userId = user.id;
@@ -49,47 +47,39 @@ let RequackResolver = class RequackResolver {
             return true;
         });
     }
-    requacksByQuackId(quackId, { userLoader, requackLoaderByQuackId }) {
+    requacksByQuackId(quackId, limit, lastIndex, { requackLoaderByQuackId, blockLoaderByUserId, payload: { user }, }) {
         return __awaiter(this, void 0, void 0, function* () {
-            const requacks = yield requackLoaderByQuackId.load(quackId);
-            if (!requacks || requacks.length === 0)
-                return null;
-            return yield Promise.all(requacks.map((requack) => __awaiter(this, void 0, void 0, function* () {
-                const user = yield userLoader.load(requack.userId);
-                if (user && !user.amIDeactivated)
-                    return requack;
-                return;
-            })));
+            const { users, hasMore } = yield likesOrRequacksByQuackId_1.likesOrRequacksByQuackId({
+                quackId,
+                user,
+                limit,
+                lastIndex,
+                blockLoaderByUserId,
+                loaderByQuackId: requackLoaderByQuackId,
+            });
+            return {
+                users,
+                hasMore,
+            };
         });
     }
-    requacksByUserId(userId, { userLoader, requackLoaderByUserId }) {
+    requacksByUserId(userId, limit, lastIndex, { requackLoaderByUserId, blockLoaderByUserId, payload: { user } }) {
         return __awaiter(this, void 0, void 0, function* () {
-            const requacks = yield requackLoaderByUserId.load(userId);
-            if (!requacks || requacks.length === 0)
-                return null;
-            return yield Promise.all(requacks.map((requack) => __awaiter(this, void 0, void 0, function* () {
-                const user = yield userLoader.load(requack.userId);
-                if (user && !user.amIDeactivated)
-                    return requack;
-                return;
-            })));
+            const { quacks, hasMore } = yield likesOrRequacksByUserId_1.likesOrRequacksByUserId({
+                userId,
+                user,
+                limit,
+                lastIndex,
+                blockLoaderByUserId,
+                loaderByUserId: requackLoaderByUserId,
+            });
+            return {
+                quacks,
+                hasMore,
+            };
         });
     }
 };
-__decorate([
-    type_graphql_1.FieldResolver(),
-    __param(0, type_graphql_1.Root()),
-    __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Requack_1.Requack]),
-    __metadata("design:returntype", void 0)
-], RequackResolver.prototype, "quack", null);
-__decorate([
-    type_graphql_1.FieldResolver(),
-    __param(0, type_graphql_1.Root()),
-    __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Requack_1.Requack]),
-    __metadata("design:returntype", void 0)
-], RequackResolver.prototype, "user", null);
 __decorate([
     type_graphql_1.Mutation(() => Boolean),
     type_graphql_1.Authorized(["ACTIVATED"]),
@@ -100,19 +90,25 @@ __decorate([
     __metadata("design:returntype", Promise)
 ], RequackResolver.prototype, "requack", null);
 __decorate([
-    type_graphql_1.Query(() => [Requack_1.Requack], { nullable: true }),
+    type_graphql_1.Query(() => PaginatedUsers_1.PaginatedUsers, { nullable: true }),
+    type_graphql_1.UseMiddleware(partialAuth_1.partialAuth),
     __param(0, type_graphql_1.Arg("quackId", () => type_graphql_1.Int)),
-    __param(1, type_graphql_1.Ctx()),
+    __param(1, type_graphql_1.Arg("limit", () => type_graphql_1.Int, { nullable: true, defaultValue: 20 })),
+    __param(2, type_graphql_1.Arg("lastIndex", () => type_graphql_1.Int, { nullable: true })),
+    __param(3, type_graphql_1.Ctx()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Number, Object]),
+    __metadata("design:paramtypes", [Number, Number, Number, Object]),
     __metadata("design:returntype", Promise)
 ], RequackResolver.prototype, "requacksByQuackId", null);
 __decorate([
-    type_graphql_1.Query(() => [Requack_1.Requack], { nullable: true }),
+    type_graphql_1.Query(() => PaginatedQuacks_1.PaginatedQuacks, { nullable: true }),
+    type_graphql_1.UseMiddleware(partialAuth_1.partialAuth),
     __param(0, type_graphql_1.Arg("userId", () => type_graphql_1.Int)),
-    __param(1, type_graphql_1.Ctx()),
+    __param(1, type_graphql_1.Arg("limit", () => type_graphql_1.Int, { nullable: true, defaultValue: 20 })),
+    __param(2, type_graphql_1.Arg("lastIndex", () => type_graphql_1.Int, { nullable: true })),
+    __param(3, type_graphql_1.Ctx()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Number, Object]),
+    __metadata("design:paramtypes", [Number, Number, Number, Object]),
     __metadata("design:returntype", Promise)
 ], RequackResolver.prototype, "requacksByUserId", null);
 RequackResolver = __decorate([

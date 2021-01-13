@@ -11,7 +11,6 @@ import {
   UseMiddleware,
 } from "type-graphql";
 import { getConnection } from "typeorm";
-import { Follow } from "../entities/Follow";
 import { Link } from "../entities/Link";
 import { Quack } from "../entities/Quack";
 import { User } from "../entities/User";
@@ -22,6 +21,7 @@ import { QuackResponse } from "../response/QuackResponse";
 import { MyContext, UserRole } from "../types";
 import { getHashtags } from "../utils/getHashtags";
 import { getMentions } from "../utils/getMentions";
+import { paginate } from "../utils/paginate";
 import { scrapeMetatags } from "../utils/scrapeMetatags";
 import { QuackValidator } from "../validators/quack";
 
@@ -154,11 +154,12 @@ export class QuackResolver {
   }
 
   @FieldResolver()
-  @Authorized<UserRole>()
+  @UseMiddleware(partialAuth)
   async requackStatus(
     @Root() quack: Quack,
     @Ctx() { payload: { user }, requackLoader }: MyContext
   ) {
+    if (!user) return null;
     const requacks = await requackLoader.load({
       quackId: quack.id,
       userId: user?.id!,
@@ -168,11 +169,12 @@ export class QuackResolver {
   }
 
   @FieldResolver()
-  @Authorized<UserRole>()
+  @UseMiddleware(partialAuth)
   async likeStatus(
     @Root() quack: Quack,
     @Ctx() { payload: { user }, likeLoader }: MyContext
   ) {
+    if (!user) return null;
     const likes = await likeLoader.load({
       quackId: quack.id,
       userId: user?.id!,
@@ -267,38 +269,32 @@ export class QuackResolver {
     @Arg("lastIndex", () => Int, { nullable: true })
     lastIndex: number,
     @Ctx()
-    { payload: { user } }: MyContext
+    { payload: { user }, followLoaderByFollowerId }: MyContext
   ): Promise<PaginatedQuacks> {
-    const realLimit = Math.min(50, limit);
-    const realLimitPlusOne = realLimit + 1;
-
     const q = getConnection()
       .createQueryBuilder()
       .select("q.*")
       .from(Quack, "q")
-      .where(`q."isVisible" = true`)
-      .take(realLimitPlusOne)
-      .orderBy({ "q.id": "DESC" });
+      .where(`q."isVisible" = true`);
 
     if (user) {
-      const follows = await Follow.find({
-        where: { followerId: user.id },
-      });
+      const follows = await followLoaderByFollowerId.load(user.id);
       const ids = follows.map((follow) => follow.userId);
       ids.push(user.id);
 
       q.andWhere(`q."quackedByUserId" in (${ids.join(", ")})`);
     }
 
-    if (lastIndex) {
-      q.andWhere(`q.id < ${lastIndex}`);
-    }
-
-    const quacks = await q.execute();
+    const { data: quacks, hasMore } = await paginate<Quack>({
+      queryBuilder: q,
+      index: "q.id",
+      limit,
+      lastIndex,
+    });
 
     return {
-      quacks: quacks?.slice(0, realLimit),
-      hasMore: quacks?.length === realLimitPlusOne,
+      quacks,
+      hasMore,
     };
   }
 }

@@ -9,9 +9,14 @@ export const followLoaderByUserId = () =>
         userId: In(userIds as number[]),
       },
     });
-    return userIds.map((userId) =>
-      follows.filter((follow) => follow.userId === userId)
-    );
+    const userIdToFollow: Record<number, Follow[]> = {};
+    follows.forEach((f) => {
+      userIdToFollow[f.userId] = userIdToFollow[f.userId]
+        ? [...userIdToFollow[f.userId], f]
+        : [f];
+    });
+
+    return userIds.map((userId) => userIdToFollow[userId]);
   });
 
 export const followLoaderByFollowerId = () =>
@@ -21,9 +26,15 @@ export const followLoaderByFollowerId = () =>
         followerId: In(followerIds as number[]),
       },
     });
-    return followerIds.map((followerId) =>
-      follows.filter((follow) => follow.followerId === followerId)
-    );
+
+    const followerIdToFollow: Record<number, Follow[]> = {};
+    follows.forEach((f) => {
+      followerIdToFollow[f.followerId] = followerIdToFollow[f.followerId]
+        ? [...followerIdToFollow[f.followerId], f]
+        : [f];
+    });
+
+    return followerIds.map((followerId) => followerIdToFollow[followerId]);
   });
 
 export const followLoader = () =>

@@ -10,7 +10,6 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.Like = void 0;
-const type_graphql_1 = require("type-graphql");
 const typeorm_1 = require("typeorm");
 const Quack_1 = require("./Quack");
 const User_1 = require("./User");
@@ -18,30 +17,26 @@ let Like = class Like extends typeorm_1.BaseEntity {
 };
 __decorate([
     typeorm_1.PrimaryGeneratedColumn(),
-    type_graphql_1.Field(),
     __metadata("design:type", Number)
 ], Like.prototype, "id", void 0);
 __decorate([
     typeorm_1.Column(),
-    type_graphql_1.Field(),
     __metadata("design:type", Number)
 ], Like.prototype, "quackId", void 0);
 __decorate([
-    type_graphql_1.Field(() => Quack_1.Quack),
+    typeorm_1.OneToMany(() => Quack_1.Quack, (quack) => quack._likes),
     __metadata("design:type", Quack_1.Quack)
 ], Like.prototype, "quack", void 0);
 __decorate([
     typeorm_1.Column(),
-    type_graphql_1.Field(),
     __metadata("design:type", Number)
 ], Like.prototype, "userId", void 0);
 __decorate([
-    type_graphql_1.Field(() => User_1.User),
+    typeorm_1.OneToMany(() => User_1.User, (user) => user._likes),
     __metadata("design:type", User_1.User)
 ], Like.prototype, "user", void 0);
 Like = __decorate([
-    typeorm_1.Entity(),
-    type_graphql_1.ObjectType()
+    typeorm_1.Entity()
 ], Like);
 exports.Like = Like;
 //# sourceMappingURL=Like.js.map

@@ -4,11 +4,13 @@ import {
   Column,
   CreateDateColumn,
   Entity,
-  OneToMany,
+  ManyToOne,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from "typeorm";
 import { DEFAULT_CP, DEFAULT_DP } from "../constants";
+import { Block } from "./Block";
+import { Follow } from "./Follow";
 import { Like } from "./Like";
 import { Quack } from "./Quack";
 import { Requack } from "./Requack";
@@ -62,29 +64,39 @@ export class User extends BaseEntity {
   @Column()
   password: string;
 
-  @OneToMany(() => Quack, (quack) => quack.quackedByUser, { nullable: true })
-  @Field(() => [Quack], { nullable: true })
-  quacks: Quack[];
+  @Field(() => Int, { defaultValue: 0 })
+  quacks: number = 0;
 
-  @OneToMany(() => Requack, (requack) => requack.user, {
-    nullable: true,
+  @ManyToOne(() => Quack, (quack) => quack.quackedByUserId, {
     onDelete: "CASCADE",
   })
-  @Field(() => [Requack], { nullable: true })
-  requacks: Requack[];
+  _quacks: Quack[];
 
-  @OneToMany(() => Like, (like) => like.user, {
-    nullable: true,
+  @ManyToOne(() => Like, (like) => like.userId, {
     onDelete: "CASCADE",
   })
-  @Field(() => [Like], { nullable: true })
-  likes: Like[];
+  _likes: Quack[];
+
+  @ManyToOne(() => Requack, (requack) => requack.userId, {
+    onDelete: "CASCADE",
+  })
+  _requacks: Quack[];
 
   @Field(() => Int, { defaultValue: 0 })
   followers: number = 0;
 
+  @ManyToOne(() => Follow, (follow) => follow.userId, {
+    onDelete: "CASCADE",
+  })
+  _followers: Follow[];
+
   @Field(() => Int, { defaultValue: 0 })
   followings: number = 0;
+
+  @ManyToOne(() => Follow, (follow) => follow.followerId, {
+    onDelete: "CASCADE",
+  })
+  _followings: Follow[];
 
   @Field(() => Boolean, { nullable: true })
   haveIBlockedThisUser: Boolean;
@@ -97,4 +109,14 @@ export class User extends BaseEntity {
 
   @Field(() => Boolean, { nullable: true })
   followBackStatus: Boolean;
+
+  @ManyToOne(() => Block, (block) => block.userId, {
+    onDelete: "CASCADE",
+  })
+  _blockedBys: Block[];
+
+  @ManyToOne(() => Block, (block) => block.blockedByUserId, {
+    onDelete: "CASCADE",
+  })
+  _blocks: Block[];
 }

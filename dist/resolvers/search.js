@@ -30,9 +30,10 @@ const Requack_1 = require("../entities/Requack");
 const User_1 = require("../entities/User");
 const partialAuth_1 = require("../middleware/partialAuth");
 const SearchResponse_1 = require("../response/SearchResponse");
+const paginate_1 = require("../utils/paginate");
 const searchQueryParser_1 = require("../utils/searchQueryParser");
 let SearchResolver = class SearchResolver {
-    search(query, type, fromFollowing, limit, lastIndex, { payload: { user }, blockLoaderByUserId, followLoaderByFollowerId, }) {
+    search(query, type, fromFollowing = false, limit, lastIndex, { payload: { user }, blockLoaderByUserId, followLoaderByFollowerId, }) {
         var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k, _l, _m, _o, _p, _q, _r, _s, _t, _u, _v, _w, _x, _y;
         return __awaiter(this, void 0, void 0, function* () {
             const realLimit = Math.min(50, limit);
@@ -50,12 +51,7 @@ let SearchResolver = class SearchResolver {
                     .createQueryBuilder()
                     .select("q.*")
                     .from(Quack_1.Quack, "q")
-                    .where(`q."isVisible" = true`)
-                    .take(realLimitPlusOne)
-                    .orderBy({ "q.id": "DESC" });
-                if (lastIndex) {
-                    q.andWhere(`q.id < ${lastIndex}`);
-                }
+                    .where(`q."isVisible" = true`);
                 if (user) {
                     const ids = (yield blockLoaderByUserId.load(user.id)).map((block) => block.blockedByUserId);
                     if (ids.length > 0) {
@@ -150,11 +146,16 @@ let SearchResolver = class SearchResolver {
                         .groupBy("q.id")
                         .andHaving(`count(rpl.id) >= ${pq.engagement.minReplies}`);
                 }
-                const quacks = yield q.execute();
+                const { data: quacks, hasMore } = yield paginate_1.paginate({
+                    queryBuilder: q,
+                    limit,
+                    index: "q.id",
+                    lastIndex,
+                });
                 return {
                     paginatedQuacks: {
-                        quacks: quacks === null || quacks === void 0 ? void 0 : quacks.slice(0, realLimit),
-                        hasMore: (quacks === null || quacks === void 0 ? void 0 : quacks.length) === realLimitPlusOne,
+                        quacks,
+                        hasMore,
                     },
                 };
             }
@@ -198,11 +199,16 @@ let SearchResolver = class SearchResolver {
                 if (((_y = pq.words) === null || _y === void 0 ? void 0 : _y.or) && pq.words.or.length > 0) {
                     u.andWhere(`concat(u.username, ' ', u."displayName") ~* '(${pq.words.or.join("|")})'`);
                 }
-                const users = yield u.execute();
+                const { data: users, hasMore } = yield paginate_1.paginate({
+                    queryBuilder: u,
+                    limit,
+                    index: "u.id",
+                    lastIndex,
+                });
                 return {
                     paginatedUsers: {
-                        users: users === null || users === void 0 ? void 0 : users.slice(0, realLimit),
-                        hasMore: (users === null || users === void 0 ? void 0 : users.length) === realLimitPlusOne,
+                        users,
+                        hasMore,
                     },
                 };
             }
