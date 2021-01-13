@@ -25,13 +25,8 @@ exports.FollowResolver = void 0;
 const type_graphql_1 = require("type-graphql");
 const Block_1 = require("../entities/Block");
 const Follow_1 = require("../entities/Follow");
+const User_1 = require("../entities/User");
 let FollowResolver = class FollowResolver {
-    user(follow, { userLoader }) {
-        return userLoader.load(follow.userId);
-    }
-    follower(follow, { userLoader }) {
-        return userLoader.load(follow.followerId);
-    }
     follow(userId, { payload: { user: me }, userLoader }) {
         return __awaiter(this, void 0, void 0, function* () {
             const myUserId = me === null || me === void 0 ? void 0 : me.id;
@@ -78,21 +73,25 @@ let FollowResolver = class FollowResolver {
             return true;
         });
     }
+    followersByUserId(userId, { followLoaderByUserId, userLoader }) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const follows = yield followLoaderByUserId.load(userId);
+            if (!follows)
+                return [];
+            const userIds = follows.map((follow) => follow.followerId);
+            return yield userLoader.loadMany(userIds);
+        });
+    }
+    followingsByUserId(userId, { followLoaderByFollowerId, userLoader }) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const follows = yield followLoaderByFollowerId.load(userId);
+            if (!follows)
+                return [];
+            const userIds = follows.map((follow) => follow.userId);
+            return yield userLoader.loadMany(userIds);
+        });
+    }
 };
-__decorate([
-    type_graphql_1.FieldResolver(),
-    __param(0, type_graphql_1.Root()), __param(1, type_graphql_1.Ctx()),
-    __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Follow_1.Follow, Object]),
-    __metadata("design:returntype", void 0)
-], FollowResolver.prototype, "user", null);
-__decorate([
-    type_graphql_1.FieldResolver(),
-    __param(0, type_graphql_1.Root()), __param(1, type_graphql_1.Ctx()),
-    __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Follow_1.Follow, Object]),
-    __metadata("design:returntype", void 0)
-], FollowResolver.prototype, "follower", null);
 __decorate([
     type_graphql_1.Mutation(() => Boolean),
     type_graphql_1.Authorized(["ACTIVATED"]),
@@ -105,12 +104,28 @@ __decorate([
 __decorate([
     type_graphql_1.Mutation(() => Boolean),
     type_graphql_1.Authorized(["ACTIVATED"]),
-    __param(0, type_graphql_1.Arg("userId")),
+    __param(0, type_graphql_1.Arg("userId", () => type_graphql_1.Int)),
     __param(1, type_graphql_1.Ctx()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [Number, Object]),
     __metadata("design:returntype", Promise)
 ], FollowResolver.prototype, "unfollow", null);
+__decorate([
+    type_graphql_1.Query(() => [User_1.User], { nullable: true }),
+    __param(0, type_graphql_1.Arg("userId", () => type_graphql_1.Int)),
+    __param(1, type_graphql_1.Ctx()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Number, Object]),
+    __metadata("design:returntype", Promise)
+], FollowResolver.prototype, "followersByUserId", null);
+__decorate([
+    type_graphql_1.Query(() => [User_1.User], { nullable: true }),
+    __param(0, type_graphql_1.Arg("userId", () => type_graphql_1.Int)),
+    __param(1, type_graphql_1.Ctx()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Number, Object]),
+    __metadata("design:returntype", Promise)
+], FollowResolver.prototype, "followingsByUserId", null);
 FollowResolver = __decorate([
     type_graphql_1.Resolver(Follow_1.Follow)
 ], FollowResolver);

@@ -9,7 +9,6 @@ import {
   UpdateDateColumn,
 } from "typeorm";
 import { DEFAULT_CP, DEFAULT_DP } from "../constants";
-import { Follow } from "./Follow";
 import { Like } from "./Like";
 import { Quack } from "./Quack";
 import { Requack } from "./Requack";
@@ -81,19 +80,11 @@ export class User extends BaseEntity {
   @Field(() => [Like], { nullable: true })
   likes: Like[];
 
-  @OneToMany(() => Follow, (follow) => follow.user, {
-    nullable: true,
-    onDelete: "CASCADE",
-  })
-  @Field(() => [Follow], { nullable: true })
-  followers: Follow[];
+  @Field(() => Int, { defaultValue: 0 })
+  followers: number = 0;
 
-  @OneToMany(() => Follow, (follow) => follow.follower, {
-    nullable: true,
-    onDelete: "CASCADE",
-  })
-  @Field(() => [Follow], { nullable: true })
-  followings: Follow[];
+  @Field(() => Int, { defaultValue: 0 })
+  followings: number = 0;
 
   @Field(() => Boolean, { nullable: true })
   haveIBlockedThisUser: Boolean;

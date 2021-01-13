@@ -4,6 +4,7 @@ import {
   Authorized,
   Ctx,
   FieldResolver,
+  Int,
   Mutation,
   Query,
   Resolver,
@@ -31,17 +32,20 @@ import { ValidateUser } from "../validators/user";
 
 @Resolver(User)
 export class UserResolver {
-  @FieldResolver()
-  followers(@Root() user: User, @Ctx() { followLoaderByUserId }: MyContext) {
-    return followLoaderByUserId.load(user.id);
+  @FieldResolver(() => Int, { defaultValue: 0 })
+  async followers(
+    @Root() user: User,
+    @Ctx() { followLoaderByUserId }: MyContext
+  ): Promise<number> {
+    return (await followLoaderByUserId.load(user.id))?.length || 0;
   }
 
-  @FieldResolver()
-  followings(
+  @FieldResolver(() => Int, { defaultValue: 0 })
+  async followings(
     @Root() user: User,
     @Ctx() { followLoaderByFollowerId }: MyContext
-  ) {
-    return followLoaderByFollowerId.load(user.id);
+  ): Promise<number> {
+    return (await followLoaderByFollowerId.load(user.id))?.length || 0;
   }
 
   @FieldResolver(() => [Quack], { nullable: true })

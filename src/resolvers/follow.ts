@@ -2,28 +2,18 @@ import {
   Arg,
   Authorized,
   Ctx,
-  FieldResolver,
   Int,
   Mutation,
+  Query,
   Resolver,
-  Root,
 } from "type-graphql";
 import { Block } from "../entities/Block";
 import { Follow } from "../entities/Follow";
+import { User } from "../entities/User";
 import { MyContext, UserRole } from "../types";
 
 @Resolver(Follow)
 export class FollowResolver {
-  @FieldResolver()
-  user(@Root() follow: Follow, @Ctx() { userLoader }: MyContext) {
-    return userLoader.load(follow.userId);
-  }
-
-  @FieldResolver()
-  follower(@Root() follow: Follow, @Ctx() { userLoader }: MyContext) {
-    return userLoader.load(follow.followerId);
-  }
-
   @Mutation(() => Boolean)
   @Authorized<UserRole>(["ACTIVATED"])
   async follow(
@@ -54,7 +44,7 @@ export class FollowResolver {
   @Mutation(() => Boolean)
   @Authorized<UserRole>(["ACTIVATED"])
   async unfollow(
-    @Arg("userId") userId: number,
+    @Arg("userId", () => Int) userId: number,
     @Ctx() { payload: { user: me }, userLoader }: MyContext
   ) {
     const followerId = me?.id;
@@ -66,5 +56,33 @@ export class FollowResolver {
     if (user.amIDeactivated) return false;
     await Follow.delete({ userId, followerId });
     return true;
+  }
+
+  @Query(() => [User], { nullable: true })
+  async followersByUserId(
+    @Arg("userId", () => Int) userId: number,
+    @Ctx() { followLoaderByUserId, userLoader }: MyContext
+  ): Promise<(User | Error)[]> {
+    const follows = await followLoaderByUserId.load(userId);
+
+    if (!follows) return [];
+
+    const userIds = follows.map((follow) => follow.followerId);
+
+    return await userLoader.loadMany(userIds);
+  }
+
+  @Query(() => [User], { nullable: true })
+  async followingsByUserId(
+    @Arg("userId", () => Int) userId: number,
+    @Ctx() { followLoaderByFollowerId, userLoader }: MyContext
+  ): Promise<(User | Error)[]> {
+    const follows = await followLoaderByFollowerId.load(userId);
+
+    if (!follows) return [];
+
+    const userIds = follows.map((follow) => follow.userId);
+
+    return await userLoader.loadMany(userIds);
   }
 }

@@ -13,7 +13,6 @@ exports.User = void 0;
 const type_graphql_1 = require("type-graphql");
 const typeorm_1 = require("typeorm");
 const constants_1 = require("../constants");
-const Follow_1 = require("./Follow");
 const Like_1 = require("./Like");
 const Quack_1 = require("./Quack");
 const Requack_1 = require("./Requack");
@@ -24,6 +23,8 @@ let User = class User extends typeorm_1.BaseEntity {
         this.coverPicture = constants_1.DEFAULT_CP;
         this.emailVerified = false;
         this.amIDeactivated = false;
+        this.followers = 0;
+        this.followings = 0;
     }
 };
 __decorate([
@@ -106,20 +107,12 @@ __decorate([
     __metadata("design:type", Array)
 ], User.prototype, "likes", void 0);
 __decorate([
-    typeorm_1.OneToMany(() => Follow_1.Follow, (follow) => follow.user, {
-        nullable: true,
-        onDelete: "CASCADE",
-    }),
-    type_graphql_1.Field(() => [Follow_1.Follow], { nullable: true }),
-    __metadata("design:type", Array)
+    type_graphql_1.Field(() => type_graphql_1.Int, { defaultValue: 0 }),
+    __metadata("design:type", Number)
 ], User.prototype, "followers", void 0);
 __decorate([
-    typeorm_1.OneToMany(() => Follow_1.Follow, (follow) => follow.follower, {
-        nullable: true,
-        onDelete: "CASCADE",
-    }),
-    type_graphql_1.Field(() => [Follow_1.Follow], { nullable: true }),
-    __metadata("design:type", Array)
+    type_graphql_1.Field(() => type_graphql_1.Int, { defaultValue: 0 }),
+    __metadata("design:type", Number)
 ], User.prototype, "followings", void 0);
 __decorate([
     type_graphql_1.Field(() => Boolean, { nullable: true }),
