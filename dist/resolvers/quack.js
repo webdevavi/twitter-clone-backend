@@ -25,6 +25,7 @@ exports.QuackResolver = void 0;
 const type_graphql_1 = require("type-graphql");
 const typeorm_1 = require("typeorm");
 const Quack_1 = require("../entities/Quack");
+const User_1 = require("../entities/User");
 const QuackInput_1 = require("../input/QuackInput");
 const partialAuth_1 = require("../middleware/partialAuth");
 const PaginatedQuacks_1 = require("../response/PaginatedQuacks");
@@ -227,6 +228,47 @@ let QuackResolver = class QuackResolver {
             };
         });
     }
+    quacksFromUser(userId, limit, lastIndex, { payload: { user: me }, blockLoader }) {
+        return __awaiter(this, void 0, void 0, function* () {
+            if (me) {
+                const blocks = yield blockLoader.load({
+                    userId: me.id,
+                    blockedByUserId: userId,
+                });
+                if (blocks && blocks.length > 0) {
+                    return {
+                        quacks: [],
+                        hasMore: false,
+                    };
+                }
+            }
+            const user = yield User_1.User.findOne(userId);
+            if (!user) {
+                throw Error("User couldn't be found");
+            }
+            if (user.amIDeactivated) {
+                return {
+                    quacks: [],
+                    hasMore: false,
+                };
+            }
+            const q = typeorm_1.getConnection()
+                .createQueryBuilder()
+                .select("q.*")
+                .from(Quack_1.Quack, "q")
+                .where(`q."quackedByUserId" = ${userId}`);
+            const { data: quacks, hasMore } = yield paginate_1.paginate({
+                queryBuilder: q,
+                index: "q.id",
+                limit,
+                lastIndex,
+            });
+            return {
+                quacks,
+                hasMore,
+            };
+        });
+    }
 };
 __decorate([
     type_graphql_1.FieldResolver(() => String, { nullable: true }),
@@ -356,6 +398,17 @@ __decorate([
     __metadata("design:paramtypes", [Number, Number, Object]),
     __metadata("design:returntype", Promise)
 ], QuackResolver.prototype, "quacksForMe", null);
+__decorate([
+    type_graphql_1.Query(() => PaginatedQuacks_1.PaginatedQuacks, { nullable: true }),
+    type_graphql_1.UseMiddleware(partialAuth_1.partialAuth),
+    __param(0, type_graphql_1.Arg("userId", () => type_graphql_1.Int)),
+    __param(1, type_graphql_1.Arg("limit", () => type_graphql_1.Int, { nullable: true, defaultValue: 20 })),
+    __param(2, type_graphql_1.Arg("lastIndex", () => type_graphql_1.Int, { nullable: true })),
+    __param(3, type_graphql_1.Ctx()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Number, Number, Number, Object]),
+    __metadata("design:returntype", Promise)
+], QuackResolver.prototype, "quacksFromUser", null);
 QuackResolver = __decorate([
     type_graphql_1.Resolver(Quack_1.Quack)
 ], QuackResolver);

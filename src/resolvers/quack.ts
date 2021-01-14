@@ -297,4 +297,61 @@ export class QuackResolver {
       hasMore,
     };
   }
+
+  @Query(() => PaginatedQuacks, { nullable: true })
+  @UseMiddleware(partialAuth)
+  async quacksFromUser(
+    @Arg("userId", () => Int) userId: number,
+    @Arg("limit", () => Int, { nullable: true, defaultValue: 20 })
+    limit: number,
+    @Arg("lastIndex", () => Int, { nullable: true })
+    lastIndex: number,
+    @Ctx()
+    { payload: { user: me }, blockLoader }: MyContext
+  ): Promise<PaginatedQuacks> {
+    if (me) {
+      const blocks = await blockLoader.load({
+        userId: me.id,
+        blockedByUserId: userId,
+      });
+
+      if (blocks && blocks.length > 0) {
+        return {
+          quacks: [],
+          hasMore: false,
+        };
+      }
+    }
+
+    const user = await User.findOne(userId);
+
+    if (!user) {
+      throw Error("User couldn't be found");
+    }
+
+    if (user.amIDeactivated) {
+      return {
+        quacks: [],
+        hasMore: false,
+      };
+    }
+
+    const q = getConnection()
+      .createQueryBuilder()
+      .select("q.*")
+      .from(Quack, "q")
+      .where(`q."quackedByUserId" = ${userId}`);
+
+    const { data: quacks, hasMore } = await paginate<Quack>({
+      queryBuilder: q,
+      index: "q.id",
+      limit,
+      lastIndex,
+    });
+
+    return {
+      quacks,
+      hasMore,
+    };
+  }
 }
