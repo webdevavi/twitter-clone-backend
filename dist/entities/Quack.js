@@ -112,11 +112,11 @@ __decorate([
     __metadata("design:type", Array)
 ], Quack.prototype, "_requacks", void 0);
 __decorate([
-    type_graphql_1.Field(),
+    type_graphql_1.Field(() => Boolean, { nullable: true }),
     __metadata("design:type", Boolean)
 ], Quack.prototype, "requackStatus", void 0);
 __decorate([
-    type_graphql_1.Field(),
+    type_graphql_1.Field(() => Boolean, { nullable: true }),
     __metadata("design:type", Boolean)
 ], Quack.prototype, "likeStatus", void 0);
 Quack = Quack_1 = __decorate([
