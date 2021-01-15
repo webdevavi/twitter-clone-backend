@@ -18,16 +18,20 @@ export const quackLoader = () =>
   });
 
 export const quackLoaderByInReplyToQuackId = () =>
-  new DataLoader<number, Quack>(async (inReplyToQuackIds) => {
+  new DataLoader<number, Quack[]>(async (inReplyToQuackIds) => {
     const quacks = await Quack.find({
       where: {
         inReplyToQuackId: In(inReplyToQuackIds as number[]),
         isVisible: true,
       },
     });
-    const inReplyToQuackIdToQuack: Record<number, Quack> = {};
+    const inReplyToQuackIdToQuack: Record<number, Quack[]> = {};
     quacks.forEach((u) => {
-      inReplyToQuackIdToQuack[u.inReplyToQuackId] = u;
+      inReplyToQuackIdToQuack[u.inReplyToQuackId] = inReplyToQuackIdToQuack[
+        u.inReplyToQuackId
+      ]
+        ? [...inReplyToQuackIdToQuack[u.inReplyToQuackId], u]
+        : [u];
     });
 
     return inReplyToQuackIds.map(

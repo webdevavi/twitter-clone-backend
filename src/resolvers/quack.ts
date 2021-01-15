@@ -103,13 +103,13 @@ export class QuackResolver {
     return likes ? likes.length : 0;
   }
 
-  @FieldResolver()
+  @FieldResolver(() => [Quack], { nullable: true })
   @UseMiddleware(partialAuth)
   async replies(
     @Root() quack: Quack,
     @Ctx()
     { quackLoaderByInReplyToQuackId, blockLoader, payload: { user } }: MyContext
-  ) {
+  ): Promise<Quack[] | null> {
     if (user) {
       const blocked = await blockLoader.load({
         userId: user.id,

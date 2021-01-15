@@ -38,7 +38,9 @@ const quackLoaderByInReplyToQuackId = () => new dataloader_1.default((inReplyToQ
     });
     const inReplyToQuackIdToQuack = {};
     quacks.forEach((u) => {
-        inReplyToQuackIdToQuack[u.inReplyToQuackId] = u;
+        inReplyToQuackIdToQuack[u.inReplyToQuackId] = inReplyToQuackIdToQuack[u.inReplyToQuackId]
+            ? [...inReplyToQuackIdToQuack[u.inReplyToQuackId], u]
+            : [u];
     });
     return inReplyToQuackIds.map((inReplyToQuackId) => inReplyToQuackIdToQuack[inReplyToQuackId]);
 }));

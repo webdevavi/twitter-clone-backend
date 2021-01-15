@@ -312,7 +312,7 @@ __decorate([
     __metadata("design:returntype", Promise)
 ], QuackResolver.prototype, "likes", null);
 __decorate([
-    type_graphql_1.FieldResolver(),
+    type_graphql_1.FieldResolver(() => [Quack_1.Quack], { nullable: true }),
     type_graphql_1.UseMiddleware(partialAuth_1.partialAuth),
     __param(0, type_graphql_1.Root()),
     __param(1, type_graphql_1.Ctx()),
