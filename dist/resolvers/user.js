@@ -374,10 +374,10 @@ let UserResolver = class UserResolver {
         return User_1.User.findOne(userId);
     }
     userByEmail(email) {
-        return User_1.User.findOne({ where: `email ~* '${email}'` });
+        return User_1.User.findOne({ where: { email: email.toLowerCase() } });
     }
     userByUsername(username) {
-        return User_1.User.findOne({ where: `username ~* '${username}'` });
+        return User_1.User.findOne({ where: { rawUsername: username.toLowerCase() } });
     }
 };
 __decorate([
