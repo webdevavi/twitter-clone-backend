@@ -45,18 +45,13 @@ __decorate([
     __metadata("design:type", String)
 ], News.prototype, "author", void 0);
 __decorate([
-    typeorm_1.Column({ nullable: true }),
-    type_graphql_1.Field({ nullable: true }),
+    typeorm_1.Column(),
+    type_graphql_1.Field(),
     __metadata("design:type", String)
 ], News.prototype, "thumbnailUrl", void 0);
 __decorate([
-    typeorm_1.Column({ nullable: true }),
-    type_graphql_1.Field({ nullable: true }),
-    __metadata("design:type", String)
-], News.prototype, "cover", void 0);
-__decorate([
-    typeorm_1.Column({ nullable: true }),
-    type_graphql_1.Field({ nullable: true }),
+    typeorm_1.Column(),
+    type_graphql_1.Field(),
     __metadata("design:type", String)
 ], News.prototype, "caption", void 0);
 __decorate([
@@ -65,8 +60,8 @@ __decorate([
     __metadata("design:type", String)
 ], News.prototype, "url", void 0);
 __decorate([
-    typeorm_1.Column({ nullable: true }),
-    type_graphql_1.Field({ nullable: true }),
+    typeorm_1.Column(),
+    type_graphql_1.Field(),
     __metadata("design:type", String)
 ], News.prototype, "shortUrl", void 0);
 News = __decorate([

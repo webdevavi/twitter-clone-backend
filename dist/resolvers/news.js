@@ -30,7 +30,7 @@ const type_graphql_1 = require("type-graphql");
 const constants_1 = require("../constants");
 const News_1 = require("../entities/News");
 let NewsResolver = class NewsResolver {
-    news(section, limit) {
+    news(section) {
         return __awaiter(this, void 0, void 0, function* () {
             if (section !== "business" &&
                 section !== "health" &&
@@ -40,15 +40,13 @@ let NewsResolver = class NewsResolver {
                 section !== "world") {
                 throw Error(`${section} is not a valid section type.`);
             }
-            const url = `${constants_1.NYTIMES_ENDPOINT}/${section}.json?api-key=${constants_1.NYTIMES_API_KEY}`;
+            const url = constants_1.NYTIMES_ENDPOINT + "/" + section + ".json?api-key=" + constants_1.NYTIMES_API_KEY;
             try {
                 const response = yield axios_1.default.get(url);
                 if (response.status === 200) {
                     yield News_1.News.delete({ section });
                     const newsList = yield Promise.all(response.data.results.map((result) => __awaiter(this, void 0, void 0, function* () {
-                        var _a, _b;
-                        const thumbnail = (_a = result.multimedia) === null || _a === void 0 ? void 0 : _a.find((media) => media.format === "Standard Thumbnail");
-                        const cover = (_b = result.multimedia) === null || _b === void 0 ? void 0 : _b.find((media) => media.format === "mediumThreeByTwo210");
+                        const thumbnail = result.multimedia.find((media) => media.format === "Standard Thumbnail");
                         const news = News_1.News.create({
                             publishedAt: new Date(result.published_date),
                             section,
@@ -56,7 +54,6 @@ let NewsResolver = class NewsResolver {
                             abstract: result.abstract,
                             author: result.byline,
                             thumbnailUrl: thumbnail === null || thumbnail === void 0 ? void 0 : thumbnail.url,
-                            cover: cover === null || cover === void 0 ? void 0 : cover.url,
                             caption: thumbnail === null || thumbnail === void 0 ? void 0 : thumbnail.caption,
                             url: result.url,
                             shortUrl: result.short_url,
@@ -64,7 +61,7 @@ let NewsResolver = class NewsResolver {
                         yield news.save();
                         return news;
                     })));
-                    return newsList.slice(0, limit !== null && limit !== void 0 ? limit : 40);
+                    return newsList;
                 }
                 else
                     return yield News_1.News.find({ section });
@@ -78,9 +75,8 @@ let NewsResolver = class NewsResolver {
 __decorate([
     type_graphql_1.Query(() => [News_1.News], { nullable: true }),
     __param(0, type_graphql_1.Arg("section")),
-    __param(1, type_graphql_1.Arg("limit", () => type_graphql_1.Int, { nullable: true, defaultValue: 40 })),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String, Object]),
+    __metadata("design:paramtypes", [String]),
     __metadata("design:returntype", Promise)
 ], NewsResolver.prototype, "news", null);
 NewsResolver = __decorate([

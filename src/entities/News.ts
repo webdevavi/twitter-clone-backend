@@ -29,23 +29,19 @@ export class News extends BaseEntity {
   @Field()
   author: string;
 
-  @Column({ nullable: true })
-  @Field({ nullable: true })
+  @Column()
+  @Field()
   thumbnailUrl: string;
 
-  @Column({ nullable: true })
-  @Field({ nullable: true })
-  cover: string;
-
-  @Column({ nullable: true })
-  @Field({ nullable: true })
+  @Column()
+  @Field()
   caption: string;
 
   @Column()
   @Field()
   url: string;
 
-  @Column({ nullable: true })
-  @Field({ nullable: true })
+  @Column()
+  @Field()
   shortUrl: string;
 }
