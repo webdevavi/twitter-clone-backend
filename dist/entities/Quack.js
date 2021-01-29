@@ -86,9 +86,6 @@ __decorate([
     __metadata("design:type", Quack)
 ], Quack.prototype, "inReplyToQuack", void 0);
 __decorate([
-    typeorm_1.OneToMany(() => Quack_1, (quack) => quack.inReplyToQuack, {
-        nullable: true,
-    }),
     type_graphql_1.Field(() => type_graphql_1.Int, { defaultValue: 0 }),
     __metadata("design:type", Number)
 ], Quack.prototype, "replies", void 0);

@@ -5,7 +5,6 @@ import {
   CreateDateColumn,
   Entity,
   ManyToOne,
-  OneToMany,
   PrimaryGeneratedColumn,
 } from "typeorm";
 import { Like } from "./Like";
@@ -63,9 +62,6 @@ export class Quack extends BaseEntity {
   @Field(() => Quack, { nullable: true })
   inReplyToQuack: Quack;
 
-  @OneToMany(() => Quack, (quack) => quack.inReplyToQuack, {
-    nullable: true,
-  })
   @Field(() => Int, { defaultValue: 0 })
   replies: number = 0;
 
