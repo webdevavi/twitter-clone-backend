@@ -103,24 +103,13 @@ export class QuackResolver {
     return likes ? likes.length : 0;
   }
 
-  @FieldResolver(() => [Quack], { nullable: true })
-  @UseMiddleware(partialAuth)
+  @FieldResolver()
   async replies(
     @Root() quack: Quack,
-    @Ctx()
-    { quackLoaderByInReplyToQuackId, blockLoader, payload: { user } }: MyContext
-  ): Promise<Quack[] | null> {
-    if (user) {
-      const blocked = await blockLoader.load({
-        userId: user.id,
-        blockedByUserId: quack.quackedByUserId,
-      });
-
-      if (blocked && blocked.length > 0) {
-        return null;
-      }
-    }
-    return quackLoaderByInReplyToQuackId.load(quack.id);
+    @Ctx() { quackLoaderByInReplyToQuackId }: MyContext
+  ): Promise<number> {
+    const replies = await quackLoaderByInReplyToQuackId.load(quack.id);
+    return replies ? replies.length : 0;
   }
 
   @FieldResolver()
@@ -341,6 +330,34 @@ export class QuackResolver {
       .select("q.*")
       .from(Quack, "q")
       .where(`q."quackedByUserId" = ${userId}`);
+
+    const { data: quacks, hasMore } = await paginate<Quack>({
+      queryBuilder: q,
+      index: "q.id",
+      limit,
+      lastIndex,
+    });
+
+    return {
+      quacks,
+      hasMore,
+    };
+  }
+
+  @Query(() => PaginatedQuacks, { nullable: true })
+  @UseMiddleware(partialAuth)
+  async repliesOfQuack(
+    @Arg("quackId", () => Int) quackId: number,
+    @Arg("limit", () => Int, { nullable: true, defaultValue: 20 })
+    limit: number,
+    @Arg("lastIndex", () => Int, { nullable: true })
+    lastIndex: number
+  ): Promise<PaginatedQuacks> {
+    const q = getConnection()
+      .createQueryBuilder()
+      .select("q.*")
+      .from(Quack, "q")
+      .where(`q."inReplyToQuackId" = ${quackId}`);
 
     const { data: quacks, hasMore } = await paginate<Quack>({
       queryBuilder: q,

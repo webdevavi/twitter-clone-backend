@@ -21,6 +21,7 @@ let Quack = Quack_1 = class Quack extends typeorm_1.BaseEntity {
     constructor() {
         super(...arguments);
         this.isVisible = true;
+        this.replies = 0;
         this.requacks = 0;
         this.likes = 0;
     }
@@ -88,8 +89,8 @@ __decorate([
     typeorm_1.OneToMany(() => Quack_1, (quack) => quack.inReplyToQuack, {
         nullable: true,
     }),
-    type_graphql_1.Field(() => [Quack_1], { nullable: true }),
-    __metadata("design:type", Array)
+    type_graphql_1.Field(() => type_graphql_1.Int, { defaultValue: 0 }),
+    __metadata("design:type", Number)
 ], Quack.prototype, "replies", void 0);
 __decorate([
     type_graphql_1.Field(() => type_graphql_1.Int, { defaultValue: 0 }),

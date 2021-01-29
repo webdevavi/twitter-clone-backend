@@ -66,8 +66,8 @@ export class Quack extends BaseEntity {
   @OneToMany(() => Quack, (quack) => quack.inReplyToQuack, {
     nullable: true,
   })
-  @Field(() => [Quack], { nullable: true })
-  replies: Quack[];
+  @Field(() => Int, { defaultValue: 0 })
+  replies: number = 0;
 
   @Field(() => Int, { defaultValue: 0 })
   requacks: number = 0;
