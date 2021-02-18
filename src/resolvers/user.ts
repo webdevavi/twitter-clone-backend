@@ -15,9 +15,11 @@ import { Quack } from "../entities/Quack";
 import { User } from "../entities/User";
 import { UserInput } from "../input/UserInput";
 import { partialAuth } from "../middleware/partialAuth";
+import { PaginatedUsers } from "../response/PaginatedUsers";
 import { UserResponse } from "../response/UserResponse";
 import { MyContext } from "../types";
 import { createAccessToken, createRefreshToken } from "../utils/createJWT";
+import { paginate } from "../utils/paginate";
 import { validEmail } from "../utils/regexp";
 import { ValidateUser } from "../validators/user";
 
@@ -259,5 +261,46 @@ export class UserResolver {
   @Query(() => User, { nullable: true })
   userByUsername(@Arg("username") username: string) {
     return User.findOne({ where: { rawUsername: username.toLowerCase() } });
+  }
+
+  @Query(() => PaginatedUsers, { nullable: true })
+  async dummyUsers(
+    @Arg("limit", () => Int, { nullable: true, defaultValue: 20 })
+    limit: number,
+    @Arg("lastIndex", () => Int, { nullable: true })
+    lastIndex: number
+  ) {
+    const u = User.createQueryBuilder("u")
+      .select("u.*")
+      .orderBy({ "u.id": "DESC" }).where(`
+        u."isVerified" is not true
+      `);
+
+    const { data: users, hasMore } = await paginate<User>({
+      queryBuilder: u,
+      limit,
+      index: "u.id",
+      lastIndex,
+    });
+
+    return {
+      users,
+      hasMore,
+    };
+  }
+
+  @Mutation(() => UserResponse)
+  async loginAsDummyUser(
+    @Arg("userId", () => Int) userId: number
+  ): Promise<UserResponse> {
+    const user = await User.findOne(userId);
+
+    if (!user) {
+      throw Error("The user is not a dummy user.");
+    }
+
+    const accessToken = createAccessToken(user);
+    const refreshToken = createRefreshToken(user);
+    return { user, accessToken, refreshToken };
   }
 }

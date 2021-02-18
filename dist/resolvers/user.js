@@ -31,8 +31,10 @@ const Quack_1 = require("../entities/Quack");
 const User_1 = require("../entities/User");
 const UserInput_1 = require("../input/UserInput");
 const partialAuth_1 = require("../middleware/partialAuth");
+const PaginatedUsers_1 = require("../response/PaginatedUsers");
 const UserResponse_1 = require("../response/UserResponse");
 const createJWT_1 = require("../utils/createJWT");
+const paginate_1 = require("../utils/paginate");
 const regexp_1 = require("../utils/regexp");
 const user_1 = require("../validators/user");
 let UserResolver = class UserResolver {
@@ -240,6 +242,39 @@ let UserResolver = class UserResolver {
     userByUsername(username) {
         return User_1.User.findOne({ where: { rawUsername: username.toLowerCase() } });
     }
+    dummyUsers(limit, lastIndex) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const u = User_1.User.createQueryBuilder("u")
+                .select("u.*")
+                .orderBy({ "u.id": "DESC" }).where(`
+        u."isVerified" is not true
+      `);
+            const { data: users, hasMore } = yield paginate_1.paginate({
+                queryBuilder: u,
+                limit,
+                index: "u.id",
+                lastIndex,
+            });
+            return {
+                users,
+                hasMore,
+            };
+        });
+    }
+    loginAsDummyUser(userId) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const user = yield User_1.User.findOne(userId);
+            if (!user) {
+                throw Error("The user does not exist.");
+            }
+            if (user.isVerified) {
+                throw Error("The user is not a dummy user.");
+            }
+            const accessToken = createJWT_1.createAccessToken(user);
+            const refreshToken = createJWT_1.createRefreshToken(user);
+            return { user, accessToken, refreshToken };
+        });
+    }
 };
 __decorate([
     type_graphql_1.FieldResolver(() => type_graphql_1.Int, { defaultValue: 0 }),
@@ -360,6 +395,21 @@ __decorate([
     __metadata("design:paramtypes", [String]),
     __metadata("design:returntype", void 0)
 ], UserResolver.prototype, "userByUsername", null);
+__decorate([
+    type_graphql_1.Query(() => PaginatedUsers_1.PaginatedUsers, { nullable: true }),
+    __param(0, type_graphql_1.Arg("limit", () => type_graphql_1.Int, { nullable: true, defaultValue: 20 })),
+    __param(1, type_graphql_1.Arg("lastIndex", () => type_graphql_1.Int, { nullable: true })),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Number, Number]),
+    __metadata("design:returntype", Promise)
+], UserResolver.prototype, "dummyUsers", null);
+__decorate([
+    type_graphql_1.Mutation(() => UserResponse_1.UserResponse),
+    __param(0, type_graphql_1.Arg("userId", () => type_graphql_1.Int)),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Number]),
+    __metadata("design:returntype", Promise)
+], UserResolver.prototype, "loginAsDummyUser", null);
 UserResolver = __decorate([
     type_graphql_1.Resolver(User_1.User)
 ], UserResolver);
