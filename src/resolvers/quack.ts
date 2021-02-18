@@ -268,10 +268,12 @@ export class QuackResolver {
 
     if (user) {
       const follows = await followLoaderByFollowerId.load(user.id);
-      const ids = follows.map((follow) => follow.userId);
-      ids.push(user.id);
+      if (follows && follows.length > 0) {
+        const ids = follows.map((follow) => follow.userId);
+        ids.push(user.id);
 
-      q.andWhere(`q."quackedByUserId" in (${ids.join(", ")})`);
+        q.andWhere(`q."quackedByUserId" in (${ids.join(", ")})`);
+      }
     }
 
     const { data: quacks, hasMore } = await paginate<Quack>({

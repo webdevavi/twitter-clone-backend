@@ -204,9 +204,11 @@ let QuackResolver = class QuackResolver {
                 .where(`q."isVisible" = true`);
             if (user) {
                 const follows = yield followLoaderByFollowerId.load(user.id);
-                const ids = follows.map((follow) => follow.userId);
-                ids.push(user.id);
-                q.andWhere(`q."quackedByUserId" in (${ids.join(", ")})`);
+                if (follows && follows.length > 0) {
+                    const ids = follows.map((follow) => follow.userId);
+                    ids.push(user.id);
+                    q.andWhere(`q."quackedByUserId" in (${ids.join(", ")})`);
+                }
             }
             const { data: quacks, hasMore } = yield paginate_1.paginate({
                 queryBuilder: q,
