@@ -20,17 +20,13 @@ const typeorm_1 = require("typeorm");
 const config_1 = require("./config");
 const constants_1 = require("./constants");
 const rest_1 = require("./rest");
-const ioredis_1 = __importDefault(require("ioredis"));
 const main = () => __awaiter(void 0, void 0, void 0, function* () {
     yield typeorm_1.createConnection(config_1.typeormConfig());
     const app = express_1.default();
     app.use(cors_1.default(config_1.corsConfig));
     app.use(express_1.default.json());
     app.use(rest_1.router);
-    const redis = new ioredis_1.default(constants_1.REDIS_URL, {
-        password: constants_1.REDIS_PASSWORD,
-    });
-    const apolloServer = new apollo_server_express_1.ApolloServer(yield config_1.apolloConfig({ redis }));
+    const apolloServer = new apollo_server_express_1.ApolloServer(yield config_1.apolloConfig());
     apolloServer.applyMiddleware({
         app,
         cors: false,

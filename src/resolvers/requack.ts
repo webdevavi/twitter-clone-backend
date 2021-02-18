@@ -13,14 +13,14 @@ import { Requack } from "../entities/Requack";
 import { partialAuth } from "../middleware/partialAuth";
 import { PaginatedQuacks } from "../response/PaginatedQuacks";
 import { PaginatedUsers } from "../response/PaginatedUsers";
-import { MyContext, UserRole } from "../types";
+import { MyContext } from "../types";
 import { likesOrRequacksByQuackId } from "../utils/likesOrRequacksByQuackId";
 import { likesOrRequacksByUserId } from "../utils/likesOrRequacksByUserId";
 
 @Resolver(Requack)
 export class RequackResolver {
   @Mutation(() => Boolean)
-  @Authorized<UserRole>(["ACTIVATED"])
+  @Authorized()
   async requack(
     @Arg("quackId", () => Int) quackId: number,
     @Ctx() { payload: { user } }: MyContext

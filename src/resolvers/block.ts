@@ -2,12 +2,12 @@ import { Arg, Authorized, Ctx, Int, Mutation, Resolver } from "type-graphql";
 import { getConnection } from "typeorm";
 import { Block } from "../entities/Block";
 import { Follow } from "../entities/Follow";
-import { MyContext, UserRole } from "../types";
+import { MyContext } from "../types";
 
 @Resolver(Block)
 export class BlockResolver {
   @Mutation(() => Boolean)
-  @Authorized<UserRole>(["ACTIVATED"])
+  @Authorized()
   async block(
     @Arg("userId", () => Int) userId: number,
     @Ctx() { payload: { user: me }, userLoader }: MyContext
@@ -20,7 +20,6 @@ export class BlockResolver {
     if (blocked) return true;
     const user = await userLoader.load(userId);
     if (!user) return false;
-    if (user.amIDeactivated) return false;
     await getConnection().transaction(async (em) => {
       em.insert(Block, { userId, blockedByUserId: myUserId });
       em.delete(Follow, { userId, followerId: myUserId });
@@ -30,7 +29,7 @@ export class BlockResolver {
   }
 
   @Mutation(() => Boolean)
-  @Authorized<UserRole>(["ACTIVATED"])
+  @Authorized()
   async unblock(
     @Arg("userId", () => Int) userId: number,
     @Ctx() { payload: { user: me }, userLoader }: MyContext
@@ -43,7 +42,6 @@ export class BlockResolver {
     if (!blocked) return true;
     const user = await userLoader.load(userId);
     if (!user) return false;
-    if (user.amIDeactivated) return false;
     await Block.delete({ userId, blockedByUserId: myUserId });
     return true;
   }

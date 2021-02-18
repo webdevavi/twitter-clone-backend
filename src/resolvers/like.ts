@@ -11,14 +11,14 @@ import { Like } from "../entities/Like";
 import { Quack } from "../entities/Quack";
 import { PaginatedQuacks } from "../response/PaginatedQuacks";
 import { PaginatedUsers } from "../response/PaginatedUsers";
-import { MyContext, UserRole } from "../types";
+import { MyContext } from "../types";
 import { likesOrRequacksByQuackId } from "../utils/likesOrRequacksByQuackId";
 import { likesOrRequacksByUserId } from "../utils/likesOrRequacksByUserId";
 
 @Resolver(Like)
 export class LikeResolver {
   @Mutation(() => Boolean)
-  @Authorized<UserRole>(["ACTIVATED"])
+  @Authorized()
   async like(
     @Arg("quackId", () => Int) quackId: number,
     @Ctx() { payload: { user } }: MyContext

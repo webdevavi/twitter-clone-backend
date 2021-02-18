@@ -15,13 +15,13 @@ import { Follow } from "../entities/Follow";
 import { User } from "../entities/User";
 import { partialAuth } from "../middleware/partialAuth";
 import { PaginatedUsers } from "../response/PaginatedUsers";
-import { MyContext, UserRole } from "../types";
+import { MyContext } from "../types";
 import { paginate } from "../utils/paginate";
 
 @Resolver(Follow)
 export class FollowResolver {
   @Mutation(() => Boolean)
-  @Authorized<UserRole>(["ACTIVATED"])
+  @Authorized()
   async follow(
     @Arg("userId", () => Int) userId: number,
     @Ctx() { payload: { user: me }, userLoader }: MyContext
@@ -42,13 +42,12 @@ export class FollowResolver {
     if (follow) return true;
     const user = await userLoader.load(userId);
     if (!user) return false;
-    if (user.amIDeactivated) return false;
     await Follow.insert({ userId, followerId: myUserId });
     return true;
   }
 
   @Mutation(() => Boolean)
-  @Authorized<UserRole>(["ACTIVATED"])
+  @Authorized()
   async unfollow(
     @Arg("userId", () => Int) userId: number,
     @Ctx() { payload: { user: me }, userLoader }: MyContext
@@ -59,7 +58,6 @@ export class FollowResolver {
     if (!follow) return true;
     const user = await userLoader.load(userId);
     if (!user) return false;
-    if (user.amIDeactivated) return false;
     await Follow.delete({ userId, followerId });
     return true;
   }

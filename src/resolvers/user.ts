@@ -11,23 +11,14 @@ import {
   Root,
   UseMiddleware,
 } from "type-graphql";
-import { v4 } from "uuid";
-import {
-  FORGOT_PASSWORD_PREFIX,
-  ORIGIN,
-  VERIFY_EMAIL_PREFIX,
-} from "../constants";
-import { forgotPasswordTemplate } from "../emailTemplates/forgotPassword";
-import { verifyEmailTemplate } from "../emailTemplates/verifyEmail";
 import { Quack } from "../entities/Quack";
 import { User } from "../entities/User";
 import { UserInput } from "../input/UserInput";
 import { partialAuth } from "../middleware/partialAuth";
 import { UserResponse } from "../response/UserResponse";
-import { MyContext, UserRole } from "../types";
+import { MyContext } from "../types";
 import { createAccessToken, createRefreshToken } from "../utils/createJWT";
 import { validEmail } from "../utils/regexp";
-import { sendEmail } from "../utils/sendEmail";
 import { ValidateUser } from "../validators/user";
 
 @Resolver(User)
@@ -50,7 +41,6 @@ export class UserResolver {
 
   @FieldResolver(() => [Quack], { defaultValue: 0 })
   async quacks(@Root() user: User, @Ctx() { quackLoaderByUserId }: MyContext) {
-    if (user.amIDeactivated) return null;
     return (await quackLoaderByUserId.load(user.id))?.length || 0;
   }
 
@@ -123,10 +113,7 @@ export class UserResolver {
   }
 
   @Mutation(() => UserResponse)
-  async signup(
-    @Arg("input") input: UserInput,
-    @Ctx() { cache }: MyContext
-  ): Promise<UserResponse> {
+  async signup(@Arg("input") input: UserInput): Promise<UserResponse> {
     const errors = new ValidateUser(input).validate();
 
     if (errors.length !== 0) {
@@ -147,18 +134,6 @@ export class UserResolver {
 
     try {
       await user.save();
-      const token = v4();
-      const key = VERIFY_EMAIL_PREFIX + token;
-      await cache.set(
-        key,
-        user.id,
-        "ex",
-        1000 * 60 * 60 * 24 * 3 // 3 days
-      );
-      const template = verifyEmailTemplate(
-        ORIGIN + "/verifyEmail?token=" + token
-      );
-      await sendEmail(user.email, template, "Verify your email - Quacker");
       const accessToken = createAccessToken(user);
       const refreshToken = createRefreshToken(user);
       return { user, accessToken, refreshToken };
@@ -228,161 +203,8 @@ export class UserResolver {
     }
   }
 
-  @Mutation(() => Boolean)
-  @Authorized<UserRole>(["UNVERIFIED"])
-  async sendEmailVerificationLink(
-    @Ctx() { payload: { user }, cache }: MyContext
-  ) {
-    const token = v4();
-    const key = VERIFY_EMAIL_PREFIX + token;
-
-    await cache.set(
-      key,
-      user!.id,
-      "ex",
-      1000 * 60 * 60 * 24 * 3 // 3 days
-    );
-
-    const template = verifyEmailTemplate(
-      ORIGIN + "/verify-email?token=" + token
-    );
-    await sendEmail(user?.email!, template, "Verify your email - Quacker");
-    return true;
-  }
-
   @Mutation(() => UserResponse)
-  async verifyEmail(
-    @Arg("token") token: string,
-    @Ctx() { cache }: MyContext
-  ): Promise<UserResponse> {
-    if (!token) {
-      return {
-        errors: [
-          {
-            field: "token",
-            message: "The token is required.",
-          },
-        ],
-      };
-    }
-
-    const key = VERIFY_EMAIL_PREFIX + token;
-    const userId = await cache.get(key);
-
-    if (!userId) {
-      return {
-        errors: [
-          {
-            field: "token",
-            message: "The token is expired.",
-          },
-        ],
-      };
-    }
-
-    const user = await User.findOne(userId);
-
-    if (!user) {
-      return {
-        errors: [
-          {
-            field: "token",
-            message: "User no longer exists.",
-          },
-        ],
-      };
-    }
-
-    if (!user.emailVerified) {
-      user.emailVerified = true;
-      await user.save();
-    }
-    await cache.del(VERIFY_EMAIL_PREFIX + token);
-    return { user };
-  }
-
-  @Mutation(() => Boolean)
-  async forgotPassword(
-    @Arg("email") email: string,
-    @Ctx() { cache }: MyContext
-  ): Promise<Boolean> {
-    const user = await User.findOne({ where: { email: email.toLowerCase() } });
-    if (!user) {
-      return true;
-    }
-
-    const token = v4();
-    const key = FORGOT_PASSWORD_PREFIX + token;
-
-    await cache.set(
-      key,
-      user!.id,
-      "ex",
-      1000 * 60 * 60 * 24 // 24 hours
-    );
-
-    const template = forgotPasswordTemplate(
-      ORIGIN + "/reset-password?token=" + token
-    );
-
-    await sendEmail(user.email, template, "Reset your password - Quacker");
-    return true;
-  }
-
-  @Mutation(() => UserResponse)
-  async changePasswordWithToken(
-    @Arg("token") token: string,
-    @Arg("newPassword") newPassword: string,
-    @Ctx() { cache }: MyContext
-  ): Promise<UserResponse> {
-    const errors = new ValidateUser({ newPassword }).validate();
-
-    if (errors.length !== 0) {
-      return { errors };
-    }
-
-    const key = FORGOT_PASSWORD_PREFIX + token;
-
-    const userIdString = await cache.get(key);
-
-    if (!userIdString) {
-      return {
-        errors: [
-          {
-            field: "token",
-            message: "Token expired.",
-          },
-        ],
-      };
-    }
-
-    const userId = parseInt(userIdString);
-
-    const user = await User.findOne(userId);
-
-    if (!user) {
-      return {
-        errors: [
-          {
-            field: "token",
-            message: "User no longer exists.",
-          },
-        ],
-      };
-    }
-
-    const hashedPassword = await argon.hash(newPassword);
-
-    user.password = hashedPassword;
-    await User.update({ id: userId }, { password: hashedPassword });
-
-    await cache.del(key);
-
-    return { user };
-  }
-
-  @Mutation(() => UserResponse)
-  @Authorized<UserRole>(["ACTIVATED"])
+  @Authorized()
   async changePasswordWithOldPassword(
     @Arg("password") password: string,
     @Arg("newPassword") newPassword: string,
@@ -411,36 +233,6 @@ export class UserResolver {
         ],
       };
     }
-  }
-
-  @Mutation(() => UserResponse, { nullable: true })
-  @Authorized<UserRole>(["ACTIVATED"])
-  async deactivate(
-    @Arg("password") password: string,
-    @Ctx() { payload: { user } }: MyContext
-  ): Promise<UserResponse> {
-    if (await argon.verify(user!.password, password)) {
-      user!.amIDeactivated = true;
-      await user!.save();
-      await Quack.update({ quackedByUserId: user?.id }, { isVisible: false });
-      return { user };
-    } else {
-      return {
-        errors: [{ field: "password", message: "The password is incorrect." }],
-      };
-    }
-  }
-
-  @Mutation(() => UserResponse, { nullable: true })
-  @Authorized<UserRole>(["DEACTIVATED"])
-  async activate(
-    @Ctx() { payload: { user } }: MyContext
-  ): Promise<UserResponse> {
-    user!.amIDeactivated = false;
-    await user!.save();
-    await Quack.update({ quackedByUserId: user?.id }, { isVisible: true });
-
-    return { user };
   }
 
   @Mutation(() => Boolean)

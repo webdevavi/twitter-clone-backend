@@ -238,12 +238,6 @@ let QuackResolver = class QuackResolver {
             if (!user) {
                 throw Error("User couldn't be found");
             }
-            if (user.amIDeactivated) {
-                return {
-                    quacks: [],
-                    hasMore: false,
-                };
-            }
             const q = typeorm_1.getConnection()
                 .createQueryBuilder()
                 .select("q.*")
@@ -373,7 +367,7 @@ __decorate([
 ], QuackResolver.prototype, "likeStatus", null);
 __decorate([
     type_graphql_1.Mutation(() => QuackResponse_1.QuackResponse),
-    type_graphql_1.Authorized(["ACTIVATED"]),
+    type_graphql_1.Authorized(),
     __param(0, type_graphql_1.Arg("input")),
     __param(1, type_graphql_1.Ctx()),
     __metadata("design:type", Function),
@@ -382,7 +376,7 @@ __decorate([
 ], QuackResolver.prototype, "quack", null);
 __decorate([
     type_graphql_1.Mutation(() => Boolean),
-    type_graphql_1.Authorized(["ACTIVATED"]),
+    type_graphql_1.Authorized(),
     __param(0, type_graphql_1.Arg("quackId", () => type_graphql_1.Int)),
     __param(1, type_graphql_1.Ctx()),
     __metadata("design:type", Function),

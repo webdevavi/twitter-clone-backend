@@ -40,8 +40,6 @@ let BlockResolver = class BlockResolver {
             const user = yield userLoader.load(userId);
             if (!user)
                 return false;
-            if (user.amIDeactivated)
-                return false;
             yield typeorm_1.getConnection().transaction((em) => __awaiter(this, void 0, void 0, function* () {
                 em.insert(Block_1.Block, { userId, blockedByUserId: myUserId });
                 em.delete(Follow_1.Follow, { userId, followerId: myUserId });
@@ -63,8 +61,6 @@ let BlockResolver = class BlockResolver {
             const user = yield userLoader.load(userId);
             if (!user)
                 return false;
-            if (user.amIDeactivated)
-                return false;
             yield Block_1.Block.delete({ userId, blockedByUserId: myUserId });
             return true;
         });
@@ -72,7 +68,7 @@ let BlockResolver = class BlockResolver {
 };
 __decorate([
     type_graphql_1.Mutation(() => Boolean),
-    type_graphql_1.Authorized(["ACTIVATED"]),
+    type_graphql_1.Authorized(),
     __param(0, type_graphql_1.Arg("userId", () => type_graphql_1.Int)),
     __param(1, type_graphql_1.Ctx()),
     __metadata("design:type", Function),
@@ -81,7 +77,7 @@ __decorate([
 ], BlockResolver.prototype, "block", null);
 __decorate([
     type_graphql_1.Mutation(() => Boolean),
-    type_graphql_1.Authorized(["ACTIVATED"]),
+    type_graphql_1.Authorized(),
     __param(0, type_graphql_1.Arg("userId", () => type_graphql_1.Int)),
     __param(1, type_graphql_1.Ctx()),
     __metadata("design:type", Function),

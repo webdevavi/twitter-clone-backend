@@ -1,5 +1,4 @@
 import { ApolloServerExpressConfig } from "apollo-server-express";
-import { Redis } from "ioredis";
 import { buildSchema } from "type-graphql";
 import { BlockResolver } from "../resolvers/block";
 import { FollowResolver } from "../resolvers/follow";
@@ -38,13 +37,7 @@ import {
 } from "../utils/requackLoader";
 import { userLoader, userLoaderByUsername } from "../utils/userLoader";
 
-interface ApolloConfigOptions {
-  redis: Redis;
-}
-
-export const apolloConfig = async ({
-  redis,
-}: ApolloConfigOptions): Promise<ApolloServerExpressConfig> => ({
+export const apolloConfig = async (): Promise<ApolloServerExpressConfig> => ({
   schema: await buildSchema({
     resolvers: [
       UserResolver,
@@ -63,7 +56,6 @@ export const apolloConfig = async ({
   context: ({ req, res }): MyContext => ({
     req,
     res,
-    cache: redis,
     userLoader: userLoader(),
     userLoaderByUsername: userLoaderByUsername(),
     quackLoader: quackLoader(),

@@ -27,10 +27,6 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.UserResolver = void 0;
 const argon2_1 = __importDefault(require("argon2"));
 const type_graphql_1 = require("type-graphql");
-const uuid_1 = require("uuid");
-const constants_1 = require("../constants");
-const forgotPassword_1 = require("../emailTemplates/forgotPassword");
-const verifyEmail_1 = require("../emailTemplates/verifyEmail");
 const Quack_1 = require("../entities/Quack");
 const User_1 = require("../entities/User");
 const UserInput_1 = require("../input/UserInput");
@@ -38,7 +34,6 @@ const partialAuth_1 = require("../middleware/partialAuth");
 const UserResponse_1 = require("../response/UserResponse");
 const createJWT_1 = require("../utils/createJWT");
 const regexp_1 = require("../utils/regexp");
-const sendEmail_1 = require("../utils/sendEmail");
 const user_1 = require("../validators/user");
 let UserResolver = class UserResolver {
     followers(user, { followLoaderByUserId }) {
@@ -56,8 +51,6 @@ let UserResolver = class UserResolver {
     quacks(user, { quackLoaderByUserId }) {
         var _a;
         return __awaiter(this, void 0, void 0, function* () {
-            if (user.amIDeactivated)
-                return null;
             return ((_a = (yield quackLoaderByUserId.load(user.id))) === null || _a === void 0 ? void 0 : _a.length) || 0;
         });
     }
@@ -125,7 +118,7 @@ let UserResolver = class UserResolver {
             return true;
         });
     }
-    signup(input, { cache }) {
+    signup(input) {
         return __awaiter(this, void 0, void 0, function* () {
             const errors = new user_1.ValidateUser(input).validate();
             if (errors.length !== 0) {
@@ -142,11 +135,6 @@ let UserResolver = class UserResolver {
             });
             try {
                 yield user.save();
-                const token = uuid_1.v4();
-                const key = constants_1.VERIFY_EMAIL_PREFIX + token;
-                yield cache.set(key, user.id, "ex", 1000 * 60 * 60 * 24 * 3);
-                const template = verifyEmail_1.verifyEmailTemplate(constants_1.ORIGIN + "/verifyEmail?token=" + token);
-                yield sendEmail_1.sendEmail(user.email, template, "Verify your email - Quacker");
                 const accessToken = createJWT_1.createAccessToken(user);
                 const refreshToken = createJWT_1.createRefreshToken(user);
                 return { user, accessToken, refreshToken };
@@ -213,110 +201,6 @@ let UserResolver = class UserResolver {
             }
         });
     }
-    sendEmailVerificationLink({ payload: { user }, cache }) {
-        return __awaiter(this, void 0, void 0, function* () {
-            const token = uuid_1.v4();
-            const key = constants_1.VERIFY_EMAIL_PREFIX + token;
-            yield cache.set(key, user.id, "ex", 1000 * 60 * 60 * 24 * 3);
-            const template = verifyEmail_1.verifyEmailTemplate(constants_1.ORIGIN + "/verify-email?token=" + token);
-            yield sendEmail_1.sendEmail(user === null || user === void 0 ? void 0 : user.email, template, "Verify your email - Quacker");
-            return true;
-        });
-    }
-    verifyEmail(token, { cache }) {
-        return __awaiter(this, void 0, void 0, function* () {
-            if (!token) {
-                return {
-                    errors: [
-                        {
-                            field: "token",
-                            message: "The token is required.",
-                        },
-                    ],
-                };
-            }
-            const key = constants_1.VERIFY_EMAIL_PREFIX + token;
-            const userId = yield cache.get(key);
-            if (!userId) {
-                return {
-                    errors: [
-                        {
-                            field: "token",
-                            message: "The token is expired.",
-                        },
-                    ],
-                };
-            }
-            const user = yield User_1.User.findOne(userId);
-            if (!user) {
-                return {
-                    errors: [
-                        {
-                            field: "token",
-                            message: "User no longer exists.",
-                        },
-                    ],
-                };
-            }
-            if (!user.emailVerified) {
-                user.emailVerified = true;
-                yield user.save();
-            }
-            yield cache.del(constants_1.VERIFY_EMAIL_PREFIX + token);
-            return { user };
-        });
-    }
-    forgotPassword(email, { cache }) {
-        return __awaiter(this, void 0, void 0, function* () {
-            const user = yield User_1.User.findOne({ where: { email: email.toLowerCase() } });
-            if (!user) {
-                return true;
-            }
-            const token = uuid_1.v4();
-            const key = constants_1.FORGOT_PASSWORD_PREFIX + token;
-            yield cache.set(key, user.id, "ex", 1000 * 60 * 60 * 24);
-            const template = forgotPassword_1.forgotPasswordTemplate(constants_1.ORIGIN + "/reset-password?token=" + token);
-            yield sendEmail_1.sendEmail(user.email, template, "Reset your password - Quacker");
-            return true;
-        });
-    }
-    changePasswordWithToken(token, newPassword, { cache }) {
-        return __awaiter(this, void 0, void 0, function* () {
-            const errors = new user_1.ValidateUser({ newPassword }).validate();
-            if (errors.length !== 0) {
-                return { errors };
-            }
-            const key = constants_1.FORGOT_PASSWORD_PREFIX + token;
-            const userIdString = yield cache.get(key);
-            if (!userIdString) {
-                return {
-                    errors: [
-                        {
-                            field: "token",
-                            message: "Token expired.",
-                        },
-                    ],
-                };
-            }
-            const userId = parseInt(userIdString);
-            const user = yield User_1.User.findOne(userId);
-            if (!user) {
-                return {
-                    errors: [
-                        {
-                            field: "token",
-                            message: "User no longer exists.",
-                        },
-                    ],
-                };
-            }
-            const hashedPassword = yield argon2_1.default.hash(newPassword);
-            user.password = hashedPassword;
-            yield User_1.User.update({ id: userId }, { password: hashedPassword });
-            yield cache.del(key);
-            return { user };
-        });
-    }
     changePasswordWithOldPassword(password, newPassword, { payload: { user } }) {
         return __awaiter(this, void 0, void 0, function* () {
             const errors = new user_1.ValidateUser({ password, newPassword }).validate();
@@ -339,29 +223,6 @@ let UserResolver = class UserResolver {
                     ],
                 };
             }
-        });
-    }
-    deactivate(password, { payload: { user } }) {
-        return __awaiter(this, void 0, void 0, function* () {
-            if (yield argon2_1.default.verify(user.password, password)) {
-                user.amIDeactivated = true;
-                yield user.save();
-                yield Quack_1.Quack.update({ quackedByUserId: user === null || user === void 0 ? void 0 : user.id }, { isVisible: false });
-                return { user };
-            }
-            else {
-                return {
-                    errors: [{ field: "password", message: "The password is incorrect." }],
-                };
-            }
-        });
-    }
-    activate({ payload: { user } }) {
-        return __awaiter(this, void 0, void 0, function* () {
-            user.amIDeactivated = false;
-            yield user.save();
-            yield Quack_1.Quack.update({ quackedByUserId: user === null || user === void 0 ? void 0 : user.id }, { isVisible: true });
-            return { user };
         });
     }
     logout() {
@@ -442,9 +303,8 @@ __decorate([
 __decorate([
     type_graphql_1.Mutation(() => UserResponse_1.UserResponse),
     __param(0, type_graphql_1.Arg("input")),
-    __param(1, type_graphql_1.Ctx()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [UserInput_1.UserInput, Object]),
+    __metadata("design:paramtypes", [UserInput_1.UserInput]),
     __metadata("design:returntype", Promise)
 ], UserResolver.prototype, "signup", null);
 __decorate([
@@ -456,41 +316,8 @@ __decorate([
     __metadata("design:returntype", Promise)
 ], UserResolver.prototype, "login", null);
 __decorate([
-    type_graphql_1.Mutation(() => Boolean),
-    type_graphql_1.Authorized(["UNVERIFIED"]),
-    __param(0, type_graphql_1.Ctx()),
-    __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Object]),
-    __metadata("design:returntype", Promise)
-], UserResolver.prototype, "sendEmailVerificationLink", null);
-__decorate([
     type_graphql_1.Mutation(() => UserResponse_1.UserResponse),
-    __param(0, type_graphql_1.Arg("token")),
-    __param(1, type_graphql_1.Ctx()),
-    __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String, Object]),
-    __metadata("design:returntype", Promise)
-], UserResolver.prototype, "verifyEmail", null);
-__decorate([
-    type_graphql_1.Mutation(() => Boolean),
-    __param(0, type_graphql_1.Arg("email")),
-    __param(1, type_graphql_1.Ctx()),
-    __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String, Object]),
-    __metadata("design:returntype", Promise)
-], UserResolver.prototype, "forgotPassword", null);
-__decorate([
-    type_graphql_1.Mutation(() => UserResponse_1.UserResponse),
-    __param(0, type_graphql_1.Arg("token")),
-    __param(1, type_graphql_1.Arg("newPassword")),
-    __param(2, type_graphql_1.Ctx()),
-    __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String, String, Object]),
-    __metadata("design:returntype", Promise)
-], UserResolver.prototype, "changePasswordWithToken", null);
-__decorate([
-    type_graphql_1.Mutation(() => UserResponse_1.UserResponse),
-    type_graphql_1.Authorized(["ACTIVATED"]),
+    type_graphql_1.Authorized(),
     __param(0, type_graphql_1.Arg("password")),
     __param(1, type_graphql_1.Arg("newPassword")),
     __param(2, type_graphql_1.Ctx()),
@@ -498,23 +325,6 @@ __decorate([
     __metadata("design:paramtypes", [String, String, Object]),
     __metadata("design:returntype", Promise)
 ], UserResolver.prototype, "changePasswordWithOldPassword", null);
-__decorate([
-    type_graphql_1.Mutation(() => UserResponse_1.UserResponse, { nullable: true }),
-    type_graphql_1.Authorized(["ACTIVATED"]),
-    __param(0, type_graphql_1.Arg("password")),
-    __param(1, type_graphql_1.Ctx()),
-    __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String, Object]),
-    __metadata("design:returntype", Promise)
-], UserResolver.prototype, "deactivate", null);
-__decorate([
-    type_graphql_1.Mutation(() => UserResponse_1.UserResponse, { nullable: true }),
-    type_graphql_1.Authorized(["DEACTIVATED"]),
-    __param(0, type_graphql_1.Ctx()),
-    __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Object]),
-    __metadata("design:returntype", Promise)
-], UserResolver.prototype, "activate", null);
 __decorate([
     type_graphql_1.Mutation(() => Boolean),
     __metadata("design:type", Function),

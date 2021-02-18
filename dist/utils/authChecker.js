@@ -12,8 +12,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.authChecker = void 0;
 const jsonwebtoken_1 = require("jsonwebtoken");
 const constants_1 = require("../constants");
-const errorMessages_1 = require("./errorMessages");
-const authChecker = ({ context }, roles) => __awaiter(void 0, void 0, void 0, function* () {
+const authChecker = ({ context }) => __awaiter(void 0, void 0, void 0, function* () {
     var _a;
     const accessToken = (_a = context.req.headers.authorization) === null || _a === void 0 ? void 0 : _a.split(" ")[1];
     if (!accessToken)
@@ -27,48 +26,9 @@ const authChecker = ({ context }, roles) => __awaiter(void 0, void 0, void 0, fu
         if (!user)
             return false;
         context.payload.user = user;
-        roles.forEach((role) => {
-            switch (role) {
-                case "ACTIVATED":
-                    {
-                        if (user.amIDeactivated)
-                            throw Error(errorMessages_1.accountDeactivated);
-                    }
-                    break;
-                case "DEACTIVATED":
-                    {
-                        if (!user.amIDeactivated) {
-                            throw Error(errorMessages_1.accountNotDeactivated);
-                        }
-                    }
-                    break;
-                case "VERIFIED":
-                    {
-                        if (!user.emailVerified) {
-                            throw Error(errorMessages_1.accountNotVerified);
-                        }
-                    }
-                    break;
-                case "UNVERIFIED":
-                    {
-                        if (user.emailVerified) {
-                            throw Error(errorMessages_1.accountAlreadyVerified);
-                        }
-                    }
-                    break;
-                default:
-                    break;
-            }
-        });
         return true;
     }
     catch (e) {
-        if (e.message === errorMessages_1.accountDeactivated ||
-            e.message === errorMessages_1.accountNotDeactivated ||
-            e.message === errorMessages_1.accountNotVerified ||
-            e.message === errorMessages_1.accountAlreadyVerified) {
-            throw e;
-        }
         return false;
     }
 });

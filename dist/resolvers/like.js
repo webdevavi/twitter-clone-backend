@@ -82,7 +82,7 @@ let LikeResolver = class LikeResolver {
 };
 __decorate([
     type_graphql_1.Mutation(() => Boolean),
-    type_graphql_1.Authorized(["ACTIVATED"]),
+    type_graphql_1.Authorized(),
     __param(0, type_graphql_1.Arg("quackId", () => type_graphql_1.Int)),
     __param(1, type_graphql_1.Ctx()),
     __metadata("design:type", Function),

@@ -18,7 +18,7 @@ import { QuackInput } from "../input/QuackInput";
 import { partialAuth } from "../middleware/partialAuth";
 import { PaginatedQuacks } from "../response/PaginatedQuacks";
 import { QuackResponse } from "../response/QuackResponse";
-import { MyContext, UserRole } from "../types";
+import { MyContext } from "../types";
 import { getHashtags } from "../utils/getHashtags";
 import { getMentions } from "../utils/getMentions";
 import { paginate } from "../utils/paginate";
@@ -174,7 +174,7 @@ export class QuackResolver {
   }
 
   @Mutation(() => QuackResponse)
-  @Authorized<UserRole>(["ACTIVATED"])
+  @Authorized()
   async quack(
     @Arg("input") { text, inReplyToQuackId }: QuackInput,
     @Ctx() { payload: { user } }: MyContext
@@ -212,7 +212,7 @@ export class QuackResolver {
   }
 
   @Mutation(() => Boolean)
-  @Authorized<UserRole>(["ACTIVATED"])
+  @Authorized()
   async deleteQuack(
     @Arg("quackId", () => Int) quackId: number,
     @Ctx() { payload: { user } }: MyContext
@@ -316,13 +316,6 @@ export class QuackResolver {
 
     if (!user) {
       throw Error("User couldn't be found");
-    }
-
-    if (user.amIDeactivated) {
-      return {
-        quacks: [],
-        hasMore: false,
-      };
     }
 
     const q = getConnection()

@@ -54,8 +54,6 @@ let FollowResolver = class FollowResolver {
             const user = yield userLoader.load(userId);
             if (!user)
                 return false;
-            if (user.amIDeactivated)
-                return false;
             yield Follow_1.Follow.insert({ userId, followerId: myUserId });
             return true;
         });
@@ -70,8 +68,6 @@ let FollowResolver = class FollowResolver {
                 return true;
             const user = yield userLoader.load(userId);
             if (!user)
-                return false;
-            if (user.amIDeactivated)
                 return false;
             yield Follow_1.Follow.delete({ userId, followerId });
             return true;
@@ -106,7 +102,7 @@ let FollowResolver = class FollowResolver {
 };
 __decorate([
     type_graphql_1.Mutation(() => Boolean),
-    type_graphql_1.Authorized(["ACTIVATED"]),
+    type_graphql_1.Authorized(),
     __param(0, type_graphql_1.Arg("userId", () => type_graphql_1.Int)),
     __param(1, type_graphql_1.Ctx()),
     __metadata("design:type", Function),
@@ -115,7 +111,7 @@ __decorate([
 ], FollowResolver.prototype, "follow", null);
 __decorate([
     type_graphql_1.Mutation(() => Boolean),
-    type_graphql_1.Authorized(["ACTIVATED"]),
+    type_graphql_1.Authorized(),
     __param(0, type_graphql_1.Arg("userId", () => type_graphql_1.Int)),
     __param(1, type_graphql_1.Ctx()),
     __metadata("design:type", Function),

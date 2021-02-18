@@ -1,5 +1,4 @@
 import { Request, Response } from "express";
-import { Redis } from "ioredis";
 import { User } from "./entities/User";
 import {
   blockLoader,
@@ -31,7 +30,6 @@ import { userLoader, userLoaderByUsername } from "./utils/userLoader";
 export type MyContext = {
   req: Request;
   res: Response;
-  cache: Redis;
   userLoader: ReturnType<typeof userLoader>;
   userLoaderByUsername: ReturnType<typeof userLoaderByUsername>;
   quackLoader: ReturnType<typeof quackLoader>;
@@ -61,8 +59,6 @@ export type ContextPayload = {
 export type JWTPayload = {
   userId: number;
 };
-
-export type UserRole = "ACTIVATED" | "DEACTIVATED" | "VERIFIED" | "UNVERIFIED";
 
 export type NewsSection =
   | "world"
