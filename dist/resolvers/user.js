@@ -134,6 +134,7 @@ let UserResolver = class UserResolver {
                 username,
                 email: email.toLowerCase(),
                 password: hashedPassword,
+                isVerified: true,
             });
             try {
                 yield user.save();
@@ -265,9 +266,6 @@ let UserResolver = class UserResolver {
         return __awaiter(this, void 0, void 0, function* () {
             const user = yield User_1.User.findOne(userId);
             if (!user) {
-                throw Error("The user does not exist.");
-            }
-            if (user.isVerified) {
                 throw Error("The user is not a dummy user.");
             }
             const accessToken = createJWT_1.createAccessToken(user);

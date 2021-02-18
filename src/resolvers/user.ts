@@ -132,6 +132,7 @@ export class UserResolver {
       username,
       email: email.toLowerCase(),
       password: hashedPassword,
+      isVerified: true,
     });
 
     try {
