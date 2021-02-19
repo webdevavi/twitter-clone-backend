@@ -164,7 +164,6 @@ let SearchResolver = class SearchResolver {
                     .createQueryBuilder()
                     .select("u.*")
                     .from(User_1.User, "u")
-                    .andWhere(`u."amIDeactivated" = false`)
                     .take(realLimitPlusOne)
                     .orderBy({ "u.id": "DESC" });
                 if (lastIndex) {

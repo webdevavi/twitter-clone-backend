@@ -212,7 +212,6 @@ export class SearchResolver {
         .createQueryBuilder()
         .select("u.*")
         .from(User, "u")
-        .andWhere(`u."amIDeactivated" = false`)
         .take(realLimitPlusOne)
         .orderBy({ "u.id": "DESC" });
 
