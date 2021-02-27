@@ -22,7 +22,7 @@ export const userLoaderByUsername = () =>
     });
     const usernameToUser: Record<string, User> = {};
     users.forEach((u) => {
-      usernameToUser[u.username] = u;
+      usernameToUser[u.username.toLowerCase()] = u;
     });
 
     return usernames.map((username) => usernameToUser[username]);

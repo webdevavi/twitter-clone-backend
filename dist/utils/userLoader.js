@@ -33,7 +33,7 @@ const userLoaderByUsername = () => new dataloader_1.default((usernames) => __awa
     });
     const usernameToUser = {};
     users.forEach((u) => {
-        usernameToUser[u.username] = u;
+        usernameToUser[u.username.toLowerCase()] = u;
     });
     return usernames.map((username) => usernameToUser[username]);
 }));
